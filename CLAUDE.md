@@ -10,7 +10,7 @@ Plateforme de coordination de soins à domicile à Nador (Maroc) : application p
 
 - Étape 1 (cadrage) : validée le 2026-11-21.
 - Étape 2 (socle technique, lot 3) : livrée le 2026-11-21 (avancement en tête de `docs/02-decoupage-lots.md`). Reste du lot 3 reporté au lot 6 : écrans Filament de gestion des utilisateurs, des rôles et des journaux.
-- Lot 4 : tâches 4.0 (socle Flutter), 4.1 (compte), 4.2 (profils de patients, adresses) et 4.3 (catalogue, avec sa gestion dans le back-office) livrées le 2026-11-21. Jamais compilé ni lancé sur un appareil : à faire avant d'aller plus loin côté mobile.
+- Lot 4 : tâches 4.0 (socle Flutter), 4.1 (compte), 4.2 (profils de patients, adresses) 4.3 (catalogue, avec sa gestion dans le back-office) et 4.4 (réservation, dans un cadre provisoire : espèces, créneaux de journée) livrées le 2026-11-21. Jamais compilé ni lancé sur un appareil : à faire avant d'aller plus loin côté mobile.
 - Suite des lots 4 à 7 : en attente des points à trancher (`docs/03-questions-ouvertes.md`, sections B et C).
 - Dépôt : `https://github.com/artgonmedia2-dev/NadorCare.git`, branche `main`.
 
@@ -61,7 +61,9 @@ Points d'entrée obligatoires :
 
 - lire les données de santé d'un patient : `ReadPatientRecord` (vérifie le droit, journalise) ;
 - lire ou écrire un fichier privé : `EncryptedFileStore` ;
-- changer le statut d'une réservation : `TransitionBooking` ;
+- changer le statut d'une réservation : `TransitionBooking` ; créer une réservation : `CreateBooking` ; l'annuler : `CancelBooking` (calcule les frais) ;
+- lire un paramètre de gestion : `Services\Settings\Settings` (valeurs par défaut dans `Settings::DEFAULTS`) ;
+- calculer un prix : `Services\Bookings\PriceCalculator` ; savoir si un créneau est réservable : `Services\Bookings\BookingSchedule` ;
 - renvoyer une erreur métier : `ApiException('code')`, avec le texte dans `lang/*/api.php`.
 
 Organisation de `/mobile` (espace de travail pub, voir `mobile/README.md`) :
@@ -76,7 +78,9 @@ Règles mobiles :
 - les écrans n'utilisent que les composants de `nc_design_system` (`NcPage`, `NcPrimaryButton`, `NcNotice`) et des marges directionnelles, pour l'arabe ;
 - le jeton vit dans le stockage sécurisé (`SecureSessionStorage`), jamais dans les préférences ;
 - les erreurs d'API arrivent en `ApiFailure` ; le message du serveur est déjà traduit, `failureMessage()` le choisit ;
-- les numéros de téléphone et les codes s'affichent toujours de gauche à droite.
+- les numéros de téléphone et les codes s'affichent toujours de gauche à droite ; un numéro inséré dans une phrase passe par `isolateLtr()` (ne jamais écrire le caractère U+2066 dans le code, l'analyseur le refuse) ;
+- les heures de soin sont celles de Nador : l'application affiche `scheduled_date` et `scheduled_time` tels que le serveur les envoie, sans conversion vers le fuseau du téléphone ;
+- dans un test d'écran, agrandir la surface (`tester.view.physicalSize`) : les listes ne construisent que ce qui est visible.
 
 ## Règles non négociables
 

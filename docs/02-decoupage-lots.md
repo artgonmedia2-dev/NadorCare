@@ -34,6 +34,18 @@ Tâche 4.3 livrée le 2026-11-21, avec la partie « services et catégories » d
 - Reste de la tâche 6.7 à faire : majorations (nuit, jour férié, distance) et jours fériés.
 - La fiche d'un soin n'a pas encore de bouton de réservation (tâche 4.4).
 
+Tâche 4.4 et début de 4.5 livrés le 2026-11-21 (162 tests côté API, 73 côté Flutter), dans un cadre provisoire accepté par le client faute de décisions :
+
+- Paiement en espèces uniquement. Le paiement par carte répond « pas encore disponible ».
+- Créneaux de journée, de 8 h à 20 h toutes les 30 minutes, avec une heure de délai et 30 jours d'avance au plus. Tout se règle dans le back-office (`/admin/settings`).
+- Majorations de nuit et de jour férié, en pourcentage ou en montant fixe (`/admin/surcharges`, `/admin/holidays`). La majoration de distance n'est pas appliquée : le cahier des charges ne dit pas depuis quel point la mesurer.
+- Frais d'annulation tardive à 0 % par défaut, réglables. Leur perception quand le paiement est en espèces reste à décider.
+- L'ordonnance est exigée dès la demande pour un soin sur prescription.
+- Le back-office a une file des demandes (`/admin/bookings`) où le coordinateur confirme ou annule. L'affectation d'un professionnel reste à faire (tâche 6.2).
+- Les créneaux ne tiennent pas compte de la disponibilité des professionnels : la coordination valide puis affecte.
+- Non fait dans 4.4 : choix de l'adresse sur une carte (clé Google Maps). Non fait dans 4.5 : passage automatique à la coordination après un délai, sans objet tant que toute demande est validée par un coordinateur.
+- Toujours aucun essai sur un appareil ; l'appareil photo et la galerie (ordonnance) s'ajoutent aux éléments natifs jamais lancés.
+
 ## Lot 3 — Socle technique
 
 | N° | Tâche | Résultat vérifiable |
