@@ -109,5 +109,21 @@
   "locationUnavailable": "Position not found. Try again outdoors.",
   "addressCovered": "Area served",
   "addressNotCovered": "Outside the area served for now",
-  "addressDeleteTitle": "Remove this address?"
+  "addressDeleteTitle": "Remove this address?",
+  "homeCatalogue": "Our care services",
+  "homeCatalogueSubtitle": "See the care available at home",
+  "catalogueSearchHint": "Search for a care service",
+  "catalogueEmpty": "No care service is available for now.",
+  "catalogueNoResult": "No care service matches “{query}”.",
+  "servicesCount": "{count, plural, =1{1 service} other{{count} services}}",
+  "serviceDuration": "{minutes} min",
+  "priceDirhams": "{amount} MAD",
+  "serviceDurationLabel": "Duration",
+  "servicePriceLabel": "Indicative price",
+  "servicePriceNote": "The price may be higher at night, on public holidays and depending on distance.",
+  "servicePrescriptionRequired": "Prescription required",
+  "servicePrescriptionHelp": "To book this care, you will need to upload a photo of the prescription.",
+  "serviceSeries": "This care can be scheduled over several days.",
+  "serviceProvidedBy": "Provided by: {profession}",
+  "bookingSoon": "Booking is coming soon to the app."
 }

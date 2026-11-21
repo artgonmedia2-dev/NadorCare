@@ -366,4 +366,72 @@ class NcLocalizationsFr extends NcLocalizations {
 
   @override
   String get addressDeleteTitle => 'Retirer cette adresse ?';
+
+  @override
+  String get homeCatalogue => 'Nos soins';
+
+  @override
+  String get homeCatalogueSubtitle => 'Voir les soins proposés à domicile';
+
+  @override
+  String get catalogueSearchHint => 'Rechercher un soin';
+
+  @override
+  String get catalogueEmpty => 'Aucun soin n\'est proposé pour le moment.';
+
+  @override
+  String catalogueNoResult(String query) {
+    return 'Aucun soin ne correspond à « $query ».';
+  }
+
+  @override
+  String servicesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count soins',
+      one: '1 soin',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String serviceDuration(int minutes) {
+    return '$minutes min';
+  }
+
+  @override
+  String priceDirhams(String amount) {
+    return '$amount DH';
+  }
+
+  @override
+  String get serviceDurationLabel => 'Durée';
+
+  @override
+  String get servicePriceLabel => 'Tarif indicatif';
+
+  @override
+  String get servicePriceNote =>
+      'Le prix peut être majoré la nuit, les jours fériés et selon la distance.';
+
+  @override
+  String get servicePrescriptionRequired => 'Ordonnance obligatoire';
+
+  @override
+  String get servicePrescriptionHelp =>
+      'Pour réserver ce soin, vous devrez déposer une photo de l\'ordonnance.';
+
+  @override
+  String get serviceSeries =>
+      'Ce soin peut être programmé sur plusieurs jours.';
+
+  @override
+  String serviceProvidedBy(String profession) {
+    return 'Réalisé par : $profession';
+  }
+
+  @override
+  String get bookingSoon =>
+      'La réservation arrive bientôt dans l\'application.';
 }

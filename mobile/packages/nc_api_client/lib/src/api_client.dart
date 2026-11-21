@@ -46,7 +46,8 @@ class ApiClient {
   final TokenReader _readToken;
   final LanguageReader _readLanguage;
 
-  Future<Map<String, dynamic>> get(String path) => _send(() => _dio.get<dynamic>(path));
+  Future<Map<String, dynamic>> get(String path, {Map<String, dynamic>? query}) =>
+      _send(() => _dio.get<dynamic>(path, queryParameters: query));
 
   Future<Map<String, dynamic>> post(String path, [Map<String, dynamic>? body]) =>
       _send(() => _dio.post<dynamic>(path, data: body));

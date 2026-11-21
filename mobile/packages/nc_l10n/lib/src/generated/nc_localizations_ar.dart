@@ -352,4 +352,72 @@ class NcLocalizationsAr extends NcLocalizations {
 
   @override
   String get addressDeleteTitle => 'حذف هذا العنوان؟';
+
+  @override
+  String get homeCatalogue => 'علاجاتنا';
+
+  @override
+  String get homeCatalogueSubtitle => 'تعرف على العلاجات المتوفرة في المنزل';
+
+  @override
+  String get catalogueSearchHint => 'ابحث عن علاج';
+
+  @override
+  String get catalogueEmpty => 'لا يوجد أي علاج متوفر حاليا.';
+
+  @override
+  String catalogueNoResult(String query) {
+    return 'لا يوجد علاج يطابق «$query».';
+  }
+
+  @override
+  String servicesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count علاجا',
+      few: '$count علاجات',
+      two: 'علاجان',
+      one: 'علاج واحد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String serviceDuration(int minutes) {
+    return '$minutes د';
+  }
+
+  @override
+  String priceDirhams(String amount) {
+    return '$amount درهم';
+  }
+
+  @override
+  String get serviceDurationLabel => 'المدة';
+
+  @override
+  String get servicePriceLabel => 'السعر التقريبي';
+
+  @override
+  String get servicePriceNote =>
+      'قد يرتفع السعر ليلا وفي أيام العطل وحسب المسافة.';
+
+  @override
+  String get servicePrescriptionRequired => 'الوصفة الطبية إجبارية';
+
+  @override
+  String get servicePrescriptionHelp =>
+      'لحجز هذا العلاج، يجب إرسال صورة للوصفة الطبية.';
+
+  @override
+  String get serviceSeries => 'يمكن برمجة هذا العلاج على عدة أيام.';
+
+  @override
+  String serviceProvidedBy(String profession) {
+    return 'يقوم به: $profession';
+  }
+
+  @override
+  String get bookingSoon => 'الحجز سيتوفر قريبا في التطبيق.';
 }

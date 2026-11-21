@@ -109,5 +109,21 @@
   "locationUnavailable": "تعذر تحديد الموقع. حاول من جديد في الخارج.",
   "addressCovered": "منطقة مغطاة",
   "addressNotCovered": "خارج المنطقة المغطاة حاليا",
-  "addressDeleteTitle": "حذف هذا العنوان؟"
+  "addressDeleteTitle": "حذف هذا العنوان؟",
+  "homeCatalogue": "علاجاتنا",
+  "homeCatalogueSubtitle": "تعرف على العلاجات المتوفرة في المنزل",
+  "catalogueSearchHint": "ابحث عن علاج",
+  "catalogueEmpty": "لا يوجد أي علاج متوفر حاليا.",
+  "catalogueNoResult": "لا يوجد علاج يطابق «{query}».",
+  "servicesCount": "{count, plural, =1{علاج واحد} =2{علاجان} few{{count} علاجات} other{{count} علاجا}}",
+  "serviceDuration": "{minutes} د",
+  "priceDirhams": "{amount} درهم",
+  "serviceDurationLabel": "المدة",
+  "servicePriceLabel": "السعر التقريبي",
+  "servicePriceNote": "قد يرتفع السعر ليلا وفي أيام العطل وحسب المسافة.",
+  "servicePrescriptionRequired": "الوصفة الطبية إجبارية",
+  "servicePrescriptionHelp": "لحجز هذا العلاج، يجب إرسال صورة للوصفة الطبية.",
+  "serviceSeries": "يمكن برمجة هذا العلاج على عدة أيام.",
+  "serviceProvidedBy": "يقوم به: {profession}",
+  "bookingSoon": "الحجز سيتوفر قريبا في التطبيق."
 }

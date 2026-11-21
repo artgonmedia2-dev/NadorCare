@@ -5,6 +5,7 @@ import 'package:nc_account/nc_account.dart';
 import 'package:nc_design_system/nc_design_system.dart';
 import 'package:nc_l10n/nc_l10n.dart';
 
+import 'catalogue/catalogue_providers.dart';
 import 'patients/patient_texts.dart';
 
 /// Accueil de l'application patient. Le catalogue et la réservation (tâches 4.3 et 4.4)
@@ -32,6 +33,13 @@ class PatientHomeScreen extends ConsumerWidget {
       title: (name == null || name.isEmpty) ? l10n.homeGreetingAnonymous : l10n.homeGreeting(name),
       subtitle: l10n.homePatientSoon,
       children: <Widget>[
+        NcListCard(
+          key: const ValueKey<String>('home-catalogue'),
+          icon: Icons.medical_services_outlined,
+          title: l10n.homeCatalogue,
+          subtitle: l10n.homeCatalogueSubtitle,
+          onTap: () => context.push(routeCatalogue),
+        ),
         NcListCard(
           key: const ValueKey<String>('home-profiles'),
           icon: Icons.people_outline,

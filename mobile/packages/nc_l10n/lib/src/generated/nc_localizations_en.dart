@@ -352,4 +352,70 @@ class NcLocalizationsEn extends NcLocalizations {
 
   @override
   String get addressDeleteTitle => 'Remove this address?';
+
+  @override
+  String get homeCatalogue => 'Our care services';
+
+  @override
+  String get homeCatalogueSubtitle => 'See the care available at home';
+
+  @override
+  String get catalogueSearchHint => 'Search for a care service';
+
+  @override
+  String get catalogueEmpty => 'No care service is available for now.';
+
+  @override
+  String catalogueNoResult(String query) {
+    return 'No care service matches “$query”.';
+  }
+
+  @override
+  String servicesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count services',
+      one: '1 service',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String serviceDuration(int minutes) {
+    return '$minutes min';
+  }
+
+  @override
+  String priceDirhams(String amount) {
+    return '$amount MAD';
+  }
+
+  @override
+  String get serviceDurationLabel => 'Duration';
+
+  @override
+  String get servicePriceLabel => 'Indicative price';
+
+  @override
+  String get servicePriceNote =>
+      'The price may be higher at night, on public holidays and depending on distance.';
+
+  @override
+  String get servicePrescriptionRequired => 'Prescription required';
+
+  @override
+  String get servicePrescriptionHelp =>
+      'To book this care, you will need to upload a photo of the prescription.';
+
+  @override
+  String get serviceSeries => 'This care can be scheduled over several days.';
+
+  @override
+  String serviceProvidedBy(String profession) {
+    return 'Provided by: $profession';
+  }
+
+  @override
+  String get bookingSoon => 'Booking is coming soon to the app.';
 }

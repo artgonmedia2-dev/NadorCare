@@ -759,6 +759,102 @@ abstract class NcLocalizations {
   /// In fr, this message translates to:
   /// **'Retirer cette adresse ?'**
   String get addressDeleteTitle;
+
+  /// No description provided for @homeCatalogue.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nos soins'**
+  String get homeCatalogue;
+
+  /// No description provided for @homeCatalogueSubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir les soins proposés à domicile'**
+  String get homeCatalogueSubtitle;
+
+  /// No description provided for @catalogueSearchHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rechercher un soin'**
+  String get catalogueSearchHint;
+
+  /// No description provided for @catalogueEmpty.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun soin n\'est proposé pour le moment.'**
+  String get catalogueEmpty;
+
+  /// No description provided for @catalogueNoResult.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun soin ne correspond à « {query} ».'**
+  String catalogueNoResult(String query);
+
+  /// No description provided for @servicesCount.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{1 soin} other{{count} soins}}'**
+  String servicesCount(int count);
+
+  /// No description provided for @serviceDuration.
+  ///
+  /// In fr, this message translates to:
+  /// **'{minutes} min'**
+  String serviceDuration(int minutes);
+
+  /// No description provided for @priceDirhams.
+  ///
+  /// In fr, this message translates to:
+  /// **'{amount} DH'**
+  String priceDirhams(String amount);
+
+  /// No description provided for @serviceDurationLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Durée'**
+  String get serviceDurationLabel;
+
+  /// No description provided for @servicePriceLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tarif indicatif'**
+  String get servicePriceLabel;
+
+  /// No description provided for @servicePriceNote.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le prix peut être majoré la nuit, les jours fériés et selon la distance.'**
+  String get servicePriceNote;
+
+  /// No description provided for @servicePrescriptionRequired.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ordonnance obligatoire'**
+  String get servicePrescriptionRequired;
+
+  /// No description provided for @servicePrescriptionHelp.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pour réserver ce soin, vous devrez déposer une photo de l\'ordonnance.'**
+  String get servicePrescriptionHelp;
+
+  /// No description provided for @serviceSeries.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce soin peut être programmé sur plusieurs jours.'**
+  String get serviceSeries;
+
+  /// No description provided for @serviceProvidedBy.
+  ///
+  /// In fr, this message translates to:
+  /// **'Réalisé par : {profession}'**
+  String serviceProvidedBy(String profession);
+
+  /// No description provided for @bookingSoon.
+  ///
+  /// In fr, this message translates to:
+  /// **'La réservation arrive bientôt dans l\'application.'**
+  String get bookingSoon;
 }
 
 class _NcLocalizationsDelegate extends LocalizationsDelegate<NcLocalizations> {
