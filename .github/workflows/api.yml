@@ -1,0 +1,93 @@
+name: API
+
+on:
+  push:
+    branches: [main]
+    paths: ['api/**', 'docker/**', '.github/workflows/api.yml']
+  pull_request:
+    paths: ['api/**', 'docker/**', '.github/workflows/api.yml']
+
+concurrency:
+  group: api-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Lint, analyse statique, tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    defaults:
+      run:
+        working-directory: api
+
+    services:
+      postgres:
+        image: postgis/postgis:18-3.7-alpine
+        env:
+          POSTGRES_DB: nadorcare_test
+          POSTGRES_USER: nadorcare
+          POSTGRES_PASSWORD: nadorcare
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U nadorcare -d nadorcare_test"
+          --health-interval 5s --health-timeout 3s --health-retries 20
+      redis:
+        image: redis:8-alpine
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s --health-timeout 3s --health-retries 20
+
+    env:
+      DB_CONNECTION: pgsql
+      DB_HOST: 127.0.0.1
+      DB_PORT: 5432
+      DB_USERNAME: nadorcare
+      DB_PASSWORD: nadorcare
+      REDIS_HOST: 127.0.0.1
+      REDIS_PORT: 6379
+      REDIS_CLIENT: phpredis
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: PHP 8.4
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo_pgsql, pgsql, redis, pcntl, intl, gd, zip, bcmath, sockets, exif
+          coverage: none
+
+      - name: Cache Composer
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache
+          key: composer-${{ hashFiles('api/composer.lock') }}
+          restore-keys: composer-
+
+      - name: Dépendances
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Environnement
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Formatage (Pint)
+        run: composer lint
+
+      - name: Analyse statique (Larastan)
+        run: composer analyse
+
+      - name: Tests
+        run: php artisan test
+
+      - name: La documentation OpenAPI versionnée est à jour
+        run: |
+          php artisan scramble:export --path=/tmp/openapi.json
+          diff <(jq -S . /tmp/openapi.json) <(jq -S . ../docs/openapi.json) \
+            || (echo "::error::docs/openapi.json n'est plus à jour : lancer 'composer openapi' dans api/ et commiter le résultat." && exit 1)

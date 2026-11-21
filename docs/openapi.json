@@ -1,0 +1,511 @@
+{
+    "openapi": "3.1.2",
+    "info": {
+        "title": "Nador Care \u2014 API",
+        "version": "1.0.0",
+        "description": "API de la plateforme Nador Care (soins \u00e0 domicile). Authentification par t\u00e9l\u00e9phone et code OTP, puis jeton `Bearer`. Langue des r\u00e9ponses : en-t\u00eate `Accept-Language` (`fr`, `ar`, `en`). Erreurs au format `{ message, code }`, o\u00f9 `code` est stable."
+    },
+    "servers": [
+        {
+            "url": "http://localhost:8000/api/v1"
+        }
+    ],
+    "tags": [
+        {
+            "name": "Authentification"
+        },
+        {
+            "name": "Compte"
+        }
+    ],
+    "security": [
+        {
+            "http": []
+        }
+    ],
+    "paths": {
+        "/auth/otp/request": {
+            "post": {
+                "operationId": "v1.auth.otp.request",
+                "description": "Envoie un code \u00e0 usage unique par SMS. La r\u00e9ponse est identique que le num\u00e9ro\nait d\u00e9j\u00e0 un compte ou non.",
+                "summary": "Demander un code OTP",
+                "tags": [
+                    "Authentification"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RequestOtpRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "202": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Si ce num\u00e9ro est valide, un code vient de lui \u00eatre envoy\u00e9 par SMS."
+                                        },
+                                        "expires_in": {
+                                            "type": "integer",
+                                            "description": "Dur\u00e9e de validit\u00e9 du code, en secondes."
+                                        },
+                                        "resend_in": {
+                                            "type": "integer",
+                                            "description": "D\u00e9lai avant de pouvoir redemander un code, en secondes."
+                                        }
+                                    },
+                                    "required": [
+                                        "message",
+                                        "expires_in",
+                                        "resend_in"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Too many requests",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview."
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                },
+                "security": []
+            }
+        },
+        "/auth/otp/verify": {
+            "post": {
+                "operationId": "v1.auth.otp.verify",
+                "description": "Renvoie un jeton d'acc\u00e8s \u00e0 transmettre ensuite dans l'en-t\u00eate `Authorization: Bearer`.\nPour un num\u00e9ro inconnu, `accept_terms` doit valoir `true` : le compte est alors cr\u00e9\u00e9\net le consentement enregistr\u00e9. Sinon l'erreur `consent_required` est renvoy\u00e9e et le\nm\u00eame code peut \u00eatre renvoy\u00e9 une seconde fois.",
+                "summary": "V\u00e9rifier le code et se connecter",
+                "tags": [
+                    "Authentification"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/VerifyOtpRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "token": {
+                                            "type": "string"
+                                        },
+                                        "token_type": {
+                                            "type": "string",
+                                            "const": "Bearer"
+                                        },
+                                        "is_new_user": {
+                                            "type": "boolean"
+                                        },
+                                        "user": {
+                                            "$ref": "#/components/schemas/UserResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "token",
+                                        "token_type",
+                                        "is_new_user",
+                                        "user"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Too many requests",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview."
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                },
+                "security": []
+            }
+        },
+        "/auth/logout": {
+            "post": {
+                "operationId": "v1.auth.logout",
+                "description": "R\u00e9voque le jeton utilis\u00e9 pour cette requ\u00eate.",
+                "summary": "Se d\u00e9connecter",
+                "tags": [
+                    "Authentification"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Vous \u00eates d\u00e9connect\u00e9."
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/me": {
+            "get": {
+                "operationId": "v1.me.show",
+                "summary": "Mon compte",
+                "tags": [
+                    "Compte"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`UserResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/UserResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "patch": {
+                "operationId": "v1.me.update",
+                "summary": "Modifier mon nom ou ma langue",
+                "tags": [
+                    "Compte"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateMeRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`UserResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/UserResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/health": {
+            "get": {
+                "operationId": "v1.health",
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "const": "ok"
+                                        },
+                                        "version": {
+                                            "type": "string",
+                                            "const": "v1"
+                                        }
+                                    },
+                                    "required": [
+                                        "status",
+                                        "version"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "securitySchemes": {
+            "http": {
+                "type": "http",
+                "scheme": "bearer"
+            }
+        },
+        "schemas": {
+            "ClientApp": {
+                "type": "string",
+                "description": "Application mobile ou site depuis lequel l'utilisateur s'authentifie.\n",
+                "enum": [
+                    "patient",
+                    "pro"
+                ],
+                "title": "ClientApp"
+            },
+            "RequestOtpRequest": {
+                "type": "object",
+                "properties": {
+                    "phone": {
+                        "type": "string",
+                        "description": "Num\u00e9ro de t\u00e9l\u00e9phone. Format international (+212612345678) ou marocain local (0612345678).",
+                        "pattern": "^\\+[1-9]\\d{7,14}$"
+                    }
+                },
+                "required": [
+                    "phone"
+                ],
+                "title": "RequestOtpRequest"
+            },
+            "UpdateMeRequest": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "minLength": 2,
+                        "maxLength": 120
+                    },
+                    "locale": {
+                        "type": "string",
+                        "enum": [
+                            "fr",
+                            "ar",
+                            "en"
+                        ]
+                    }
+                },
+                "title": "UpdateMeRequest"
+            },
+            "UserResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "phone": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "locale": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "active",
+                            "suspended",
+                            "deleted"
+                        ]
+                    },
+                    "roles": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                },
+                "required": [
+                    "id",
+                    "phone",
+                    "name",
+                    "locale",
+                    "status",
+                    "roles",
+                    "created_at"
+                ],
+                "title": "UserResource"
+            },
+            "VerifyOtpRequest": {
+                "type": "object",
+                "properties": {
+                    "phone": {
+                        "type": "string",
+                        "pattern": "^\\+[1-9]\\d{7,14}$"
+                    },
+                    "code": {
+                        "type": "string",
+                        "description": "Code re\u00e7u par SMS."
+                    },
+                    "app": {
+                        "description": "Application qui se connecte : `patient` ou `pro`.",
+                        "$ref": "#/components/schemas/ClientApp"
+                    },
+                    "device_name": {
+                        "type": "string",
+                        "description": "Nom de l'appareil, affich\u00e9 dans la liste des sessions.",
+                        "maxLength": 100
+                    },
+                    "accept_terms": {
+                        "type": "boolean",
+                        "description": "Obligatoire \u00e0 `true` pour cr\u00e9er un compte : acceptation des conditions g\u00e9n\u00e9rales,\nde la politique de confidentialit\u00e9 et du traitement des donn\u00e9es de sant\u00e9."
+                    },
+                    "locale": {
+                        "type": "string",
+                        "enum": [
+                            "fr",
+                            "ar",
+                            "en"
+                        ]
+                    }
+                },
+                "required": [
+                    "phone",
+                    "code",
+                    "app",
+                    "device_name"
+                ],
+                "title": "VerifyOtpRequest"
+            }
+        },
+        "responses": {
+            "ValidationException": {
+                "description": "Validation error",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string",
+                                    "description": "Errors overview."
+                                },
+                                "errors": {
+                                    "type": "object",
+                                    "description": "A detailed description of each field that failed validation.",
+                                    "additionalProperties": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            },
+                            "required": [
+                                "message",
+                                "errors"
+                            ]
+                        }
+                    }
+                }
+            },
+            "AuthenticationException": {
+                "description": "Unauthenticated",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string",
+                                    "description": "Error overview."
+                                }
+                            },
+                            "required": [
+                                "message"
+                            ]
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
