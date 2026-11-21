@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\ProfessionalCategory;
+use App\Services\Settings\Settings;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -52,14 +53,7 @@ class ReferenceDataSeeder extends Seeder
      */
     private function seedSettings(): void
     {
-        $settings = [
-            'booking.free_cancellation_minutes' => 120,
-            'booking.escalation_minutes' => 10,
-            'offer.response_seconds' => 120,
-            'location.retention_days' => 30,
-        ];
-
-        foreach ($settings as $key => $value) {
+        foreach (Settings::DEFAULTS as $key => $value) {
             DB::table('settings')->insertOrIgnore([
                 'key' => $key,
                 'value' => json_encode($value),
