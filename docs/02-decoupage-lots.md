@@ -2,6 +2,14 @@
 
 Statut : **proposition à valider**. Chaque tâche correspond à un ou plusieurs petits commits et se termine par ses tests. Les fonctionnalités marquées V2 dans le cahier des charges sont exclues.
 
+## Avancement
+
+Lot 3 livré le 2026-11-21 : tâches 3.1 à 3.14 faites, avec trois écarts par rapport au tableau ci-dessous.
+
+- 3.3 : pas de Mailpit ni de MinIO dans Docker. La plateforme n'envoie pas d'e-mail au MVP, et les fichiers privés utilisent le disque local en développement (S3 en production, par `.env`). Sous Windows, le serveur HTTP tourne en natif, le conteneur `api` étant trop lent.
+- 3.11 : le panneau, le contrôle d'accès et le double facteur obligatoire sont en place et testés. Les écrans de gestion des utilisateurs, des rôles et des journaux sont reportés à la tâche 6.11.
+- 3.14 : le fichier d'intégration continue est écrit mais n'a pas encore tourné sur GitHub (rien n'est poussé).
+
 ## Lot 3 — Socle technique
 
 | N° | Tâche | Résultat vérifiable |

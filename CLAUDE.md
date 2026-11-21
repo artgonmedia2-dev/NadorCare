@@ -9,7 +9,8 @@ Plateforme de coordination de soins à domicile à Nador (Maroc) : application p
 ## État du projet
 
 - Étape 1 (cadrage) : validée le 2026-11-21.
-- Étape 2 (socle technique, lot 3) : en cours. Avancement tâche par tâche dans `docs/02-decoupage-lots.md`.
+- Étape 2 (socle technique, lot 3) : livrée le 2026-11-21 (avancement en tête de `docs/02-decoupage-lots.md`). Reste du lot 3 reporté au lot 6 : écrans Filament de gestion des utilisateurs, des rôles et des journaux.
+- Lots 4 à 7 : pas commencés, en attente des points à trancher (`docs/03-questions-ouvertes.md`, sections B et C).
 - Dépôt : `https://github.com/artgonmedia2-dev/NadorCare.git`, branche `main`.
 
 ## Décisions structurantes
@@ -44,7 +45,20 @@ Revérifier la documentation officielle au moment de chaque installation, et fig
 /.github  Intégration continue
 ```
 
-`/api/app` s'organise par domaine métier (Auth, Patients, Catalogue, Professionals, Bookings, Interventions, Payments, Notifications, Content, Audit). Les contrôleurs d'API et les ressources Filament appellent les mêmes classes d'action ; aucune règle métier dans un contrôleur ou une ressource Filament.
+Organisation de `/api/app` :
+
+- `Actions/<Domaine>` : une classe par cas d'usage (`Auth\LoginWithOtp`, `Bookings\TransitionBooking`, `Health\ReadPatientRecord`). Les contrôleurs d'API et les écrans Filament appellent ces mêmes classes ; aucune règle métier dans un contrôleur ou une ressource Filament.
+- `Contracts` : interfaces des services externes. `Services/<Service>` : leurs implémentations (factices pour l'instant) et les services internes (`Auth\OtpService`, `Files\EncryptedFileStore`, `Health\AccessLogger`). Le lien se fait dans `Providers/ExternalServicesProvider`.
+- `Enums` : rôles, permissions, statuts. `Policies` : droits d'accès, dont le cloisonnement par mission.
+- `Http/Controllers/Api/V1`, `Http/Requests/Api/V1`, `Http/Resources/Api/V1` : couche HTTP de la version 1.
+- `lang/{fr,ar,en}/api.php` : tous les textes renvoyés par l'API.
+
+Points d'entrée obligatoires :
+
+- lire les données de santé d'un patient : `ReadPatientRecord` (vérifie le droit, journalise) ;
+- lire ou écrire un fichier privé : `EncryptedFileStore` ;
+- changer le statut d'une réservation : `TransitionBooking` ;
+- renvoyer une erreur métier : `ApiException('code')`, avec le texte dans `lang/*/api.php`.
 
 `/mobile/packages` : `core` (modèles, erreurs), `api_client`, `design_system`, `l10n`, `offline` (Drift, file de synchronisation).
 
@@ -72,20 +86,28 @@ Revérifier la documentation officielle au moment de chaque installation, et fig
 - Un compte rendu validé est immuable ; une correction crée un avenant.
 - Schéma de référence : `docs/01-schema-base-de-donnees.md`. Découpage des lots : `docs/02-decoupage-lots.md`.
 
-## Commandes utiles (cible, à confirmer à l'étape 2)
+## Commandes utiles
+
+Sur cette machine, remplacer `php` par `C:\php84\php.exe` et `composer` par `C:\php84\php.exe C:\composer\composer.phar`.
 
 ```powershell
-# Services
+# Services Docker : PostgreSQL + PostGIS (5432), Redis (6380), Horizon, Reverb (8080), planificateur
 docker compose up -d
-docker compose exec api php artisan migrate:fresh --seed
+docker compose ps
+docker compose logs horizon --tail 20
 
-# API (dans /api)
-composer test          # tests
-composer lint          # Pint
-composer analyse       # Larastan
-php artisan horizon
-php artisan reverb:start
+# API (dans /api) — le serveur HTTP tourne en natif sous Windows
+php artisan serve                      # http://localhost:8000
+php artisan migrate:fresh --seed
+php artisan nadorcare:create-staff     # compte du back-office
+php artisan nadorcare:files-key        # clé de chiffrement des fichiers
+composer test                          # tests, base nadorcare_test dans Docker
+composer lint                          # Pint (composer format pour corriger)
+composer analyse                       # Larastan niveau 5
+composer openapi                       # régénère docs/openapi.json (vérifié par la CI)
+composer require <paquet> --ignore-platform-req=ext-pcntl --ignore-platform-req=ext-posix
 
+# Mobile et site : commandes cibles, les projets n'existent pas encore
 # Mobile (dans /mobile)
 flutter pub get
 flutter analyze
@@ -102,7 +124,11 @@ pnpm build
 ## Particularités de cette machine (Windows 11)
 
 - Ce projet utilise **PHP 8.4 dans `C:\php84`** (avec `pdo_pgsql`). Le `php` du PATH est PHP 8.3 (`C:\php83`), gardé pour les autres projets : appeler `C:\php84\php.exe` explicitement, et Composer par `C:\php84\php.exe C:\composer\composer.phar`.
-- Pas d'extension `redis`, `pcntl` ni `posix` sous Windows : Horizon ne tourne que dans Docker.
+- Pas d'extension `redis`, `pcntl` ni `posix` sous Windows : Horizon ne tourne que dans Docker, et le PHP local parle à Redis avec `predis` sur le port 6380.
+- Le conteneur `api` (profil `full`) est très lent sous Windows à cause du dossier monté (5 à 38 s par requête, mesuré le 2026-11-21) : servir l'API avec `php artisan serve`.
+- Docker n'est pas dans le PATH des sessions ouvertes avant son installation : `C:\Program Files\Docker\Docker\resources\bin\docker.exe`. Docker Desktop ne démarre pas tout seul avec Windows.
+- `Set-Content -Encoding utf8` de PowerShell 5.1 ajoute un BOM qui casse les fichiers PHP : utiliser l'outil d'édition.
+- Les tests ont besoin du conteneur PostgreSQL (déclencheurs et PostGIS) : pas de SQLite.
 - Pas de PostgreSQL natif ; le Redis installé est une version 3.0 pour Windows, trop ancienne : utiliser ceux de Docker.
 - Disque C: petit (environ 11 Go libres le 2026-11-21 après nettoyage des caches) : vérifier l'espace avant toute installation ou tout téléchargement d'image.
 - Flutter dans `C:\flutter` (3.47.2), FVM disponible, SDK Android et JDK 17 présents. Pas de compilation iOS possible sur cette machine.
