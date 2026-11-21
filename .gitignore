@@ -1,0 +1,19 @@
+# Secrets et environnement
+.env
+.env.*
+!.env.example
+
+# Systèmes et éditeurs
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
+
+# Réglages locaux de Claude Code
+.claude/settings.local.json
+
+# Dépendances et artefacts (complétés par le .gitignore de chaque sous-projet)
+node_modules/
+vendor/

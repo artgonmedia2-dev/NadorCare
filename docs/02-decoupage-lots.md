@@ -1,0 +1,90 @@
+# Découpage en tâches — lots 3 à 7 (MVP uniquement)
+
+Statut : **proposition à valider**. Chaque tâche correspond à un ou plusieurs petits commits et se termine par ses tests. Les fonctionnalités marquées V2 dans le cahier des charges sont exclues.
+
+## Lot 3 — Socle technique
+
+| N° | Tâche | Résultat vérifiable |
+| --- | --- | --- |
+| 3.1 | Dépôt et outillage : `git init`, arborescence du monorepo, `.editorconfig`, `.gitignore`, Pint, Larastan | `composer lint` et `composer analyse` passent |
+| 3.2 | Projet Laravel dans `/api`, configuration par `.env`, `.env.example` complet, langues fr/ar/en | `php artisan about` |
+| 3.3 | Docker Compose : PHP, PostgreSQL + PostGIS, Redis, Horizon, Reverb, Mailpit, MinIO (S3 local) | `docker compose up` puis `/up` répond 200 |
+| 3.4 | Squelette `/api/v1` : format d'erreur unique, limitation de débit, en-tête de langue, point de santé | Tests de contrat sur les erreurs |
+| 3.5 | Migrations du schéma validé + PostGIS + seeders (rôles, catégories, zone de démonstration Nador) | `migrate:fresh --seed` |
+| 3.6 | Interfaces des services externes et implémentations factices : SMS, WhatsApp, paiement, push, cartographie, stockage | Choix du pilote par `.env`, tests avec les factices |
+| 3.7 | Authentification téléphone + OTP : demande, vérification, jetons Sanctum avec expiration, déconnexion, `/me`, anti-abus | Tests : code faux, expiré, rejoué, trop de tentatives |
+| 3.8 | Rôles et permissions : six rôles, matrice de permissions, policies de base | Tests d'accès par rôle |
+| 3.9 | Données de santé : champs chiffrés, service de fichiers chiffrés, journal d'accès en insertion seule, policy de cloisonnement par mission | Tests : accès hors mission refusé, chaque lecture journalisée |
+| 3.10 | Machine à états des réservations + historique des statuts | Tests de toutes les transitions autorisées et interdites |
+| 3.11 | Panneau Filament : connexion, double facteur obligatoire, expiration de session, gestion des utilisateurs et des rôles, lecture des journaux | Tests de connexion et de 2FA |
+| 3.12 | Horizon, Reverb, planificateur, canaux privés authentifiés | Un événement de test arrive sur un canal privé |
+| 3.13 | Documentation OpenAPI générée depuis le code, export `openapi.json` | `/docs/api` consultable, fichier versionné dans `/docs` |
+| 3.14 | Intégration continue GitHub Actions : lint, analyse statique, tests avec PostgreSQL + PostGIS et Redis | Pipeline vert sur une pull request |
+
+## Lot 4 — Application patient
+
+Chaque tâche couvre les points d'API et les écrans.
+
+| N° | Tâche |
+| --- | --- |
+| 4.0 | Socle Flutter : espace de travail `/mobile`, deux applications, paquets partagés (client API, design system, traductions, cœur), Riverpod, Drift, fr/ar/en avec RTL, taille de police réglable, épinglage de certificat |
+| 4.1 | Compte : inscription et connexion par OTP, consentement daté, connexion biométrique, choix de la langue |
+| 4.2 | Profils de patients et adresses (carte, repères d'accès, rattachement à une zone) |
+| 4.3 | Catalogue : catégories, fiche service, tarif indicatif, recherche |
+| 4.4 | Réservation en cinq écrans : service, patient et adresse, créneau immédiat ou planifié, paiement ou confirmation ; ordonnance en photo, note ; moteur de prix avec majorations |
+| 4.5 | Règles de gestion : ordonnance obligatoire selon le service, escalade à la coordination après délai, annulation gratuite puis avec frais |
+| 4.6 | Soins récurrents : création d'une série et génération des réservations |
+| 4.7 | Suivi en temps réel : statut, position sur carte, heure d'arrivée estimée |
+| 4.8 | Paiement : espèces, carte en ligne (fournisseur factice), reçu PDF |
+| 4.9 | Notifications push, SMS et WhatsApp : confirmation, rappel, arrivée, compte rendu disponible |
+| 4.10 | Historique : interventions, comptes rendus, reçus, nouvelle réservation en un geste |
+| 4.11 | Évaluation et signalement d'un problème |
+| 4.12 | Messagerie avec la coordination et appel direct |
+| 4.13 | Droits loi 09-08 : accès, rectification, suppression depuis l'application ; mentions légales et message « urgences : 141 et 15 » |
+
+## Lot 5 — Application professionnel
+
+| N° | Tâche |
+| --- | --- |
+| 5.1 | Inscription, dépôt des justificatifs, statut de vérification |
+| 5.2 | Disponibilités : agenda hebdomadaire, zones couvertes, bascule en ligne / hors ligne |
+| 5.3 | Missions : réception en push, détail limité avant acceptation, acceptation ou refus avec délai de réponse |
+| 5.4 | Déplacement : itinéraire, partage de position pendant le trajet uniquement |
+| 5.5 | Intervention : pointage d'arrivée et de fin, actes réalisés, consommables |
+| 5.6 | Compte rendu : constantes, observations, photos, signature à l'écran ; verrouillage après validation, avenant tracé |
+| 5.7 | Mode hors ligne : saisie locale Drift, file de synchronisation, rejeu idempotent |
+| 5.8 | Encaissement : confirmation des espèces, solde dû à la plateforme |
+| 5.9 | Revenus : missions, montants, reversements, export mensuel |
+
+## Lot 6 — Back-office
+
+| N° | Tâche |
+| --- | --- |
+| 6.1 | Tableau de bord : demandes du jour, interventions en cours sur carte, alertes, indicateurs |
+| 6.2 | Demandes : file d'attente, affectation manuelle, réaffectation, annulation |
+| 6.3 | Affectation automatique : classement par spécialité, zone, disponibilité, distance, note ; choix forcé par le coordinateur |
+| 6.4 | Saisie téléphonique : réservation créée pour un patient qui appelle ou écrit sur WhatsApp |
+| 6.5 | Professionnels : dossiers, vérification des justificatifs, suspension, alertes d'expiration |
+| 6.6 | Patients : comptes, profils, historique, réclamations, messagerie côté coordination |
+| 6.7 | Catalogue et tarifs : services, catégories, durées, prix, majorations, jours fériés |
+| 6.8 | Zones : dessin sur carte, activation |
+| 6.9 | Finances : encaissements, commission, reversements, exports comptables |
+| 6.10 | Contenus : pages, FAQ, bannières, modèles de notification |
+| 6.11 | Rôles et journal : permissions par rôle, journal des actions sensibles, journal d'accès |
+| 6.12 | Statistiques : volume par service, délai moyen d'affectation, taux d'annulation, satisfaction |
+
+## Lot 7 — Site public
+
+| N° | Tâche |
+| --- | --- |
+| 7.0 | Socle Next.js dans `/web` : trois langues, RTL, client API typé depuis OpenAPI |
+| 7.1 | Pages : accueil, services, zones couvertes, tarifs, FAQ, à propos, contact ; bouton WhatsApp et numéro d'appel partout ; liens vers les stores |
+| 7.2 | Réservation en ligne, même parcours que l'application, avec OTP |
+| 7.3 | Recrutement des professionnels : page et formulaire de candidature |
+| 7.4 | Blog santé |
+| 7.5 | Référencement : données structurées, plan du site, `hreflang`, pages par service et par ville |
+| 7.6 | Pages légales : conditions générales, confidentialité, message sur les urgences vitales |
+
+## Ordre conseillé
+
+Le lot 3 d'abord. Ensuite le parcours critique de bout en bout, en avançant les trois lots de front : réservation (4.1 à 4.5), affectation (6.2, 6.3, 5.3), intervention et compte rendu (5.4 à 5.7), paiement (4.8, 5.8, 6.9). Le reste des lots 4 à 6 suit, puis le lot 7.
