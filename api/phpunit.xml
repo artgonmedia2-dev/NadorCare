@@ -19,16 +19,27 @@
     </source>
     <php>
         <env name="APP_ENV" value="testing"/>
+        <env name="APP_LOCALE" value="fr"/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="BROADCAST_CONNECTION" value="null"/>
         <env name="CACHE_STORE" value="array"/>
-        <env name="DB_CONNECTION" value="sqlite"/>
-        <env name="DB_DATABASE" value=":memory:"/>
+        <!-- Les tests exigent PostgreSQL + PostGIS (déclencheurs, géographie) : base dédiée. -->
+        <env name="DB_CONNECTION" value="pgsql"/>
+        <env name="DB_DATABASE" value="nadorcare_test"/>
         <env name="DB_URL" value=""/>
+        <env name="FILESYSTEM_DISK" value="local"/>
+        <env name="PRIVATE_FILES_DISK" value="local"/>
         <env name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>
+        <env name="OTP_STATIC_CODE" value=""/>
+        <env name="SMS_DRIVER" value="fake"/>
+        <env name="WHATSAPP_DRIVER" value="fake"/>
+        <env name="PUSH_DRIVER" value="fake"/>
+        <env name="PAYMENT_DRIVER" value="fake"/>
+        <env name="MAPS_DRIVER" value="fake"/>
+        <env name="SCRAMBLE_ENABLED" value="true"/>
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
