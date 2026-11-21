@@ -199,4 +199,157 @@ class NcLocalizationsEn extends NcLocalizations {
 
   @override
   String get retry => 'Try again';
+
+  @override
+  String get delete => 'Delete';
+
+  @override
+  String get fieldRequired => 'This field is required.';
+
+  @override
+  String get homeProfiles => 'My patients';
+
+  @override
+  String get homeProfilesSubtitle => 'Yourself, a parent, a child';
+
+  @override
+  String get homeAddresses => 'My addresses';
+
+  @override
+  String get homeAddressesSubtitle => 'Where the caregiver should go';
+
+  @override
+  String get profilesEmpty =>
+      'Add the person who needs care: yourself or a relative.';
+
+  @override
+  String get profileAdd => 'Add a patient';
+
+  @override
+  String get profileNewTitle => 'New patient';
+
+  @override
+  String get profileEditTitle => 'Edit patient';
+
+  @override
+  String get firstNameLabel => 'First name';
+
+  @override
+  String get lastNameLabel => 'Last name';
+
+  @override
+  String get relationshipLabel => 'This person is';
+
+  @override
+  String get relationshipSelf => 'Myself';
+
+  @override
+  String get relationshipParent => 'My father or mother';
+
+  @override
+  String get relationshipChild => 'My child';
+
+  @override
+  String get relationshipSpouse => 'My spouse';
+
+  @override
+  String get relationshipOther => 'Another relative';
+
+  @override
+  String get birthDateLabel => 'Date of birth';
+
+  @override
+  String get birthDateChoose => 'Choose a date';
+
+  @override
+  String get sexLabel => 'Sex';
+
+  @override
+  String get sexFemale => 'Female';
+
+  @override
+  String get sexMale => 'Male';
+
+  @override
+  String get patientPhoneLabel => 'Patient\'s phone (optional)';
+
+  @override
+  String get careNotesLabel => 'Useful information for the caregiver';
+
+  @override
+  String get careNotesHint => 'Allergies, illnesses, mobility…';
+
+  @override
+  String get careNotesPrivacy =>
+      'This information is encrypted. Only the caregiver who visits this patient can see it.';
+
+  @override
+  String get profileDeleteTitle => 'Remove this patient?';
+
+  @override
+  String get profileDeleteBody => 'Their care history is kept.';
+
+  @override
+  String get addressesEmpty => 'Add the address where the caregiver should go.';
+
+  @override
+  String get addressAdd => 'Add an address';
+
+  @override
+  String get addressNewTitle => 'New address';
+
+  @override
+  String get addressEditTitle => 'Edit address';
+
+  @override
+  String get addressLabelLabel => 'Address name';
+
+  @override
+  String get addressLabelHint => 'Home, my mother\'s place…';
+
+  @override
+  String get addressLineLabel => 'Address';
+
+  @override
+  String get addressLineHint => 'Street, number, neighbourhood';
+
+  @override
+  String get accessNotesLabel => 'Landmarks to find the door';
+
+  @override
+  String get accessNotesHint => 'Floor, door colour, nearby shop…';
+
+  @override
+  String get locationLabel => 'GPS position';
+
+  @override
+  String get locationHelp => 'Do this on site, at the patient\'s door.';
+
+  @override
+  String get locationUse => 'Use my current position';
+
+  @override
+  String get locationSet => 'Position saved';
+
+  @override
+  String get locationMissing => 'Save the position of this address.';
+
+  @override
+  String get locationDenied =>
+      'Allow location for Nador Care in the phone settings.';
+
+  @override
+  String get locationDisabled => 'Turn on the phone\'s location (GPS).';
+
+  @override
+  String get locationUnavailable => 'Position not found. Try again outdoors.';
+
+  @override
+  String get addressCovered => 'Area served';
+
+  @override
+  String get addressNotCovered => 'Outside the area served for now';
+
+  @override
+  String get addressDeleteTitle => 'Remove this address?';
 }

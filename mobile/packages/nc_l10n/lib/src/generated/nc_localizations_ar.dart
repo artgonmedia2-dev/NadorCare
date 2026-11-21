@@ -198,4 +198,158 @@ class NcLocalizationsAr extends NcLocalizations {
 
   @override
   String get retry => 'إعادة المحاولة';
+
+  @override
+  String get delete => 'حذف';
+
+  @override
+  String get fieldRequired => 'هذه الخانة إجبارية.';
+
+  @override
+  String get homeProfiles => 'مرضاي';
+
+  @override
+  String get homeProfilesSubtitle => 'أنت، أحد والديك، طفلك';
+
+  @override
+  String get homeAddresses => 'عناويني';
+
+  @override
+  String get homeAddressesSubtitle => 'المكان الذي سيأتي إليه المعالج';
+
+  @override
+  String get profilesEmpty =>
+      'أضف الشخص الذي يحتاج إلى العلاج: أنت أو أحد أقاربك.';
+
+  @override
+  String get profileAdd => 'إضافة مريض';
+
+  @override
+  String get profileNewTitle => 'مريض جديد';
+
+  @override
+  String get profileEditTitle => 'تعديل المريض';
+
+  @override
+  String get firstNameLabel => 'الاسم الشخصي';
+
+  @override
+  String get lastNameLabel => 'الاسم العائلي';
+
+  @override
+  String get relationshipLabel => 'هذا الشخص هو';
+
+  @override
+  String get relationshipSelf => 'أنا';
+
+  @override
+  String get relationshipParent => 'أبي أو أمي';
+
+  @override
+  String get relationshipChild => 'طفلي';
+
+  @override
+  String get relationshipSpouse => 'زوجي أو زوجتي';
+
+  @override
+  String get relationshipOther => 'قريب آخر';
+
+  @override
+  String get birthDateLabel => 'تاريخ الازدياد';
+
+  @override
+  String get birthDateChoose => 'اختيار تاريخ';
+
+  @override
+  String get sexLabel => 'الجنس';
+
+  @override
+  String get sexFemale => 'أنثى';
+
+  @override
+  String get sexMale => 'ذكر';
+
+  @override
+  String get patientPhoneLabel => 'هاتف المريض (اختياري)';
+
+  @override
+  String get careNotesLabel => 'معلومات مفيدة للمعالج';
+
+  @override
+  String get careNotesHint => 'الحساسية، الأمراض، الحركة…';
+
+  @override
+  String get careNotesPrivacy =>
+      'هذه المعلومات مشفرة. لا يراها إلا المعالج الذي يزور هذا المريض.';
+
+  @override
+  String get profileDeleteTitle => 'حذف هذا المريض؟';
+
+  @override
+  String get profileDeleteBody => 'يبقى سجل علاجاته محفوظا.';
+
+  @override
+  String get addressesEmpty => 'أضف العنوان الذي سيأتي إليه المعالج.';
+
+  @override
+  String get addressAdd => 'إضافة عنوان';
+
+  @override
+  String get addressNewTitle => 'عنوان جديد';
+
+  @override
+  String get addressEditTitle => 'تعديل العنوان';
+
+  @override
+  String get addressLabelLabel => 'اسم العنوان';
+
+  @override
+  String get addressLabelHint => 'المنزل، عند أمي…';
+
+  @override
+  String get addressLineLabel => 'العنوان';
+
+  @override
+  String get addressLineHint => 'الزنقة، الرقم، الحي';
+
+  @override
+  String get accessNotesLabel => 'علامات للوصول إلى الباب';
+
+  @override
+  String get accessNotesHint => 'الطابق، لون الباب، متجر قريب…';
+
+  @override
+  String get locationLabel => 'الموقع GPS';
+
+  @override
+  String get locationHelp => 'قم بذلك في عين المكان، أمام باب المريض.';
+
+  @override
+  String get locationUse => 'استعمال موقعي الحالي';
+
+  @override
+  String get locationSet => 'تم حفظ الموقع';
+
+  @override
+  String get locationMissing => 'احفظ موقع هذا العنوان.';
+
+  @override
+  String get locationDenied =>
+      'اسمح لـ Nador Care باستعمال الموقع من إعدادات الهاتف.';
+
+  @override
+  String get locationDisabled => 'شغل خدمة الموقع (GPS) في الهاتف.';
+
+  @override
+  String get locationUnavailable =>
+      'تعذر تحديد الموقع. حاول من جديد في الخارج.';
+
+  @override
+  String get addressCovered => 'منطقة مغطاة';
+
+  @override
+  String get addressNotCovered => 'خارج المنطقة المغطاة حاليا';
+
+  @override
+  String get addressDeleteTitle => 'حذف هذا العنوان؟';
 }

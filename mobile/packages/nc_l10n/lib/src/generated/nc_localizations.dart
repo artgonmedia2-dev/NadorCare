@@ -459,6 +459,306 @@ abstract class NcLocalizations {
   /// In fr, this message translates to:
   /// **'Réessayer'**
   String get retry;
+
+  /// No description provided for @delete.
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer'**
+  String get delete;
+
+  /// No description provided for @fieldRequired.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce champ est obligatoire.'**
+  String get fieldRequired;
+
+  /// No description provided for @homeProfiles.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mes patients'**
+  String get homeProfiles;
+
+  /// No description provided for @homeProfilesSubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous-même, un parent, un enfant'**
+  String get homeProfilesSubtitle;
+
+  /// No description provided for @homeAddresses.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mes adresses'**
+  String get homeAddresses;
+
+  /// No description provided for @homeAddressesSubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Là où le soignant doit se rendre'**
+  String get homeAddressesSubtitle;
+
+  /// No description provided for @profilesEmpty.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajoutez la personne à soigner : vous-même ou un proche.'**
+  String get profilesEmpty;
+
+  /// No description provided for @profileAdd.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter un patient'**
+  String get profileAdd;
+
+  /// No description provided for @profileNewTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouveau patient'**
+  String get profileNewTitle;
+
+  /// No description provided for @profileEditTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier le patient'**
+  String get profileEditTitle;
+
+  /// No description provided for @firstNameLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Prénom'**
+  String get firstNameLabel;
+
+  /// No description provided for @lastNameLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nom'**
+  String get lastNameLabel;
+
+  /// No description provided for @relationshipLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette personne est'**
+  String get relationshipLabel;
+
+  /// No description provided for @relationshipSelf.
+  ///
+  /// In fr, this message translates to:
+  /// **'Moi-même'**
+  String get relationshipSelf;
+
+  /// No description provided for @relationshipParent.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mon père ou ma mère'**
+  String get relationshipParent;
+
+  /// No description provided for @relationshipChild.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mon enfant'**
+  String get relationshipChild;
+
+  /// No description provided for @relationshipSpouse.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mon conjoint ou ma conjointe'**
+  String get relationshipSpouse;
+
+  /// No description provided for @relationshipOther.
+  ///
+  /// In fr, this message translates to:
+  /// **'Un autre proche'**
+  String get relationshipOther;
+
+  /// No description provided for @birthDateLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Date de naissance'**
+  String get birthDateLabel;
+
+  /// No description provided for @birthDateChoose.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisir une date'**
+  String get birthDateChoose;
+
+  /// No description provided for @sexLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Sexe'**
+  String get sexLabel;
+
+  /// No description provided for @sexFemale.
+  ///
+  /// In fr, this message translates to:
+  /// **'Femme'**
+  String get sexFemale;
+
+  /// No description provided for @sexMale.
+  ///
+  /// In fr, this message translates to:
+  /// **'Homme'**
+  String get sexMale;
+
+  /// No description provided for @patientPhoneLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Téléphone du patient (facultatif)'**
+  String get patientPhoneLabel;
+
+  /// No description provided for @careNotesLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Informations utiles au soignant'**
+  String get careNotesLabel;
+
+  /// No description provided for @careNotesHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Allergies, maladies, mobilité…'**
+  String get careNotesHint;
+
+  /// No description provided for @careNotesPrivacy.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ces informations sont chiffrées. Seul le soignant qui intervient chez ce patient les voit.'**
+  String get careNotesPrivacy;
+
+  /// No description provided for @profileDeleteTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Retirer ce patient ?'**
+  String get profileDeleteTitle;
+
+  /// No description provided for @profileDeleteBody.
+  ///
+  /// In fr, this message translates to:
+  /// **'Son historique de soins est conservé.'**
+  String get profileDeleteBody;
+
+  /// No description provided for @addressesEmpty.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajoutez l\'adresse où le soignant doit se rendre.'**
+  String get addressesEmpty;
+
+  /// No description provided for @addressAdd.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter une adresse'**
+  String get addressAdd;
+
+  /// No description provided for @addressNewTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouvelle adresse'**
+  String get addressNewTitle;
+
+  /// No description provided for @addressEditTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier l\'adresse'**
+  String get addressEditTitle;
+
+  /// No description provided for @addressLabelLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nom de l\'adresse'**
+  String get addressLabelLabel;
+
+  /// No description provided for @addressLabelHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Maison, chez ma mère…'**
+  String get addressLabelHint;
+
+  /// No description provided for @addressLineLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Adresse'**
+  String get addressLineLabel;
+
+  /// No description provided for @addressLineHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rue, numéro, quartier'**
+  String get addressLineHint;
+
+  /// No description provided for @accessNotesLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Repères pour trouver la porte'**
+  String get accessNotesLabel;
+
+  /// No description provided for @accessNotesHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Étage, couleur de la porte, commerce voisin…'**
+  String get accessNotesHint;
+
+  /// No description provided for @locationLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Position GPS'**
+  String get locationLabel;
+
+  /// No description provided for @locationHelp.
+  ///
+  /// In fr, this message translates to:
+  /// **'À faire sur place, devant la porte du patient.'**
+  String get locationHelp;
+
+  /// No description provided for @locationUse.
+  ///
+  /// In fr, this message translates to:
+  /// **'Utiliser ma position actuelle'**
+  String get locationUse;
+
+  /// No description provided for @locationSet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Position enregistrée'**
+  String get locationSet;
+
+  /// No description provided for @locationMissing.
+  ///
+  /// In fr, this message translates to:
+  /// **'Enregistrez la position de cette adresse.'**
+  String get locationMissing;
+
+  /// No description provided for @locationDenied.
+  ///
+  /// In fr, this message translates to:
+  /// **'Autorisez la localisation pour Nador Care dans les réglages du téléphone.'**
+  String get locationDenied;
+
+  /// No description provided for @locationDisabled.
+  ///
+  /// In fr, this message translates to:
+  /// **'Activez la localisation (GPS) du téléphone.'**
+  String get locationDisabled;
+
+  /// No description provided for @locationUnavailable.
+  ///
+  /// In fr, this message translates to:
+  /// **'Position introuvable. Réessayez à l\'extérieur.'**
+  String get locationUnavailable;
+
+  /// No description provided for @addressCovered.
+  ///
+  /// In fr, this message translates to:
+  /// **'Zone desservie'**
+  String get addressCovered;
+
+  /// No description provided for @addressNotCovered.
+  ///
+  /// In fr, this message translates to:
+  /// **'Hors zone desservie pour le moment'**
+  String get addressNotCovered;
+
+  /// No description provided for @addressDeleteTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Retirer cette adresse ?'**
+  String get addressDeleteTitle;
 }
 
 class _NcLocalizationsDelegate extends LocalizationsDelegate<NcLocalizations> {

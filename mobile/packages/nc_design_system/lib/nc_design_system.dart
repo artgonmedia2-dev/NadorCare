@@ -6,6 +6,7 @@
 library;
 
 export 'src/nc_buttons.dart';
+export 'src/nc_choice_list.dart';
 export 'src/nc_notice.dart';
 export 'src/nc_page.dart';
 export 'src/nc_spacing.dart';
