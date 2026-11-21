@@ -10,6 +10,14 @@ Lot 3 livré le 2026-11-21 : tâches 3.1 à 3.14 faites, avec trois écarts par 
 - 3.11 : le panneau, le contrôle d'accès et le double facteur obligatoire sont en place et testés. Les écrans de gestion des utilisateurs, des rôles et des journaux sont reportés à la tâche 6.11.
 - 3.14 : le fichier d'intégration continue est écrit mais n'a pas encore tourné sur GitHub (rien n'est poussé).
 
+Lot 4, tâches 4.0 et 4.1 livrées le 2026-11-21 (38 tests Flutter), avec ces écarts :
+
+- 4.0 : Drift n'est pas encore installé. Il arrivera avec le mode hors ligne (tâche 5.7), seul endroit du MVP qui en a besoin.
+- 4.0 : Flutter 3.47.2 (version installée sur la machine) et non 3.50.1, faute d'espace disque pour la mise à jour.
+- 4.0 et 4.1 : aucune compilation Android ni iOS n'a été faite (pas d'émulateur, disque presque plein, pas de Mac). La configuration native est écrite mais n'a jamais tourné sur un appareil.
+- 4.1 : les écrans sont communs aux deux applications. Le design est provisoire, en attendant les maquettes.
+- 4.1 : le consentement affiche les trois accords, sans lien vers les textes légaux, qui n'existent pas encore (tâche 6.10).
+
 ## Lot 3 — Socle technique
 
 | N° | Tâche | Résultat vérifiable |

@@ -9,7 +9,7 @@ Le cahier des charges est à la racine du dépôt. Le cadrage (schéma, découpa
 | Dossier | Contenu | État |
 | --- | --- | --- |
 | `api/` | API Laravel `/api/v1`, back-office Filament, files d'attente, temps réel | Socle technique en place |
-| `mobile/` | Applications Flutter patient et professionnel | À venir (lots 4 et 5) |
+| `mobile/` | Applications Flutter patient et professionnel ([mobile/README.md](mobile/README.md)) | Socle et écrans de compte en place |
 | `web/` | Site public Next.js | À venir (lot 7) |
 | `docs/` | Cadrage, schéma de base de données, `openapi.json` | À jour |
 | `docker/` | Image PHP et initialisation de PostgreSQL | En place |

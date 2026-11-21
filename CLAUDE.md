@@ -10,7 +10,8 @@ Plateforme de coordination de soins à domicile à Nador (Maroc) : application p
 
 - Étape 1 (cadrage) : validée le 2026-11-21.
 - Étape 2 (socle technique, lot 3) : livrée le 2026-11-21 (avancement en tête de `docs/02-decoupage-lots.md`). Reste du lot 3 reporté au lot 6 : écrans Filament de gestion des utilisateurs, des rôles et des journaux.
-- Lots 4 à 7 : pas commencés, en attente des points à trancher (`docs/03-questions-ouvertes.md`, sections B et C).
+- Lot 4 : tâches 4.0 (socle Flutter) et 4.1 (compte) livrées le 2026-11-21. Jamais compilé ni lancé sur un appareil : à faire avant d'aller plus loin côté mobile.
+- Suite des lots 4 à 7 : en attente des points à trancher (`docs/03-questions-ouvertes.md`, sections B et C).
 - Dépôt : `https://github.com/artgonmedia2-dev/NadorCare.git`, branche `main`.
 
 ## Décisions structurantes
@@ -60,7 +61,19 @@ Points d'entrée obligatoires :
 - changer le statut d'une réservation : `TransitionBooking` ;
 - renvoyer une erreur métier : `ApiException('code')`, avec le texte dans `lang/*/api.php`.
 
-`/mobile/packages` : `core` (modèles, erreurs), `api_client`, `design_system`, `l10n`, `offline` (Drift, file de synchronisation).
+Organisation de `/mobile` (espace de travail pub, voir `mobile/README.md`) :
+
+- `apps/patient`, `apps/pro` : un `main.dart` et les écrans propres à chaque application. Tout le reste est partagé.
+- `packages/nc_core` (modèles, `ApiFailure`, `AppConfig`), `nc_api_client` (Dio, épinglage), `nc_l10n` (ARB fr/ar/en), `nc_design_system` (thème et composants provisoires), `nc_account` (connexion OTP, consentement, réglages, biométrie, enveloppe `NadorCareApp` et routes communes).
+- Le paquet `offline` (Drift, file de synchronisation) reste à créer avec la tâche 5.7.
+
+Règles mobiles :
+
+- aucun texte en dur : `context.l10n.cle`, clés dans `nc_l10n/lib/src/arb`, puis `flutter gen-l10n` (les fichiers générés sont commités et vérifiés par la CI) ;
+- les écrans n'utilisent que les composants de `nc_design_system` (`NcPage`, `NcPrimaryButton`, `NcNotice`) et des marges directionnelles, pour l'arabe ;
+- le jeton vit dans le stockage sécurisé (`SecureSessionStorage`), jamais dans les préférences ;
+- les erreurs d'API arrivent en `ApiFailure` ; le message du serveur est déjà traduit, `failureMessage()` le choisit ;
+- les numéros de téléphone et les codes s'affichent toujours de gauche à droite.
 
 ## Règles non négociables
 
@@ -107,15 +120,14 @@ composer analyse                       # Larastan niveau 5
 composer openapi                       # régénère docs/openapi.json (vérifié par la CI)
 composer require <paquet> --ignore-platform-req=ext-pcntl --ignore-platform-req=ext-posix
 
-# Mobile et site : commandes cibles, les projets n'existent pas encore
 # Mobile (dans /mobile)
 flutter pub get
-flutter analyze
-flutter test
-flutter run -t apps/patient/lib/main.dart
-flutter run -t apps/pro/lib/main.dart
+flutter analyze                               # tout l'espace de travail
+cd packages\nc_account; flutter test          # idem dans packages\nc_api_client et apps\patient
+cd packages\nc_l10n; flutter gen-l10n         # après toute modification d'un fichier .arb
+cd apps\patient; flutter run                  # ou apps\pro ; API vue par l'émulateur sur 10.0.2.2:8000
 
-# Site (dans /web)
+# Site (dans /web) : commandes cibles, le projet n'existe pas encore
 pnpm install
 pnpm dev
 pnpm build
