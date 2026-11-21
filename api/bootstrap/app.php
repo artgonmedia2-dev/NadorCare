@@ -10,6 +10,8 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
+use Laravel\Sanctum\Exceptions\MissingAbilityException;
+use Laravel\Sanctum\Http\Middleware\CheckForAnyAbility;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
@@ -24,6 +26,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->api(prepend: [SetLocale::class]);
         $middleware->throttleApi('api');
+        $middleware->alias(['ability' => CheckForAnyAbility::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
@@ -44,7 +47,7 @@ return Application::configure(basePath: dirname(__DIR__))
             return $request->is('api/*') ? $apiError('unauthenticated', 401) : null;
         });
 
-        $exceptions->render(function (AuthorizationException|AccessDeniedHttpException $e, Request $request) use ($apiError) {
+        $exceptions->render(function (AuthorizationException|AccessDeniedHttpException|MissingAbilityException $e, Request $request) use ($apiError) {
             return $request->is('api/*') ? $apiError('forbidden', 403) : null;
         });
 

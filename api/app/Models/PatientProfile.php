@@ -9,7 +9,20 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property string $id
+ * @property string $user_id
+ * @property string $relationship
+ * @property string $first_name
+ * @property string $last_name
+ * @property Carbon|null $birth_date
+ * @property string|null $sex
+ * @property string|null $phone
+ * @property string|null $care_notes
+ * @property-read User $user
+ */
 class PatientProfile extends Model
 {
     /** @use HasFactory<PatientProfileFactory> */

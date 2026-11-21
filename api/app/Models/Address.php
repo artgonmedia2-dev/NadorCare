@@ -10,6 +10,18 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @property string $id
+ * @property string $user_id
+ * @property string|null $patient_profile_id
+ * @property string|null $zone_id
+ * @property string $label
+ * @property string $line
+ * @property string $city
+ * @property Point $location
+ * @property string|null $access_notes
+ * @property-read Zone|null $zone
+ */
 class Address extends Model
 {
     /** @use HasFactory<AddressFactory> */

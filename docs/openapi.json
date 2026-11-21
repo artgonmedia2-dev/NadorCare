@@ -16,6 +16,12 @@
         },
         {
             "name": "Compte"
+        },
+        {
+            "name": "Profils de patients"
+        },
+        {
+            "name": "Adresses"
         }
     ],
     "security": [
@@ -282,6 +288,368 @@
                 }
             }
         },
+        "/patient-profiles": {
+            "get": {
+                "operationId": "v1.patient-profiles.index",
+                "description": "Un compte g\u00e8re plusieurs profils : soi-m\u00eame, un parent, un enfant. Les notes de soin\nne figurent pas dans la liste.",
+                "summary": "Mes profils de patients",
+                "tags": [
+                    "Profils de patients"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Array of `PatientProfileResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/PatientProfileResource"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "v1.patient-profiles.store",
+                "summary": "Ajouter un profil",
+                "tags": [
+                    "Profils de patients"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatientProfileRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "`PatientProfileResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/PatientProfileResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/patient-profiles/{patientProfile}": {
+            "get": {
+                "operationId": "v1.patient-profiles.show",
+                "description": "Renvoie aussi les notes de soin. Cette lecture est inscrite au journal des acc\u00e8s.",
+                "summary": "D\u00e9tail d'un profil",
+                "tags": [
+                    "Profils de patients"
+                ],
+                "parameters": [
+                    {
+                        "name": "patientProfile",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`PatientProfileResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/PatientProfileResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "put": {
+                "operationId": "v1.patient-profiles.update",
+                "summary": "Modifier un profil",
+                "tags": [
+                    "Profils de patients"
+                ],
+                "parameters": [
+                    {
+                        "name": "patientProfile",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatientProfileRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`PatientProfileResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/PatientProfileResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "v1.patient-profiles.destroy",
+                "description": "Refus\u00e9 (`profile_in_use`) tant qu'un soin est pr\u00e9vu ou en cours pour ce patient.",
+                "summary": "Retirer un profil",
+                "tags": [
+                    "Profils de patients"
+                ],
+                "parameters": [
+                    {
+                        "name": "patientProfile",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/addresses": {
+            "get": {
+                "operationId": "v1.addresses.index",
+                "summary": "Mes adresses",
+                "tags": [
+                    "Adresses"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Array of `AddressResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/AddressResource"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "v1.addresses.store",
+                "description": "L'adresse est rattach\u00e9e \u00e0 la zone qui contient ses coordonn\u00e9es. `is_covered` indique\nsi le service y est ouvert ; une adresse hors zone est tout de m\u00eame enregistr\u00e9e.",
+                "summary": "Ajouter une adresse",
+                "tags": [
+                    "Adresses"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AddressRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "`AddressResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/AddressResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/addresses/{address}": {
+            "put": {
+                "operationId": "v1.addresses.update",
+                "summary": "Modifier une adresse",
+                "tags": [
+                    "Adresses"
+                ],
+                "parameters": [
+                    {
+                        "name": "address",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AddressRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`AddressResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/AddressResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "v1.addresses.destroy",
+                "description": "Refus\u00e9 (`address_in_use`) tant qu'un soin est pr\u00e9vu ou en cours \u00e0 cette adresse.",
+                "summary": "Retirer une adresse",
+                "tags": [
+                    "Adresses"
+                ],
+                "parameters": [
+                    {
+                        "name": "address",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/health": {
             "get": {
                 "operationId": "v1.health",
@@ -322,6 +690,128 @@
             }
         },
         "schemas": {
+            "AddressRequest": {
+                "type": "object",
+                "description": "Cr\u00e9ation (POST) ou modification partielle (PATCH) d'une adresse.",
+                "properties": {
+                    "label": {
+                        "type": "string",
+                        "description": "Nom donn\u00e9 \u00e0 l'adresse : \u00ab Maison \u00bb, \u00ab Chez ma m\u00e8re \u00bb\u2026",
+                        "minLength": 1,
+                        "maxLength": 60
+                    },
+                    "line": {
+                        "type": "string",
+                        "minLength": 3,
+                        "maxLength": 255
+                    },
+                    "city": {
+                        "type": "string",
+                        "maxLength": 80
+                    },
+                    "latitude": {
+                        "type": "number",
+                        "description": "Coordonn\u00e9es GPS. Toujours fournies ensemble.\nPas de `sometimes` ici : il ferait sauter la r\u00e8gle \u00ab ensemble \u00bb en modification.",
+                        "minimum": -90,
+                        "maximum": 90
+                    },
+                    "longitude": {
+                        "type": "number",
+                        "minimum": -180,
+                        "maximum": 180
+                    },
+                    "access_notes": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Rep\u00e8res d'acc\u00e8s pour le soignant : \u00e9tage, code, couleur de la porte\u2026",
+                        "maxLength": 500
+                    },
+                    "patient_profile_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Profil du patient qui habite \u00e0 cette adresse, parmi ceux du compte."
+                    }
+                },
+                "title": "AddressRequest"
+            },
+            "AddressResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "label": {
+                        "type": "string"
+                    },
+                    "line": {
+                        "type": "string"
+                    },
+                    "city": {
+                        "type": "string"
+                    },
+                    "latitude": {
+                        "type": "number"
+                    },
+                    "longitude": {
+                        "type": "number"
+                    },
+                    "access_notes": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "patient_profile_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "zone": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "description": "Zone qui contient l'adresse, ou `null` si aucune.",
+                        "properties": {
+                            "id": {
+                                "type": "string"
+                            },
+                            "name": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "name"
+                        ]
+                    },
+                    "is_covered": {
+                        "type": "boolean",
+                        "description": "`true` si l'adresse est dans une zone o\u00f9 le service est ouvert."
+                    }
+                },
+                "required": [
+                    "id",
+                    "label",
+                    "line",
+                    "city",
+                    "latitude",
+                    "longitude",
+                    "access_notes",
+                    "patient_profile_id",
+                    "zone",
+                    "is_covered"
+                ],
+                "title": "AddressResource"
+            },
             "ClientApp": {
                 "type": "string",
                 "description": "Application mobile ou site depuis lequel l'utilisateur s'authentifie.\n",
@@ -330,6 +820,141 @@
                     "pro"
                 ],
                 "title": "ClientApp"
+            },
+            "PatientProfileRequest": {
+                "type": "object",
+                "description": "Cr\u00e9ation (POST) ou modification partielle (PATCH) d'un profil de patient.",
+                "properties": {
+                    "first_name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 80
+                    },
+                    "last_name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 80
+                    },
+                    "relationship": {
+                        "description": "Lien avec le titulaire du compte : `self`, `parent`, `child`, `spouse`, `other`.",
+                        "$ref": "#/components/schemas/PatientRelationship"
+                    },
+                    "birth_date": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date"
+                    },
+                    "sex": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "enum": [
+                            "female",
+                            "male",
+                            null
+                        ]
+                    },
+                    "phone": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Num\u00e9ro du patient lui-m\u00eame, s'il diff\u00e8re de celui du compte.",
+                        "pattern": "^\\+[1-9]\\d{7,14}$"
+                    },
+                    "care_notes": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Informations utiles au soignant (allergies, mobilit\u00e9\u2026). Donn\u00e9e de sant\u00e9, chiffr\u00e9e.",
+                        "maxLength": 2000
+                    }
+                },
+                "required": [
+                    "first_name",
+                    "last_name",
+                    "relationship"
+                ],
+                "title": "PatientProfileRequest"
+            },
+            "PatientProfileResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "relationship": {
+                        "type": "string"
+                    },
+                    "first_name": {
+                        "type": "string"
+                    },
+                    "last_name": {
+                        "type": "string"
+                    },
+                    "birth_date": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date"
+                    },
+                    "sex": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "phone": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "has_care_notes": {
+                        "type": "boolean"
+                    },
+                    "care_notes": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                },
+                "required": [
+                    "id",
+                    "relationship",
+                    "first_name",
+                    "last_name",
+                    "birth_date",
+                    "sex",
+                    "phone",
+                    "has_care_notes",
+                    "created_at"
+                ],
+                "title": "PatientProfileResource"
+            },
+            "PatientRelationship": {
+                "type": "string",
+                "description": "Lien entre le titulaire du compte et le patient d'un profil.\n",
+                "enum": [
+                    "self",
+                    "parent",
+                    "child",
+                    "spouse",
+                    "other"
+                ],
+                "title": "PatientRelationship"
             },
             "RequestOtpRequest": {
                 "type": "object",
@@ -489,6 +1114,25 @@
             },
             "AuthenticationException": {
                 "description": "Unauthenticated",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string",
+                                    "description": "Error overview."
+                                }
+                            },
+                            "required": [
+                                "message"
+                            ]
+                        }
+                    }
+                }
+            },
+            "AuthorizationException": {
+                "description": "Authorization error",
                 "content": {
                     "application/json": {
                         "schema": {

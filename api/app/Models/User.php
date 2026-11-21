@@ -70,16 +70,33 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
         ];
     }
 
+    /**
+     * @return HasMany<PatientProfile, $this>
+     */
     public function patientProfiles(): HasMany
     {
         return $this->hasMany(PatientProfile::class);
     }
 
+    /**
+     * @return HasMany<Address, $this>
+     */
+    public function addresses(): HasMany
+    {
+        return $this->hasMany(Address::class);
+    }
+
+    /**
+     * @return HasOne<Professional, $this>
+     */
     public function professional(): HasOne
     {
         return $this->hasOne(Professional::class);
     }
 
+    /**
+     * @return HasMany<Consent, $this>
+     */
     public function consents(): HasMany
     {
         return $this->hasMany(Consent::class);

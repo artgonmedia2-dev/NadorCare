@@ -17,6 +17,12 @@ return [
         'static_code' => env('OTP_STATIC_CODE'),
     ],
 
+    // Plafonds par compte, contre les abus.
+    'limits' => [
+        'patient_profiles' => (int) env('LIMIT_PATIENT_PROFILES', 10),
+        'addresses' => (int) env('LIMIT_ADDRESSES', 20),
+    ],
+
     'legal' => [
         'documents_version' => env('LEGAL_DOCUMENTS_VERSION', '2026-11'),
     ],

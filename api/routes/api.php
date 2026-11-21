@@ -1,7 +1,9 @@
 <?php
 
+use App\Http\Controllers\Api\V1\AddressController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\MeController;
+use App\Http\Controllers\Api\V1\PatientProfileController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -21,5 +23,12 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('/me', [MeController::class, 'show'])->name('me.show');
         Route::patch('/me', [MeController::class, 'update'])->name('me.update');
+    });
+
+    // Réservé aux jetons de l'application patient (et du site) : un jeton de l'application
+    // professionnel ne gère pas de profils de patients.
+    Route::middleware(['auth:sanctum', 'ability:app:patient'])->group(function () {
+        Route::apiResource('patient-profiles', PatientProfileController::class);
+        Route::apiResource('addresses', AddressController::class)->except('show');
     });
 });

@@ -23,6 +23,11 @@ return [
         'transition_not_allowed' => 'تغيير الحالة هذا غير ممكن.',
         'transition_forbidden' => 'غير مسموح لك بتغيير هذه الحالة.',
         'professional_required' => 'يجب تحديد مهني.',
+        'self_profile_exists' => 'هذا الحساب يتوفر مسبقا على ملف خاص بك.',
+        'profile_limit_reached' => 'لقد بلغت العدد الأقصى للملفات.',
+        'profile_in_use' => 'لهذا الملف علاج مبرمج أو جار. ألغه أو انتظر نهايته.',
+        'address_limit_reached' => 'لقد بلغت العدد الأقصى للعناوين.',
+        'address_in_use' => 'يوجد علاج مبرمج أو جار في هذا العنوان.',
         'server_error' => 'حدث خطأ. حاول لاحقا.',
     ],
 ];

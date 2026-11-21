@@ -23,6 +23,11 @@ return [
         'transition_not_allowed' => 'This status change is not possible.',
         'transition_forbidden' => 'You are not allowed to change this status.',
         'professional_required' => 'A professional must be selected.',
+        'self_profile_exists' => 'This account already has a profile for yourself.',
+        'profile_limit_reached' => 'You have reached the maximum number of profiles.',
+        'profile_in_use' => 'This profile has care planned or in progress. Cancel it or wait until it ends.',
+        'address_limit_reached' => 'You have reached the maximum number of addresses.',
+        'address_in_use' => 'Care is planned or in progress at this address.',
         'server_error' => 'Something went wrong. Try again later.',
     ],
 ];

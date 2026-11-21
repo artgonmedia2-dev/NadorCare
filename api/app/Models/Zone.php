@@ -5,6 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @property string $id
+ * @property array<string, string> $name
+ * @property string $slug
+ * @property bool $is_active
+ */
 class Zone extends Model
 {
     use HasUlids;
