@@ -1,6 +1,7 @@
 <?php
 
 use Dedoc\Scramble\Http\Middleware\RestrictedDocsAccess;
+use Dedoc\Scramble\OpenApiVersion;
 
 return [
     /*
@@ -18,7 +19,7 @@ return [
      * Multiple includes or wildcards → server defaults to / and paths stay full (/api/users).
      * Override with `servers`, or use Scramble::registerApi() for separate bases.
      */
-    'api_path' => 'api',
+    'api_path' => 'api/v1',
 
     /*
      * Your API domain. By default, app domain is used. This is also a part of the default API routes
@@ -44,22 +45,22 @@ return [
     /*
      * OpenAPI version of the resulting document.
      */
-    'openapi_version' => \Dedoc\Scramble\OpenApiVersion::V3_1,
+    'openapi_version' => OpenApiVersion::V3_1,
 
     'info' => [
         /*
          * API version.
          */
-        'version' => env('API_VERSION', '0.0.1'),
+        'version' => env('API_VERSION', '1.0.0'),
 
         /*
          * Description rendered on the home page of the API documentation (`/docs/api`).
          */
-        'description' => '',
+        'description' => 'API de la plateforme Nador Care (soins à domicile). Authentification par téléphone et code OTP, puis jeton `Bearer`. Langue des réponses : en-tête `Accept-Language` (`fr`, `ar`, `en`). Erreurs au format `{ message, code }`, où `code` est stable.',
     ],
 
     'ui' => [
-        'title' => null,
+        'title' => 'Nador Care — API',
     ],
 
     /*
