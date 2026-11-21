@@ -855,6 +855,348 @@ abstract class NcLocalizations {
   /// In fr, this message translates to:
   /// **'La réservation arrive bientôt dans l\'application.'**
   String get bookingSoon;
+
+  /// No description provided for @bookService.
+  ///
+  /// In fr, this message translates to:
+  /// **'Réserver ce soin'**
+  String get bookService;
+
+  /// No description provided for @homeBookings.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mes réservations'**
+  String get homeBookings;
+
+  /// No description provided for @homeBookingsSubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Suivre ou annuler une demande'**
+  String get homeBookingsSubtitle;
+
+  /// No description provided for @bookingStepPatientTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pour qui est ce soin ?'**
+  String get bookingStepPatientTitle;
+
+  /// No description provided for @bookingStepAddressTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Où le soignant doit-il venir ?'**
+  String get bookingStepAddressTitle;
+
+  /// No description provided for @bookingStepSlotTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Quand ?'**
+  String get bookingStepSlotTitle;
+
+  /// No description provided for @bookingStepSummaryTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérifiez votre demande'**
+  String get bookingStepSummaryTitle;
+
+  /// No description provided for @bookingNoProfile.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajoutez d\'abord la personne à soigner.'**
+  String get bookingNoProfile;
+
+  /// No description provided for @bookingNoAddress.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajoutez d\'abord l\'adresse du patient.'**
+  String get bookingNoAddress;
+
+  /// No description provided for @bookingChoosePatient.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisissez un patient.'**
+  String get bookingChoosePatient;
+
+  /// No description provided for @bookingChooseAddress.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisissez une adresse.'**
+  String get bookingChooseAddress;
+
+  /// No description provided for @bookingAddressNotCovered.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette adresse est hors de la zone desservie pour le moment.'**
+  String get bookingAddressNotCovered;
+
+  /// No description provided for @slotAsap.
+  ///
+  /// In fr, this message translates to:
+  /// **'Dès que possible'**
+  String get slotAsap;
+
+  /// No description provided for @slotChooseDay.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisir un jour'**
+  String get slotChooseDay;
+
+  /// No description provided for @slotNadorTime.
+  ///
+  /// In fr, this message translates to:
+  /// **'Les heures sont celles de Nador.'**
+  String get slotNadorTime;
+
+  /// No description provided for @slotNone.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun créneau ce jour-là. Choisissez un autre jour.'**
+  String get slotNone;
+
+  /// No description provided for @slotChoose.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisissez un créneau.'**
+  String get slotChoose;
+
+  /// No description provided for @summaryService.
+  ///
+  /// In fr, this message translates to:
+  /// **'Soin'**
+  String get summaryService;
+
+  /// No description provided for @summaryPatient.
+  ///
+  /// In fr, this message translates to:
+  /// **'Patient'**
+  String get summaryPatient;
+
+  /// No description provided for @summaryAddress.
+  ///
+  /// In fr, this message translates to:
+  /// **'Adresse'**
+  String get summaryAddress;
+
+  /// No description provided for @summarySlot.
+  ///
+  /// In fr, this message translates to:
+  /// **'Créneau'**
+  String get summarySlot;
+
+  /// No description provided for @summaryPayment.
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement'**
+  String get summaryPayment;
+
+  /// No description provided for @summaryBasePrice.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tarif'**
+  String get summaryBasePrice;
+
+  /// No description provided for @summaryTotal.
+  ///
+  /// In fr, this message translates to:
+  /// **'Total'**
+  String get summaryTotal;
+
+  /// No description provided for @paymentCash.
+  ///
+  /// In fr, this message translates to:
+  /// **'Espèces, à régler au soignant'**
+  String get paymentCash;
+
+  /// No description provided for @noteLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Note pour le soignant (facultatif)'**
+  String get noteLabel;
+
+  /// No description provided for @noteHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Exemple : sonner deux fois'**
+  String get noteHint;
+
+  /// No description provided for @prescriptionCamera.
+  ///
+  /// In fr, this message translates to:
+  /// **'Prendre l\'ordonnance en photo'**
+  String get prescriptionCamera;
+
+  /// No description provided for @prescriptionGallery.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisir une photo de l\'ordonnance'**
+  String get prescriptionGallery;
+
+  /// No description provided for @prescriptionAdded.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ordonnance ajoutée'**
+  String get prescriptionAdded;
+
+  /// No description provided for @prescriptionMissing.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajoutez l\'ordonnance pour envoyer la demande.'**
+  String get prescriptionMissing;
+
+  /// No description provided for @bookingConfirm.
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyer ma demande'**
+  String get bookingConfirm;
+
+  /// No description provided for @bookingSentTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande envoyée'**
+  String get bookingSentTitle;
+
+  /// No description provided for @bookingSentBody.
+  ///
+  /// In fr, this message translates to:
+  /// **'La coordination va valider votre demande {reference}. Gardez ce numéro.'**
+  String bookingSentBody(String reference);
+
+  /// No description provided for @bookingSeeMine.
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir mes réservations'**
+  String get bookingSeeMine;
+
+  /// No description provided for @bookingsEmpty.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous n\'avez aucune réservation en cours.'**
+  String get bookingsEmpty;
+
+  /// No description provided for @bookingsPastEmpty.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune réservation passée.'**
+  String get bookingsPastEmpty;
+
+  /// No description provided for @bookingsUpcoming.
+  ///
+  /// In fr, this message translates to:
+  /// **'En cours et à venir'**
+  String get bookingsUpcoming;
+
+  /// No description provided for @bookingsPast.
+  ///
+  /// In fr, this message translates to:
+  /// **'Passées'**
+  String get bookingsPast;
+
+  /// No description provided for @statusPending.
+  ///
+  /// In fr, this message translates to:
+  /// **'En attente de validation'**
+  String get statusPending;
+
+  /// No description provided for @statusConfirmed.
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmée, recherche d\'un soignant'**
+  String get statusConfirmed;
+
+  /// No description provided for @statusAssigned.
+  ///
+  /// In fr, this message translates to:
+  /// **'Soignant affecté'**
+  String get statusAssigned;
+
+  /// No description provided for @statusEnRoute.
+  ///
+  /// In fr, this message translates to:
+  /// **'Soignant en route'**
+  String get statusEnRoute;
+
+  /// No description provided for @statusInProgress.
+  ///
+  /// In fr, this message translates to:
+  /// **'Soin en cours'**
+  String get statusInProgress;
+
+  /// No description provided for @statusCompleted.
+  ///
+  /// In fr, this message translates to:
+  /// **'Terminée'**
+  String get statusCompleted;
+
+  /// No description provided for @statusCancelled.
+  ///
+  /// In fr, this message translates to:
+  /// **'Annulée'**
+  String get statusCancelled;
+
+  /// No description provided for @statusDisputed.
+  ///
+  /// In fr, this message translates to:
+  /// **'En cours d\'examen'**
+  String get statusDisputed;
+
+  /// No description provided for @bookingReference.
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande {reference}'**
+  String bookingReference(String reference);
+
+  /// No description provided for @dateAtTime.
+  ///
+  /// In fr, this message translates to:
+  /// **'{date} à {time}'**
+  String dateAtTime(String date, String time);
+
+  /// No description provided for @bookingCancel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Annuler la réservation'**
+  String get bookingCancel;
+
+  /// No description provided for @bookingCancelTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Annuler cette réservation ?'**
+  String get bookingCancelTitle;
+
+  /// No description provided for @bookingCancelFree.
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'annulation est gratuite.'**
+  String get bookingCancelFree;
+
+  /// No description provided for @bookingCancelFee.
+  ///
+  /// In fr, this message translates to:
+  /// **'Des frais d\'annulation de {amount} DH s\'appliquent.'**
+  String bookingCancelFee(String amount);
+
+  /// No description provided for @bookingCancelConfirm.
+  ///
+  /// In fr, this message translates to:
+  /// **'Oui, annuler'**
+  String get bookingCancelConfirm;
+
+  /// No description provided for @bookingKeep.
+  ///
+  /// In fr, this message translates to:
+  /// **'Garder la réservation'**
+  String get bookingKeep;
+
+  /// No description provided for @bookingFeeCharged.
+  ///
+  /// In fr, this message translates to:
+  /// **'Frais d\'annulation : {amount} DH'**
+  String bookingFeeCharged(String amount);
+
+  /// No description provided for @back.
+  ///
+  /// In fr, this message translates to:
+  /// **'Retour'**
+  String get back;
 }
 
 class _NcLocalizationsDelegate extends LocalizationsDelegate<NcLocalizations> {

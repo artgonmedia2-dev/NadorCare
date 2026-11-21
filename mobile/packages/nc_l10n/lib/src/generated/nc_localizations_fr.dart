@@ -434,4 +434,187 @@ class NcLocalizationsFr extends NcLocalizations {
   @override
   String get bookingSoon =>
       'La réservation arrive bientôt dans l\'application.';
+
+  @override
+  String get bookService => 'Réserver ce soin';
+
+  @override
+  String get homeBookings => 'Mes réservations';
+
+  @override
+  String get homeBookingsSubtitle => 'Suivre ou annuler une demande';
+
+  @override
+  String get bookingStepPatientTitle => 'Pour qui est ce soin ?';
+
+  @override
+  String get bookingStepAddressTitle => 'Où le soignant doit-il venir ?';
+
+  @override
+  String get bookingStepSlotTitle => 'Quand ?';
+
+  @override
+  String get bookingStepSummaryTitle => 'Vérifiez votre demande';
+
+  @override
+  String get bookingNoProfile => 'Ajoutez d\'abord la personne à soigner.';
+
+  @override
+  String get bookingNoAddress => 'Ajoutez d\'abord l\'adresse du patient.';
+
+  @override
+  String get bookingChoosePatient => 'Choisissez un patient.';
+
+  @override
+  String get bookingChooseAddress => 'Choisissez une adresse.';
+
+  @override
+  String get bookingAddressNotCovered =>
+      'Cette adresse est hors de la zone desservie pour le moment.';
+
+  @override
+  String get slotAsap => 'Dès que possible';
+
+  @override
+  String get slotChooseDay => 'Choisir un jour';
+
+  @override
+  String get slotNadorTime => 'Les heures sont celles de Nador.';
+
+  @override
+  String get slotNone => 'Aucun créneau ce jour-là. Choisissez un autre jour.';
+
+  @override
+  String get slotChoose => 'Choisissez un créneau.';
+
+  @override
+  String get summaryService => 'Soin';
+
+  @override
+  String get summaryPatient => 'Patient';
+
+  @override
+  String get summaryAddress => 'Adresse';
+
+  @override
+  String get summarySlot => 'Créneau';
+
+  @override
+  String get summaryPayment => 'Paiement';
+
+  @override
+  String get summaryBasePrice => 'Tarif';
+
+  @override
+  String get summaryTotal => 'Total';
+
+  @override
+  String get paymentCash => 'Espèces, à régler au soignant';
+
+  @override
+  String get noteLabel => 'Note pour le soignant (facultatif)';
+
+  @override
+  String get noteHint => 'Exemple : sonner deux fois';
+
+  @override
+  String get prescriptionCamera => 'Prendre l\'ordonnance en photo';
+
+  @override
+  String get prescriptionGallery => 'Choisir une photo de l\'ordonnance';
+
+  @override
+  String get prescriptionAdded => 'Ordonnance ajoutée';
+
+  @override
+  String get prescriptionMissing =>
+      'Ajoutez l\'ordonnance pour envoyer la demande.';
+
+  @override
+  String get bookingConfirm => 'Envoyer ma demande';
+
+  @override
+  String get bookingSentTitle => 'Demande envoyée';
+
+  @override
+  String bookingSentBody(String reference) {
+    return 'La coordination va valider votre demande $reference. Gardez ce numéro.';
+  }
+
+  @override
+  String get bookingSeeMine => 'Voir mes réservations';
+
+  @override
+  String get bookingsEmpty => 'Vous n\'avez aucune réservation en cours.';
+
+  @override
+  String get bookingsPastEmpty => 'Aucune réservation passée.';
+
+  @override
+  String get bookingsUpcoming => 'En cours et à venir';
+
+  @override
+  String get bookingsPast => 'Passées';
+
+  @override
+  String get statusPending => 'En attente de validation';
+
+  @override
+  String get statusConfirmed => 'Confirmée, recherche d\'un soignant';
+
+  @override
+  String get statusAssigned => 'Soignant affecté';
+
+  @override
+  String get statusEnRoute => 'Soignant en route';
+
+  @override
+  String get statusInProgress => 'Soin en cours';
+
+  @override
+  String get statusCompleted => 'Terminée';
+
+  @override
+  String get statusCancelled => 'Annulée';
+
+  @override
+  String get statusDisputed => 'En cours d\'examen';
+
+  @override
+  String bookingReference(String reference) {
+    return 'Demande $reference';
+  }
+
+  @override
+  String dateAtTime(String date, String time) {
+    return '$date à $time';
+  }
+
+  @override
+  String get bookingCancel => 'Annuler la réservation';
+
+  @override
+  String get bookingCancelTitle => 'Annuler cette réservation ?';
+
+  @override
+  String get bookingCancelFree => 'L\'annulation est gratuite.';
+
+  @override
+  String bookingCancelFee(String amount) {
+    return 'Des frais d\'annulation de $amount DH s\'appliquent.';
+  }
+
+  @override
+  String get bookingCancelConfirm => 'Oui, annuler';
+
+  @override
+  String get bookingKeep => 'Garder la réservation';
+
+  @override
+  String bookingFeeCharged(String amount) {
+    return 'Frais d\'annulation : $amount DH';
+  }
+
+  @override
+  String get back => 'Retour';
 }

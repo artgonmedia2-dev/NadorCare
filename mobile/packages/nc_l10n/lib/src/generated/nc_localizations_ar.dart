@@ -420,4 +420,186 @@ class NcLocalizationsAr extends NcLocalizations {
 
   @override
   String get bookingSoon => 'الحجز سيتوفر قريبا في التطبيق.';
+
+  @override
+  String get bookService => 'حجز هذا العلاج';
+
+  @override
+  String get homeBookings => 'حجوزاتي';
+
+  @override
+  String get homeBookingsSubtitle => 'متابعة طلب أو إلغاؤه';
+
+  @override
+  String get bookingStepPatientTitle => 'لمن هذا العلاج؟';
+
+  @override
+  String get bookingStepAddressTitle => 'إلى أين يأتي المعالج؟';
+
+  @override
+  String get bookingStepSlotTitle => 'متى؟';
+
+  @override
+  String get bookingStepSummaryTitle => 'راجع طلبك';
+
+  @override
+  String get bookingNoProfile => 'أضف أولا الشخص الذي يحتاج إلى العلاج.';
+
+  @override
+  String get bookingNoAddress => 'أضف أولا عنوان المريض.';
+
+  @override
+  String get bookingChoosePatient => 'اختر مريضا.';
+
+  @override
+  String get bookingChooseAddress => 'اختر عنوانا.';
+
+  @override
+  String get bookingAddressNotCovered =>
+      'هذا العنوان خارج المنطقة المغطاة حاليا.';
+
+  @override
+  String get slotAsap => 'في أقرب وقت';
+
+  @override
+  String get slotChooseDay => 'اختيار يوم';
+
+  @override
+  String get slotNadorTime => 'الأوقات بتوقيت الناظور.';
+
+  @override
+  String get slotNone => 'لا يوجد موعد في هذا اليوم. اختر يوما آخر.';
+
+  @override
+  String get slotChoose => 'اختر موعدا.';
+
+  @override
+  String get summaryService => 'العلاج';
+
+  @override
+  String get summaryPatient => 'المريض';
+
+  @override
+  String get summaryAddress => 'العنوان';
+
+  @override
+  String get summarySlot => 'الموعد';
+
+  @override
+  String get summaryPayment => 'الأداء';
+
+  @override
+  String get summaryBasePrice => 'السعر';
+
+  @override
+  String get summaryTotal => 'المجموع';
+
+  @override
+  String get paymentCash => 'نقدا، يؤدى للمعالج';
+
+  @override
+  String get noteLabel => 'ملاحظة للمعالج (اختياري)';
+
+  @override
+  String get noteHint => 'مثال: اضغط على الجرس مرتين';
+
+  @override
+  String get prescriptionCamera => 'تصوير الوصفة الطبية';
+
+  @override
+  String get prescriptionGallery => 'اختيار صورة للوصفة الطبية';
+
+  @override
+  String get prescriptionAdded => 'تمت إضافة الوصفة الطبية';
+
+  @override
+  String get prescriptionMissing => 'أضف الوصفة الطبية لإرسال الطلب.';
+
+  @override
+  String get bookingConfirm => 'إرسال طلبي';
+
+  @override
+  String get bookingSentTitle => 'تم إرسال الطلب';
+
+  @override
+  String bookingSentBody(String reference) {
+    return 'سيقوم فريق التنسيق بتأكيد طلبك $reference. احتفظ بهذا الرقم.';
+  }
+
+  @override
+  String get bookingSeeMine => 'عرض حجوزاتي';
+
+  @override
+  String get bookingsEmpty => 'ليس لديك أي حجز جار.';
+
+  @override
+  String get bookingsPastEmpty => 'لا يوجد أي حجز سابق.';
+
+  @override
+  String get bookingsUpcoming => 'الجارية والقادمة';
+
+  @override
+  String get bookingsPast => 'السابقة';
+
+  @override
+  String get statusPending => 'في انتظار التأكيد';
+
+  @override
+  String get statusConfirmed => 'مؤكد، جار البحث عن معالج';
+
+  @override
+  String get statusAssigned => 'تم تعيين معالج';
+
+  @override
+  String get statusEnRoute => 'المعالج في الطريق';
+
+  @override
+  String get statusInProgress => 'العلاج جار';
+
+  @override
+  String get statusCompleted => 'انتهى';
+
+  @override
+  String get statusCancelled => 'ملغى';
+
+  @override
+  String get statusDisputed => 'قيد الدراسة';
+
+  @override
+  String bookingReference(String reference) {
+    return 'الطلب $reference';
+  }
+
+  @override
+  String dateAtTime(String date, String time) {
+    return '$date على الساعة $time';
+  }
+
+  @override
+  String get bookingCancel => 'إلغاء الحجز';
+
+  @override
+  String get bookingCancelTitle => 'إلغاء هذا الحجز؟';
+
+  @override
+  String get bookingCancelFree => 'الإلغاء مجاني.';
+
+  @override
+  String bookingCancelFee(String amount) {
+    return 'تطبق رسوم إلغاء قدرها $amount درهم.';
+  }
+
+  @override
+  String get bookingCancelConfirm => 'نعم، إلغاء';
+
+  @override
+  String get bookingKeep => 'الاحتفاظ بالحجز';
+
+  @override
+  String bookingFeeCharged(String amount) {
+    return 'رسوم الإلغاء: $amount درهم';
+  }
+
+  @override
+  String get back => 'رجوع';
 }

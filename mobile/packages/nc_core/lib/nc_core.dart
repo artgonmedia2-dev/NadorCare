@@ -4,6 +4,8 @@ library;
 export 'src/api_failure.dart';
 export 'src/app_config.dart';
 export 'src/app_user.dart';
+export 'src/bidi.dart';
+export 'src/booking.dart';
 export 'src/care_service.dart';
 export 'src/client_app.dart';
 export 'src/patient_address.dart';

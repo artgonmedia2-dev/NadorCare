@@ -55,6 +55,21 @@ class ApiClient {
   Future<Map<String, dynamic>> patch(String path, Map<String, dynamic> body) =>
       _send(() => _dio.patch<dynamic>(path, data: body));
 
+  /// Envoi d'un fichier en `multipart/form-data`.
+  Future<Map<String, dynamic>> upload(
+    String path, {
+    required String field,
+    required List<int> bytes,
+    required String filename,
+  }) {
+    return _send(
+      () => _dio.post<dynamic>(
+        path,
+        data: FormData.fromMap(<String, dynamic>{field: MultipartFile.fromBytes(bytes, filename: filename)}),
+      ),
+    );
+  }
+
   Future<void> delete(String path) async {
     await _send(() => _dio.delete<dynamic>(path));
   }
