@@ -17,6 +17,9 @@ x-api: &api
     REDIS_PORT: 6379
     REDIS_CLIENT: phpredis
     REVERB_SERVER_HOST: 0.0.0.0
+    # Depuis un conteneur, le serveur WebSocket se joint par son nom de service.
+    REVERB_HOST: reverb
+    REVERB_PORT: 8080
   depends_on:
     postgres:
       condition: service_healthy
@@ -24,8 +27,12 @@ x-api: &api
       condition: service_healthy
 
 services:
+  # Serveur HTTP de l'API. Sous Windows, le dossier monté rend chaque requête très lente :
+  # on sert alors l'API en natif (php artisan serve) et ce service ne démarre que sur demande
+  # avec `docker compose --profile full up -d`. Sous Linux, macOS ou en CI, il convient tel quel.
   api:
     <<: *api
+    profiles: [full]
     ports:
       - "${API_PORT:-8000}:8000"
 
