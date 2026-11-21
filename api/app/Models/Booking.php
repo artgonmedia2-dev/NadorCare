@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\BookingStatus;
 use Database\Factories\BookingFactory;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -22,6 +23,19 @@ use Illuminate\Support\Carbon;
  * @property string|null $cancelled_by
  * @property string|null $cancellation_reason
  * @property Carbon $scheduled_at
+ * @property Carbon|null $scheduled_end_at
+ * @property string $type
+ * @property int $base_price
+ * @property int $surcharges_total
+ * @property int $total_price
+ * @property int $cancellation_fee
+ * @property string $payment_method
+ * @property string|null $prescription_file_id
+ * @property array<string, mixed>|null $address_snapshot
+ * @property array<string, mixed>|null $price_snapshot
+ * @property-read Service $service
+ * @property-read PatientProfile $patientProfile
+ * @property-read Collection<int, BookingStatusHistory> $statusHistory
  */
 class Booking extends Model
 {
@@ -57,26 +71,41 @@ class Booking extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * @return BelongsTo<PatientProfile, $this>
+     */
     public function patientProfile(): BelongsTo
     {
         return $this->belongsTo(PatientProfile::class);
     }
 
+    /**
+     * @return BelongsTo<Service, $this>
+     */
     public function service(): BelongsTo
     {
         return $this->belongsTo(Service::class);
     }
 
+    /**
+     * @return BelongsTo<Professional, $this>
+     */
     public function professional(): BelongsTo
     {
         return $this->belongsTo(Professional::class);
     }
 
+    /**
+     * @return HasMany<BookingStatusHistory, $this>
+     */
     public function statusHistory(): HasMany
     {
         return $this->hasMany(BookingStatusHistory::class)->orderBy('created_at')->orderBy('id');

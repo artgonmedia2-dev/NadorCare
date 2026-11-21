@@ -87,6 +87,16 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
     }
 
     /**
+     * Réservations demandées par ce compte, pour lui-même ou pour un proche.
+     *
+     * @return HasMany<Booking, $this>
+     */
+    public function bookings(): HasMany
+    {
+        return $this->hasMany(Booking::class);
+    }
+
+    /**
      * @return HasOne<Professional, $this>
      */
     public function professional(): HasOne

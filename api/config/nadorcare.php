@@ -5,6 +5,9 @@ return [
     // Langues prises en charge par l'API, le back-office et les notifications.
     'locales' => ['fr', 'ar', 'en'],
 
+    // Fuseau des horaires de service et des créneaux. Les dates restent stockées en UTC.
+    'timezone' => env('SERVICE_TIMEZONE', 'Africa/Casablanca'),
+
     // Documentation OpenAPI en ligne (/docs/api) hors environnement local.
     'api_docs_enabled' => (bool) env('SCRAMBLE_ENABLED', false),
 

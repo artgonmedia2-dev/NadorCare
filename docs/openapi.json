@@ -25,6 +25,9 @@
         },
         {
             "name": "Catalogue"
+        },
+        {
+            "name": "R\u00e9servations"
         }
     ],
     "security": [
@@ -787,6 +790,463 @@
                 "security": []
             }
         },
+        "/files/prescriptions": {
+            "post": {
+                "operationId": "v1.prescriptions.store",
+                "description": "Photo ou PDF de l'ordonnance, \u00e0 envoyer avant de r\u00e9server un soin qui l'exige.\nLe fichier est chiffr\u00e9 avant d'\u00eatre stock\u00e9. L'identifiant renvoy\u00e9 se passe ensuite\ndans `prescription_file_id`.",
+                "summary": "D\u00e9poser une ordonnance",
+                "tags": [
+                    "R\u00e9servations"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "file": {
+                                        "type": "string",
+                                        "format": "binary",
+                                        "contentMediaType": "application/octet-stream",
+                                        "description": "Image JPEG ou PNG, ou PDF. 10 Mo au plus."
+                                    }
+                                },
+                                "required": [
+                                    "file"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string"
+                                                },
+                                                "mime": {
+                                                    "type": "string"
+                                                },
+                                                "size": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "mime",
+                                                "size"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/bookings/slots": {
+            "get": {
+                "operationId": "v1.bookings.slots",
+                "description": "D\u00e9buts de cr\u00e9neau encore disponibles pour un service, un jour donn\u00e9 (heure de Nador).\nLa liste est vide si le jour est pass\u00e9, trop lointain, ou si les horaires sont d\u00e9pass\u00e9s.",
+                "summary": "Cr\u00e9neaux r\u00e9servables",
+                "tags": [
+                    "R\u00e9servations"
+                ],
+                "parameters": [
+                    {
+                        "name": "service_id",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "date",
+                        "in": "query",
+                        "required": true,
+                        "description": "Jour voulu, au format `AAAA-MM-JJ`.",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "date": {
+                                                    "type": "string"
+                                                },
+                                                "timezone": {
+                                                    "type": "string"
+                                                },
+                                                "slots": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "immediate_available": {
+                                                    "type": "boolean",
+                                                    "description": "Une demande \u00ab d\u00e8s que possible \u00bb est accept\u00e9e en ce moment."
+                                                }
+                                            },
+                                            "required": [
+                                                "date",
+                                                "timezone",
+                                                "slots",
+                                                "immediate_available"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/bookings/quote": {
+            "post": {
+                "operationId": "v1.bookings.quote",
+                "description": "Prix d'un soin \u00e0 un cr\u00e9neau donn\u00e9, avec les majorations qui s'appliquent.",
+                "summary": "Devis",
+                "tags": [
+                    "R\u00e9servations"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "service_id": {
+                                        "type": "string"
+                                    },
+                                    "scheduled_at": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "format": "date-time",
+                                        "description": "D\u00e9but du cr\u00e9neau. Absent : le prix est calcul\u00e9 pour maintenant."
+                                    }
+                                },
+                                "required": [
+                                    "service_id"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "base": {
+                                                    "type": "integer"
+                                                },
+                                                "surcharges": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "label": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "amount": {
+                                                                "type": "integer"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "label",
+                                                            "amount"
+                                                        ]
+                                                    }
+                                                },
+                                                "total": {
+                                                    "type": "integer"
+                                                },
+                                                "currency": {
+                                                    "type": "string",
+                                                    "const": "MAD"
+                                                }
+                                            },
+                                            "required": [
+                                                "base",
+                                                "surcharges",
+                                                "total",
+                                                "currency"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/bookings": {
+            "get": {
+                "operationId": "v1.bookings.index",
+                "summary": "Mes r\u00e9servations",
+                "tags": [
+                    "R\u00e9servations"
+                ],
+                "parameters": [
+                    {
+                        "name": "scope",
+                        "in": "query",
+                        "description": "`upcoming` (\u00e0 venir ou en cours, par d\u00e9faut) ou `past` (termin\u00e9es et annul\u00e9es).",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "upcoming",
+                                "past"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Array of `BookingResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/BookingResource"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "v1.bookings.store",
+                "description": "La demande est cr\u00e9\u00e9e \u00ab en attente \u00bb : la coordination la confirme ensuite.\nSeul le paiement en esp\u00e8ces est ouvert pour l'instant.",
+                "summary": "R\u00e9server un soin",
+                "tags": [
+                    "R\u00e9servations"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreBookingRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "`BookingResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/BookingResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/bookings/{booking}": {
+            "get": {
+                "operationId": "v1.bookings.show",
+                "description": "Renvoie aussi la note du patient et l'historique des statuts. Cette lecture est\ninscrite au journal des acc\u00e8s.",
+                "summary": "D\u00e9tail d'une r\u00e9servation",
+                "tags": [
+                    "R\u00e9servations"
+                ],
+                "parameters": [
+                    {
+                        "name": "booking",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`BookingResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/BookingResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/bookings/{booking}/cancel": {
+            "post": {
+                "operationId": "v1.bookings.cancel",
+                "description": "Gratuit jusqu'\u00e0 `free_cancellation_until`, avec des frais au-del\u00e0.",
+                "summary": "Annuler une r\u00e9servation",
+                "tags": [
+                    "R\u00e9servations"
+                ],
+                "parameters": [
+                    {
+                        "name": "booking",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "reason": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 500
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`BookingResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/BookingResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/health": {
             "get": {
                 "operationId": "v1.health",
@@ -948,6 +1408,217 @@
                     "is_covered"
                 ],
                 "title": "AddressResource"
+            },
+            "BookingResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "reference": {
+                        "type": "string",
+                        "description": "Num\u00e9ro lisible, \u00e0 donner au t\u00e9l\u00e9phone : `NC-2026-000123`."
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "pending",
+                            "confirmed",
+                            "assigned",
+                            "en_route",
+                            "in_progress",
+                            "completed",
+                            "cancelled",
+                            "disputed"
+                        ]
+                    },
+                    "type": {
+                        "type": "string"
+                    },
+                    "scheduled_at": {
+                        "type": "string"
+                    },
+                    "scheduled_end_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "service": {
+                        "type": "object",
+                        "properties": {
+                            "slug": {
+                                "type": "string"
+                            },
+                            "name": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "slug",
+                            "name"
+                        ]
+                    },
+                    "patient": {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "string"
+                            },
+                            "first_name": {
+                                "type": "string"
+                            },
+                            "last_name": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "first_name",
+                            "last_name"
+                        ]
+                    },
+                    "address": {
+                        "type": "object",
+                        "description": "Adresse telle qu'elle \u00e9tait au moment de la demande.",
+                        "properties": {
+                            "label": {},
+                            "line": {},
+                            "city": {}
+                        },
+                        "required": [
+                            "label",
+                            "line",
+                            "city"
+                        ]
+                    },
+                    "price": {
+                        "type": "object",
+                        "description": "Prix fig\u00e9 \u00e0 la demande, en centimes de dirham.",
+                        "properties": {
+                            "base": {
+                                "type": "integer"
+                            },
+                            "surcharges": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "label": {
+                                            "type": [
+                                                "string",
+                                                "null"
+                                            ]
+                                        },
+                                        "amount": {
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "required": [
+                                        "label",
+                                        "amount"
+                                    ]
+                                }
+                            },
+                            "total": {
+                                "type": "integer"
+                            },
+                            "currency": {
+                                "type": "string",
+                                "const": "MAD"
+                            }
+                        },
+                        "required": [
+                            "base",
+                            "surcharges",
+                            "total",
+                            "currency"
+                        ]
+                    },
+                    "payment_method": {
+                        "type": "string"
+                    },
+                    "has_prescription": {
+                        "type": "boolean"
+                    },
+                    "can_cancel": {
+                        "type": "boolean"
+                    },
+                    "free_cancellation_until": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Dernier moment pour annuler sans frais."
+                    },
+                    "cancellation_fee_if_cancelled_now": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Frais dus si la r\u00e9servation \u00e9tait annul\u00e9e maintenant."
+                    },
+                    "cancellation_fee": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "description": "Frais retenus, une fois la r\u00e9servation annul\u00e9e."
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "patient_note": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "history": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "status": {
+                                    "type": "string"
+                                },
+                                "at": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "status",
+                                "at"
+                            ]
+                        }
+                    }
+                },
+                "required": [
+                    "id",
+                    "reference",
+                    "status",
+                    "type",
+                    "scheduled_at",
+                    "scheduled_end_at",
+                    "service",
+                    "patient",
+                    "address",
+                    "price",
+                    "payment_method",
+                    "has_prescription",
+                    "can_cancel",
+                    "free_cancellation_until",
+                    "cancellation_fee_if_cancelled_now",
+                    "cancellation_fee",
+                    "created_at"
+                ],
+                "title": "BookingResource"
             },
             "ClientApp": {
                 "type": "string",
@@ -1227,6 +1898,69 @@
                     "professional_category"
                 ],
                 "title": "ServiceResource"
+            },
+            "StoreBookingRequest": {
+                "type": "object",
+                "properties": {
+                    "service_id": {
+                        "type": "string"
+                    },
+                    "patient_profile_id": {
+                        "type": "string",
+                        "description": "Profil du patient \u00e0 soigner, parmi ceux du compte."
+                    },
+                    "address_id": {
+                        "type": "string",
+                        "description": "Adresse o\u00f9 le soignant se rend, parmi celles du compte."
+                    },
+                    "type": {
+                        "type": "string",
+                        "description": "`immediate` (d\u00e8s que possible) ou `scheduled` (cr\u00e9neau choisi).",
+                        "enum": [
+                            "immediate",
+                            "scheduled"
+                        ]
+                    },
+                    "scheduled_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time",
+                        "description": "D\u00e9but du cr\u00e9neau, parmi ceux renvoy\u00e9s par `GET /bookings/slots`. Obligatoire si `type` vaut `scheduled`."
+                    },
+                    "payment_method": {
+                        "type": "string",
+                        "description": "`cash` (esp\u00e8ces \u00e0 domicile). Le paiement par carte n'est pas encore ouvert.",
+                        "enum": [
+                            "cash",
+                            "card"
+                        ]
+                    },
+                    "patient_note": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Note pour le soignant. Donn\u00e9e de sant\u00e9, chiffr\u00e9e.",
+                        "maxLength": 1000
+                    },
+                    "prescription_file_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Identifiant renvoy\u00e9 par `POST /files/prescriptions`. Obligatoire si le soin exige une ordonnance."
+                    }
+                },
+                "required": [
+                    "service_id",
+                    "patient_profile_id",
+                    "address_id",
+                    "type",
+                    "payment_method"
+                ],
+                "title": "StoreBookingRequest"
             },
             "UpdateMeRequest": {
                 "type": "object",

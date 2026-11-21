@@ -2,9 +2,11 @@
 
 use App\Http\Controllers\Api\V1\AddressController;
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\BookingController;
 use App\Http\Controllers\Api\V1\CatalogueController;
 use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\PatientProfileController;
+use App\Http\Controllers\Api\V1\PrescriptionController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -37,5 +39,14 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
     Route::middleware(['auth:sanctum', 'ability:app:patient'])->group(function () {
         Route::apiResource('patient-profiles', PatientProfileController::class);
         Route::apiResource('addresses', AddressController::class)->except('show');
+
+        Route::post('/files/prescriptions', [PrescriptionController::class, 'store'])->name('prescriptions.store');
+
+        Route::get('/bookings/slots', [BookingController::class, 'slots'])->name('bookings.slots');
+        Route::post('/bookings/quote', [BookingController::class, 'quote'])->name('bookings.quote');
+        Route::get('/bookings', [BookingController::class, 'index'])->name('bookings.index');
+        Route::post('/bookings', [BookingController::class, 'store'])->name('bookings.store');
+        Route::get('/bookings/{booking}', [BookingController::class, 'show'])->name('bookings.show');
+        Route::post('/bookings/{booking}/cancel', [BookingController::class, 'cancel'])->name('bookings.cancel');
     });
 });

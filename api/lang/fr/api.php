@@ -28,6 +28,13 @@ return [
         'profile_in_use' => 'Ce profil a un soin prévu ou en cours. Annulez-le ou attendez sa fin.',
         'address_limit_reached' => 'Vous avez atteint le nombre maximum d\'adresses.',
         'address_in_use' => 'Un soin est prévu ou en cours à cette adresse.',
+        'service_unavailable' => 'Ce soin n\'est plus proposé.',
+        'payment_method_unavailable' => 'Le paiement par carte n\'est pas encore disponible. Choisissez le paiement en espèces.',
+        'address_not_covered' => 'Cette adresse est hors de la zone desservie pour le moment.',
+        'slot_unavailable' => 'Ce créneau n\'est plus disponible. Choisissez-en un autre.',
+        'outside_service_hours' => 'Le service est fermé à cette heure. Choisissez un créneau.',
+        'prescription_required' => 'Ce soin exige une ordonnance. Ajoutez-en une photo.',
+        'booking_duplicate' => 'Une demande identique existe déjà pour ce patient à ce créneau.',
         'server_error' => 'Une erreur est survenue. Réessayez plus tard.',
     ],
 ];

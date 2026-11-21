@@ -28,6 +28,13 @@ return [
         'profile_in_use' => 'This profile has care planned or in progress. Cancel it or wait until it ends.',
         'address_limit_reached' => 'You have reached the maximum number of addresses.',
         'address_in_use' => 'Care is planned or in progress at this address.',
+        'service_unavailable' => 'This care service is no longer available.',
+        'payment_method_unavailable' => 'Card payment is not available yet. Choose cash payment.',
+        'address_not_covered' => 'This address is outside the area served for now.',
+        'slot_unavailable' => 'This time slot is no longer available. Choose another one.',
+        'outside_service_hours' => 'The service is closed at this time. Choose a time slot.',
+        'prescription_required' => 'This care requires a prescription. Add a photo of it.',
+        'booking_duplicate' => 'An identical request already exists for this patient at this time.',
         'server_error' => 'Something went wrong. Try again later.',
     ],
 ];
