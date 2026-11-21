@@ -171,7 +171,7 @@ void main() {
     expect(find.text('Séance de rééducation'), findsNothing);
   });
 
-  testWidgets('la fiche d un soin explique le tarif et l ordonnance, sans bouton de réservation pour l instant', (tester) async {
+  testWidgets('la fiche d un soin explique le tarif et l ordonnance, et propose de réserver', (tester) async {
     await pumpPatientApp(tester, api: FakeCatalogueApi());
     await tapAndSettle(tester, byName('home-catalogue'));
     await tapAndSettle(tester, byName('category-soins-infirmiers'));
@@ -185,7 +185,7 @@ void main() {
     expect(find.text(fr.serviceProvidedBy('Infirmier')), findsOneWidget);
     expect(find.text(fr.serviceSeries), findsOneWidget);
     expect(byName('prescription-notice'), findsOneWidget);
-    expect(find.text(fr.bookingSoon), findsOneWidget);
+    expect(find.text(fr.bookService), findsOneWidget);
   });
 
   testWidgets('un soin sans ordonnance ni série n affiche pas ces mentions', (tester) async {

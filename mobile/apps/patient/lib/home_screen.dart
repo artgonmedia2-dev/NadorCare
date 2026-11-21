@@ -5,6 +5,7 @@ import 'package:nc_account/nc_account.dart';
 import 'package:nc_design_system/nc_design_system.dart';
 import 'package:nc_l10n/nc_l10n.dart';
 
+import 'bookings/bookings_providers.dart';
 import 'catalogue/catalogue_providers.dart';
 import 'patients/patient_texts.dart';
 
@@ -39,6 +40,13 @@ class PatientHomeScreen extends ConsumerWidget {
           title: l10n.homeCatalogue,
           subtitle: l10n.homeCatalogueSubtitle,
           onTap: () => context.push(routeCatalogue),
+        ),
+        NcListCard(
+          key: const ValueKey<String>('home-bookings'),
+          icon: Icons.event_note_outlined,
+          title: l10n.homeBookings,
+          subtitle: l10n.homeBookingsSubtitle,
+          onTap: () => context.push(routeBookings),
         ),
         NcListCard(
           key: const ValueKey<String>('home-profiles'),

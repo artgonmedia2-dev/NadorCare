@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:nc_account/nc_account.dart';
 import 'package:nc_core/nc_core.dart';
 import 'package:nc_design_system/nc_design_system.dart';
 import 'package:nc_l10n/nc_l10n.dart';
 
+import '../bookings/bookings_providers.dart';
 import 'catalogue_providers.dart';
 
 /// Fiche d'un soin : description, durée, tarif indicatif, règle d'ordonnance.
@@ -48,6 +50,9 @@ class ServiceDetailScreen extends ConsumerWidget {
       appBar: AppBar(),
       title: service.name,
       subtitle: service.categoryName,
+      actions: <Widget>[
+        NcPrimaryButton(label: l10n.bookService, onPressed: () => context.push(routeBookingNew(service.slug))),
+      ],
       children: <Widget>[
         if (description != null && description.isNotEmpty) ...<Widget>[
           Text(description, style: textTheme.bodyLarge),
@@ -79,9 +84,7 @@ class ServiceDetailScreen extends ConsumerWidget {
             message: '${l10n.servicePrescriptionRequired}. ${l10n.servicePrescriptionHelp}',
             kind: NcNoticeKind.warning,
           ),
-          const SizedBox(height: NcSpacing.md),
         ],
-        NcNotice(message: l10n.bookingSoon),
       ],
     );
   }

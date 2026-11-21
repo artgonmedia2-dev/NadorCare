@@ -19,6 +19,11 @@ void main() {
   testWidgets('une session enregistrée ouvre l accueil patient, en arabe et de droite à gauche', (tester) async {
     final ar = lookupNcLocalizations(const Locale('ar'));
 
+    // Écran assez haut pour afficher tout l'accueil.
+    tester.view.physicalSize = const Size(800, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
     await tester.pumpWidget(
       ProviderScope(
         overrides: [

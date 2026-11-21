@@ -10,6 +10,10 @@
 	<string>Nador Care</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Nador Care utilise votre position pour enregistrer l'adresse où le soignant doit se rendre.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Nador Care utilise l'appareil photo pour photographier votre ordonnance.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Nador Care accède à vos photos pour joindre votre ordonnance.</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Nador Care utilise Face ID pour verrouiller l'application.</string>
 	<key>CFBundleExecutable</key>
