@@ -1,0 +1,78 @@
+# Environnement de développement local. Aucun secret réel ici : les valeurs par défaut
+# ne servent qu'en local et se surchargent par des variables d'environnement.
+name: nadorcare
+
+x-api: &api
+  build:
+    context: ./docker/api
+  image: nadorcare-api:dev
+  volumes:
+    - ./api:/var/www/api
+  env_file:
+    - ./api/.env
+  environment:
+    DB_HOST: postgres
+    DB_PORT: 5432
+    REDIS_HOST: redis
+    REDIS_PORT: 6379
+    REDIS_CLIENT: phpredis
+    REVERB_SERVER_HOST: 0.0.0.0
+  depends_on:
+    postgres:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+
+services:
+  api:
+    <<: *api
+    ports:
+      - "${API_PORT:-8000}:8000"
+
+  horizon:
+    <<: *api
+    command: php artisan horizon
+
+  reverb:
+    <<: *api
+    command: php artisan reverb:start --host=0.0.0.0 --port=8080
+    ports:
+      - "${REVERB_PORT:-8080}:8080"
+
+  scheduler:
+    <<: *api
+    command: php artisan schedule:work
+
+  postgres:
+    image: postgis/postgis:18-3.7-alpine
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-nadorcare}
+      POSTGRES_USER: ${DB_USERNAME:-nadorcare}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-nadorcare}
+    ports:
+      - "${DB_FORWARD_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/20-nadorcare.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-nadorcare} -d ${DB_DATABASE:-nadorcare}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:8-alpine
+    # 6380 côté hôte : le port 6379 est souvent pris par un Redis local.
+    ports:
+      - "${REDIS_FORWARD_PORT:-6380}:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  postgres-data:
+  redis-data:
