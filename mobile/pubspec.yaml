@@ -1,0 +1,15 @@
+name: nadorcare_workspace
+description: Espace de travail Flutter de Nador Care (deux applications, paquets partagés).
+publish_to: none
+
+environment:
+  sdk: ^3.13.2
+
+workspace:
+  - apps/patient
+  - apps/pro
+  - packages/nc_core
+  - packages/nc_api_client
+  - packages/nc_design_system
+  - packages/nc_l10n
+  - packages/nc_account
