@@ -10,7 +10,7 @@ Plateforme de coordination de soins à domicile à Nador (Maroc) : application p
 
 - Étape 1 (cadrage) : validée le 2026-11-21.
 - Étape 2 (socle technique, lot 3) : livrée le 2026-11-21 (avancement en tête de `docs/02-decoupage-lots.md`). Reste du lot 3 reporté au lot 6 : écrans Filament de gestion des utilisateurs, des rôles et des journaux.
-- Lot 4 : tâches 4.0 (socle Flutter), 4.1 (compte) et 4.2 (profils de patients, adresses) livrées le 2026-11-21. Jamais compilé ni lancé sur un appareil : à faire avant d'aller plus loin côté mobile.
+- Lot 4 : tâches 4.0 (socle Flutter), 4.1 (compte), 4.2 (profils de patients, adresses) et 4.3 (catalogue, avec sa gestion dans le back-office) livrées le 2026-11-21. Jamais compilé ni lancé sur un appareil : à faire avant d'aller plus loin côté mobile.
 - Suite des lots 4 à 7 : en attente des points à trancher (`docs/03-questions-ouvertes.md`, sections B et C).
 - Dépôt : `https://github.com/artgonmedia2-dev/NadorCare.git`, branche `main`.
 
@@ -52,7 +52,10 @@ Organisation de `/api/app` :
 - `Contracts` : interfaces des services externes. `Services/<Service>` : leurs implémentations (factices pour l'instant) et les services internes (`Auth\OtpService`, `Files\EncryptedFileStore`, `Health\AccessLogger`). Le lien se fait dans `Providers/ExternalServicesProvider`.
 - `Enums` : rôles, permissions, statuts. `Policies` : droits d'accès, dont le cloisonnement par mission.
 - `Http/Controllers/Api/V1`, `Http/Requests/Api/V1`, `Http/Resources/Api/V1` : couche HTTP de la version 1.
-- `lang/{fr,ar,en}/api.php` : tous les textes renvoyés par l'API.
+- `lang/{fr,ar,en}/api.php` : tous les textes renvoyés par l'API. `lang/{fr,ar,en}/admin.php` : tous les libellés du back-office.
+- `Filament/Resources/<Pluriel>` : écrans du back-office (structure générée par `make:filament-resource`). Chaque ressource limite son accès par `canAccess()` et une permission. Les champs traduisibles passent par `Filament\Support\TranslatableFields`.
+- Les textes stockés en `{fr, ar, en}` se lisent avec `Support\Translated::pick()`. Ne pas comparer ces tableaux avec `assertSame` : PostgreSQL ne garde pas l'ordre des clés d'un `jsonb`.
+- Dans les tests, la langue par défaut est le français (`Accept-Language: fr`, posé par `Tests\TestCase`).
 
 Points d'entrée obligatoires :
 
@@ -112,6 +115,7 @@ docker compose logs horizon --tail 20
 # API (dans /api) — le serveur HTTP tourne en natif sous Windows
 php artisan serve                      # http://localhost:8000
 php artisan migrate:fresh --seed
+php artisan db:seed --class=DemoCatalogueSeeder   # catalogue de démonstration (prix inventés, jamais en production)
 php artisan nadorcare:create-staff     # compte du back-office
 php artisan nadorcare:files-key        # clé de chiffrement des fichiers
 composer test                          # tests, base nadorcare_test dans Docker

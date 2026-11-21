@@ -26,6 +26,14 @@ Tâche 4.2 livrée le 2026-11-21 (113 tests côté API, 53 côté Flutter), avec
 - Plafonds ajoutés contre les abus, modifiables par `.env` : 10 profils et 20 adresses par compte.
 - Toujours aucun essai sur un appareil.
 
+Tâche 4.3 livrée le 2026-11-21, avec la partie « services et catégories » de la tâche 6.7 (128 tests côté API, 62 côté Flutter) :
+
+- Le catalogue se lit sans compte, pour l'application et pour le futur site public.
+- Les services installés par `php artisan db:seed --class=DemoCatalogueSeeder` sont des exemples aux prix inventés. La vraie liste et la grille tarifaire se saisissent dans le back-office (`/admin/services`), réservé à l'administrateur.
+- Un service ou une catégorie ne se supprime pas : on le masque, pour garder les réservations rattachées lisibles.
+- Reste de la tâche 6.7 à faire : majorations (nuit, jour férié, distance) et jours fériés.
+- La fiche d'un soin n'a pas encore de bouton de réservation (tâche 4.4).
+
 ## Lot 3 — Socle technique
 
 | N° | Tâche | Résultat vérifiable |
