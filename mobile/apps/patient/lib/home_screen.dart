@@ -5,6 +5,8 @@ import 'package:nc_account/nc_account.dart';
 import 'package:nc_design_system/nc_design_system.dart';
 import 'package:nc_l10n/nc_l10n.dart';
 
+import 'patients/patient_texts.dart';
+
 /// Accueil de l'application patient. Le catalogue et la réservation (tâches 4.3 et 4.4)
 /// viendront ici ; pour l'instant l'écran confirme la connexion et rappelle les urgences.
 class PatientHomeScreen extends ConsumerWidget {
@@ -30,6 +32,21 @@ class PatientHomeScreen extends ConsumerWidget {
       title: (name == null || name.isEmpty) ? l10n.homeGreetingAnonymous : l10n.homeGreeting(name),
       subtitle: l10n.homePatientSoon,
       children: <Widget>[
+        NcListCard(
+          key: const ValueKey<String>('home-profiles'),
+          icon: Icons.people_outline,
+          title: l10n.homeProfiles,
+          subtitle: l10n.homeProfilesSubtitle,
+          onTap: () => context.push(routeProfiles),
+        ),
+        NcListCard(
+          key: const ValueKey<String>('home-addresses'),
+          icon: Icons.home_outlined,
+          title: l10n.homeAddresses,
+          subtitle: l10n.homeAddressesSubtitle,
+          onTap: () => context.push(routeAddresses),
+        ),
+        const SizedBox(height: NcSpacing.md),
         NcNotice(message: l10n.emergencyNotice, kind: NcNoticeKind.warning),
       ],
     );

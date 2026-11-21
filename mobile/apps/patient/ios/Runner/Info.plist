@@ -8,6 +8,8 @@
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
 	<string>Nador Care</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Nador Care utilise votre position pour enregistrer l'adresse où le soignant doit se rendre.</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Nador Care utilise Face ID pour verrouiller l'application.</string>
 	<key>CFBundleExecutable</key>
