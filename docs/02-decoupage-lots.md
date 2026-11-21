@@ -18,6 +18,14 @@ Lot 4, tâches 4.0 et 4.1 livrées le 2026-11-21 (38 tests Flutter), avec ces é
 - 4.1 : les écrans sont communs aux deux applications. Le design est provisoire, en attendant les maquettes.
 - 4.1 : le consentement affiche les trois accords, sans lien vers les textes légaux, qui n'existent pas encore (tâche 6.10).
 
+Tâche 4.2 livrée le 2026-11-21 (113 tests côté API, 53 côté Flutter), avec ces limites :
+
+- La position d'une adresse vient du GPS du téléphone. Le choix d'un point sur une carte attend la clé Google Maps (tâche 4.4). Sans lui, un proche à l'étranger ne peut pas enregistrer l'adresse de son parent : il faut être sur place.
+- Le rôle « proche » n'est pas encore attribué (question 16 ouverte) ; il n'ouvre aucun droit de plus que « patient » pour l'instant.
+- Retirer un profil le masque sans l'effacer, pour garder l'historique des soins. L'effacement définitif relève de la demande de suppression (tâche 4.13).
+- Plafonds ajoutés contre les abus, modifiables par `.env` : 10 profils et 20 adresses par compte.
+- Toujours aucun essai sur un appareil.
+
 ## Lot 3 — Socle technique
 
 | N° | Tâche | Résultat vérifiable |

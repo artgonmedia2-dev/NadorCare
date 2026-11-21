@@ -10,7 +10,7 @@ Plateforme de coordination de soins à domicile à Nador (Maroc) : application p
 
 - Étape 1 (cadrage) : validée le 2026-11-21.
 - Étape 2 (socle technique, lot 3) : livrée le 2026-11-21 (avancement en tête de `docs/02-decoupage-lots.md`). Reste du lot 3 reporté au lot 6 : écrans Filament de gestion des utilisateurs, des rôles et des journaux.
-- Lot 4 : tâches 4.0 (socle Flutter) et 4.1 (compte) livrées le 2026-11-21. Jamais compilé ni lancé sur un appareil : à faire avant d'aller plus loin côté mobile.
+- Lot 4 : tâches 4.0 (socle Flutter), 4.1 (compte) et 4.2 (profils de patients, adresses) livrées le 2026-11-21. Jamais compilé ni lancé sur un appareil : à faire avant d'aller plus loin côté mobile.
 - Suite des lots 4 à 7 : en attente des points à trancher (`docs/03-questions-ouvertes.md`, sections B et C).
 - Dépôt : `https://github.com/artgonmedia2-dev/NadorCare.git`, branche `main`.
 
