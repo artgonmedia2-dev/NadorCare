@@ -126,6 +126,8 @@ class BookingApiTest extends TestCase
             ->assertJsonPath('data.status', 'pending')
             ->assertJsonPath('data.type', 'scheduled')
             ->assertJsonPath('data.scheduled_at', CarbonImmutable::parse('2026-12-08 09:30', self::TZ)->utc()->toIso8601String())
+            ->assertJsonPath('data.scheduled_date', '2026-12-08')
+            ->assertJsonPath('data.scheduled_time', '09:30')
             ->assertJsonPath('data.patient.first_name', 'Aïcha')
             ->assertJsonPath('data.address.label', 'Maison')
             ->assertJsonPath('data.price', ['base' => 10000, 'surcharges' => [], 'total' => 10000, 'currency' => 'MAD'])

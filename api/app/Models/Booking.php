@@ -17,6 +17,7 @@ use Illuminate\Support\Carbon;
  * @property string $reference
  * @property string $user_id
  * @property string $patient_profile_id
+ * @property string $service_id
  * @property string|null $professional_id
  * @property BookingStatus $status
  * @property string|null $patient_note

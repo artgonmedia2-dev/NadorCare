@@ -36,6 +36,7 @@ class BookingResource extends JsonResource
         $cancellation = app(CancelBooking::class);
         $cancellable = $this->status->canTransitionTo(BookingStatus::Cancelled);
         $snapshot = $this->price_snapshot ?? [];
+        $timezone = (string) config('nadorcare.timezone');
 
         return [
             'id' => $this->id,
@@ -45,7 +46,12 @@ class BookingResource extends JsonResource
             'type' => $this->type,
             'scheduled_at' => $this->scheduled_at->toIso8601String(),
             'scheduled_end_at' => $this->scheduled_end_at?->toIso8601String(),
+            /** Jour du soin à Nador (`AAAA-MM-JJ`), à afficher tel quel quel que soit le fuseau du téléphone. */
+            'scheduled_date' => $this->scheduled_at->copy()->setTimezone($timezone)->format('Y-m-d'),
+            /** Heure du soin à Nador (`HH:MM`). */
+            'scheduled_time' => $this->scheduled_at->copy()->setTimezone($timezone)->format('H:i'),
             'service' => [
+                'id' => $this->service_id,
                 'slug' => $this->service->slug,
                 'name' => Translated::pick($this->service->name),
             ],

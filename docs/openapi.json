@@ -1444,9 +1444,20 @@
                             "null"
                         ]
                     },
+                    "scheduled_date": {
+                        "type": "string",
+                        "description": "Jour du soin \u00e0 Nador (`AAAA-MM-JJ`), \u00e0 afficher tel quel quel que soit le fuseau du t\u00e9l\u00e9phone."
+                    },
+                    "scheduled_time": {
+                        "type": "string",
+                        "description": "Heure du soin \u00e0 Nador (`HH:MM`)."
+                    },
                     "service": {
                         "type": "object",
                         "properties": {
+                            "id": {
+                                "type": "string"
+                            },
                             "slug": {
                                 "type": "string"
                             },
@@ -1458,6 +1469,7 @@
                             }
                         },
                         "required": [
+                            "id",
                             "slug",
                             "name"
                         ]
@@ -1606,6 +1618,8 @@
                     "type",
                     "scheduled_at",
                     "scheduled_end_at",
+                    "scheduled_date",
+                    "scheduled_time",
                     "service",
                     "patient",
                     "address",
