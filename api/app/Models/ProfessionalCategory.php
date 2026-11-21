@@ -7,6 +7,11 @@ use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @property string $id
+ * @property string $code
+ * @property array<string, string> $name
+ */
 class ProfessionalCategory extends Model
 {
     /** @use HasFactory<ProfessionalCategoryFactory> */

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\AddressController;
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\CatalogueController;
 use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\PatientProfileController;
 use Illuminate\Support\Facades\Route;
@@ -13,6 +14,12 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->name('api.v1.')->group(function () {
     Route::get('/health', fn () => response()->json(['status' => 'ok', 'version' => 'v1']))->name('health');
+
+    Route::prefix('catalogue')->name('catalogue.')->group(function () {
+        Route::get('/categories', [CatalogueController::class, 'categories'])->name('categories');
+        Route::get('/services', [CatalogueController::class, 'services'])->name('services');
+        Route::get('/services/{slug}', [CatalogueController::class, 'service'])->name('service');
+    });
 
     Route::prefix('auth')->name('auth.')->group(function () {
         Route::post('/otp/request', [AuthController::class, 'requestOtp'])->middleware('throttle:otp-request')->name('otp.request');

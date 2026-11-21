@@ -22,6 +22,9 @@
         },
         {
             "name": "Adresses"
+        },
+        {
+            "name": "Catalogue"
         }
     ],
     "security": [
@@ -650,6 +653,140 @@
                 }
             }
         },
+        "/catalogue/categories": {
+            "get": {
+                "operationId": "v1.catalogue.categories",
+                "description": "Seules les cat\u00e9gories actives qui contiennent au moins un service actif sont renvoy\u00e9es.",
+                "summary": "Cat\u00e9gories de services",
+                "tags": [
+                    "Catalogue"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Array of `ServiceCategoryResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/ServiceCategoryResource"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": []
+            }
+        },
+        "/catalogue/services": {
+            "get": {
+                "operationId": "v1.catalogue.services",
+                "description": "Les textes suivent l'en-t\u00eate `Accept-Language`. Le prix est indicatif.",
+                "summary": "Services",
+                "tags": [
+                    "Catalogue"
+                ],
+                "parameters": [
+                    {
+                        "name": "category",
+                        "in": "query",
+                        "description": "Identifiant lisible (`slug`) d'une cat\u00e9gorie.",
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 120
+                        }
+                    },
+                    {
+                        "name": "q",
+                        "in": "query",
+                        "description": "Recherche dans le nom et la description, sans tenir compte des accents. Deux caract\u00e8res au moins.",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "maxLength": 80
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Array of `ServiceResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/ServiceResource"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                },
+                "security": []
+            }
+        },
+        "/catalogue/services/{slug}": {
+            "get": {
+                "operationId": "v1.catalogue.service",
+                "summary": "D\u00e9tail d'un service",
+                "tags": [
+                    "Catalogue"
+                ],
+                "parameters": [
+                    {
+                        "name": "slug",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`ServiceResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ServiceResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": []
+            }
+        },
         "/health": {
             "get": {
                 "operationId": "v1.health",
@@ -969,6 +1106,127 @@
                     "phone"
                 ],
                 "title": "RequestOtpRequest"
+            },
+            "ServiceCategoryResource": {
+                "type": "object",
+                "properties": {
+                    "slug": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "icon": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "services_count": {
+                        "type": "integer",
+                        "description": "Nombre de services propos\u00e9s dans la cat\u00e9gorie."
+                    }
+                },
+                "required": [
+                    "slug",
+                    "name",
+                    "icon",
+                    "services_count"
+                ],
+                "title": "ServiceCategoryResource"
+            },
+            "ServiceResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "slug": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "description": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "duration_minutes": {
+                        "type": "integer"
+                    },
+                    "price": {
+                        "type": "object",
+                        "description": "Tarif indicatif, hors majorations (nuit, jour f\u00e9ri\u00e9, distance).",
+                        "properties": {
+                            "amount": {
+                                "type": "integer",
+                                "description": "Montant en centimes de dirham."
+                            },
+                            "currency": {
+                                "type": "string",
+                                "const": "MAD"
+                            }
+                        },
+                        "required": [
+                            "amount",
+                            "currency"
+                        ]
+                    },
+                    "requires_prescription": {
+                        "type": "boolean",
+                        "description": "Une ordonnance doit \u00eatre d\u00e9pos\u00e9e pour confirmer la r\u00e9servation."
+                    },
+                    "allows_series": {
+                        "type": "boolean",
+                        "description": "Le soin peut \u00eatre programm\u00e9 en s\u00e9rie (plusieurs s\u00e9ances)."
+                    },
+                    "category": {
+                        "type": "object",
+                        "properties": {
+                            "slug": {
+                                "type": "string"
+                            },
+                            "name": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "slug",
+                            "name"
+                        ]
+                    },
+                    "professional_category": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Profession du soignant qui r\u00e9alise ce soin."
+                    }
+                },
+                "required": [
+                    "id",
+                    "slug",
+                    "name",
+                    "description",
+                    "duration_minutes",
+                    "price",
+                    "requires_prescription",
+                    "allows_series",
+                    "category",
+                    "professional_category"
+                ],
+                "title": "ServiceResource"
             },
             "UpdateMeRequest": {
                 "type": "object",

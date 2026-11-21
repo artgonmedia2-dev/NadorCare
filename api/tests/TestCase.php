@@ -21,6 +21,15 @@ abstract class TestCase extends BaseTestCase
 
     protected string $seeder = RolesAndPermissionsSeeder::class;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Le client de test envoie « en-us » par défaut. Les applications, elles, envoient
+        // toujours la langue choisie : on fixe le français, et chaque test peut le surcharger.
+        $this->withHeader('Accept-Language', 'fr');
+    }
+
     protected function userWithRole(Role $role, array $attributes = []): User
     {
         return User::factory()->withRole($role)->create($attributes);
