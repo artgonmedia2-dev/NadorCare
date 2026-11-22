@@ -56,6 +56,16 @@ Affectation livrée le 2026-11-22 (tâche 6.2, et partie serveur de 5.3) — 191
 - Question 20 toujours ouverte : une seule proposition à la fois (choix fait ici), ou diffusion à plusieurs professionnels en même temps.
 - Les notifications partent par le service factice : aucun téléphone ne reçoit rien tant que Firebase n'est pas branché.
 
+Dossier des professionnels livré le 2026-11-22 (parties serveur de 5.1 et 5.2, tâche 6.5) — 213 tests côté API :
+
+- Le professionnel choisit sa profession, dépose les justificatifs exigés pour elle (chiffrés), puis soumet son dossier. La date de fin de validité est obligatoire pour l'assurance.
+- L'administrateur ouvre chaque justificatif, l'approuve ou le refuse avec un motif, puis valide ou refuse le dossier. Il peut suspendre un professionnel vérifié et lever la suspension. Le coordinateur consulte sans décider.
+- Chaque décision entre dans l'historique des contrôles et dans le journal des actions sensibles ; chaque ouverture de fichier est journalisée.
+- Un justificatif refusé reste dans le dossier. Un renouvellement d'assurance ne remplace l'ancienne qu'une fois approuvé.
+- Les justificatifs périmés sont marqués chaque nuit ; un filtre liste les assurances périmées ou expirant sous 30 jours.
+- Zones couvertes, agenda hebdomadaire et bascule en ligne (réservée aux professionnels vérifiés).
+- Non fait : les écrans de l'application professionnel pour tout cela, et l'envoi d'une alerte (notification ou e-mail) à l'approche d'une expiration.
+
 ## Lot 3 — Socle technique
 
 | N° | Tâche | Résultat vérifiable |
