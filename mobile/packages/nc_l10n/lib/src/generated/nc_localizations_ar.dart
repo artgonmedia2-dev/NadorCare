@@ -846,4 +846,185 @@ class NcLocalizationsAr extends NcLocalizations {
 
   @override
   String get missionWithdrawReason => 'السبب';
+
+  @override
+  String get add => 'إضافة';
+
+  @override
+  String get missionDepart => 'أنا في الطريق';
+
+  @override
+  String get missionArrive => 'لقد وصلت';
+
+  @override
+  String get missionOpenReport => 'تحرير التقرير';
+
+  @override
+  String get journeySharing => 'يُشارَك موقعك مع المريض إلى حين وصولك.';
+
+  @override
+  String get journeyLocationOff =>
+      'الموقع غير متاح. فعّل تحديد الموقع ليتمكن المريض من متابعة وصولك.';
+
+  @override
+  String journeyEta(int minutes) {
+    return 'الوصول المتوقع خلال $minutes د';
+  }
+
+  @override
+  String get reportTitle => 'تقرير التدخل';
+
+  @override
+  String get reportVitalsTitle => 'العلامات الحيوية';
+
+  @override
+  String get vitalSystolic => 'الضغط الانقباضي (mmHg)';
+
+  @override
+  String get vitalDiastolic => 'الضغط الانبساطي (mmHg)';
+
+  @override
+  String get vitalPulse => 'النبض (نبضة/د)';
+
+  @override
+  String get vitalTemperature => 'الحرارة (°C)';
+
+  @override
+  String get vitalGlucose => 'السكر في الدم (g/L)';
+
+  @override
+  String get vitalSpo2 => 'تشبع الأكسجين (%)';
+
+  @override
+  String vitalOutOfRange(String min, String max) {
+    return 'القيمة المتوقعة بين $min و$max.';
+  }
+
+  @override
+  String get reportObservations => 'الملاحظات';
+
+  @override
+  String get reportObservationsRequired => 'صِف العلاج المنجز.';
+
+  @override
+  String get reportActsTitle => 'الأعمال المنجزة';
+
+  @override
+  String get reportActAdd => 'إضافة عمل';
+
+  @override
+  String get reportConsumablesTitle => 'المستلزمات المستعملة';
+
+  @override
+  String get reportConsumableAdd => 'إضافة مستلزم';
+
+  @override
+  String get reportLineLabel => 'التسمية';
+
+  @override
+  String get reportLineQuantity => 'الكمية';
+
+  @override
+  String reportLineWithQuantity(String label, String quantity) {
+    return '$label × $quantity';
+  }
+
+  @override
+  String get reportPhotosTitle => 'الصور';
+
+  @override
+  String reportPhotosCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count صورة',
+      many: '$count صورة',
+      few: '$count صور',
+      two: 'صورتان',
+      one: 'صورة واحدة',
+      zero: 'لا توجد صور',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get reportPhotoAdd => 'إضافة صورة';
+
+  @override
+  String get reportSignatureTitle => 'توقيع المريض';
+
+  @override
+  String get reportSign => 'طلب التوقيع';
+
+  @override
+  String get reportSignAgain => 'إعادة التوقيع';
+
+  @override
+  String reportSignedBy(String name) {
+    return 'وقّعه $name';
+  }
+
+  @override
+  String get reportNotSigned => 'لم يُوقَّع بعد';
+
+  @override
+  String get signatureName => 'اسم الشخص الموقِّع';
+
+  @override
+  String get signatureHelp =>
+      'يوقّع المريض، أو أحد أقاربه الحاضرين، بإصبعه داخل الإطار.';
+
+  @override
+  String get signatureClear => 'مسح';
+
+  @override
+  String get signatureConfirm => 'تأكيد التوقيع';
+
+  @override
+  String get signatureEmpty => 'التوقيع فارغ.';
+
+  @override
+  String reportCashCollected(String amount) {
+    return 'استلمتُ $amount نقدًا';
+  }
+
+  @override
+  String get reportSaveDraft => 'حفظ المسودة';
+
+  @override
+  String get reportSaved => 'تم حفظ المسودة.';
+
+  @override
+  String get reportComplete => 'إنهاء التدخل';
+
+  @override
+  String get reportCompleteTitle => 'إنهاء التدخل؟';
+
+  @override
+  String get reportCompleteBody => 'سيُعتمد التقرير ولن يمكن تعديله بعد ذلك.';
+
+  @override
+  String get reportSignatureRequired => 'اطلب توقيع المريض قبل الإنهاء.';
+
+  @override
+  String get reportCompleted => 'انتهى التدخل. تم اعتماد التقرير.';
+
+  @override
+  String get bookingProfessional => 'مقدّم الرعاية';
+
+  @override
+  String get trackingOnTheWay => 'مقدّم الرعاية في الطريق إليك.';
+
+  @override
+  String trackingEta(int minutes) {
+    return 'يصل مقدّم الرعاية خلال $minutes د تقريبًا.';
+  }
+
+  @override
+  String get bookingReportOpen => 'عرض التقرير';
+
+  @override
+  String reportAmended(String reason) {
+    return 'تم تصحيح هذا التقرير. السبب: $reason';
+  }
 }

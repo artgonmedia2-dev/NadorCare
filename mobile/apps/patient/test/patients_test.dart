@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nadorcare_patient/home_screen.dart';
-import 'package:nadorcare_patient/patients/location_service.dart';
 import 'package:nadorcare_patient/patients/patient_routes.dart';
 import 'package:nadorcare_patient/patients/patients_providers.dart';
 import 'package:nc_account/nc_account.dart';

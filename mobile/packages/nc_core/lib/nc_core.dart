@@ -8,6 +8,7 @@ export 'src/bidi.dart';
 export 'src/booking.dart';
 export 'src/care_service.dart';
 export 'src/client_app.dart';
+export 'src/intervention.dart';
 export 'src/patient_address.dart';
 export 'src/patient_profile.dart';
 export 'src/professional.dart';

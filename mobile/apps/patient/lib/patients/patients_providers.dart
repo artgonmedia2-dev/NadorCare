@@ -3,11 +3,7 @@ import 'package:nc_account/nc_account.dart';
 import 'package:nc_api_client/nc_api_client.dart';
 import 'package:nc_core/nc_core.dart';
 
-import 'location_service.dart';
-
 final patientsApiProvider = Provider<PatientsApi>((ref) => HttpPatientsApi(ref.watch(apiClientProvider)));
-
-final locationServiceProvider = Provider<LocationService>((ref) => const DeviceLocationService());
 
 /// Profils de patients du compte. Chaque écriture met la liste à jour sans nouvel appel.
 class ProfilesController extends AsyncNotifier<List<PatientProfile>> {

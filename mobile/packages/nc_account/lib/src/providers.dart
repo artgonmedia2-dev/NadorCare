@@ -3,6 +3,7 @@ import 'package:nc_api_client/nc_api_client.dart';
 import 'package:nc_core/nc_core.dart';
 
 import 'biometric_service.dart';
+import 'location_service.dart';
 import 'settings/settings_controller.dart';
 import 'storage/preferences_store.dart';
 import 'storage/session_storage.dart';
@@ -18,6 +19,9 @@ final preferencesStoreProvider = Provider<PreferencesStore>(
 );
 
 final sessionStorageProvider = Provider<SessionStorage>((ref) => SecureSessionStorage());
+
+/// Position de l'appareil : adresse du patient, trajet du professionnel.
+final locationServiceProvider = Provider<LocationService>((ref) => const DeviceLocationService());
 
 final biometricServiceProvider = Provider<BiometricService>((ref) => LocalAuthBiometricService());
 

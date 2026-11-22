@@ -6,7 +6,6 @@ import 'package:nc_core/nc_core.dart';
 import 'package:nc_design_system/nc_design_system.dart';
 import 'package:nc_l10n/nc_l10n.dart';
 
-import 'location_service.dart';
 import 'patients_providers.dart';
 
 /// Création ou modification d'une adresse. [addressId] est `null` pour une création.

@@ -844,4 +844,185 @@ class NcLocalizationsEn extends NcLocalizations {
 
   @override
   String get missionWithdrawReason => 'Reason';
+
+  @override
+  String get add => 'Add';
+
+  @override
+  String get missionDepart => 'I\'m leaving';
+
+  @override
+  String get missionArrive => 'I have arrived';
+
+  @override
+  String get missionOpenReport => 'Write the report';
+
+  @override
+  String get journeySharing =>
+      'Your location is shared with the patient until you arrive.';
+
+  @override
+  String get journeyLocationOff =>
+      'Location unavailable. Turn on location so the patient can follow your arrival.';
+
+  @override
+  String journeyEta(int minutes) {
+    return 'Estimated arrival in $minutes min';
+  }
+
+  @override
+  String get reportTitle => 'Care report';
+
+  @override
+  String get reportVitalsTitle => 'Vital signs';
+
+  @override
+  String get vitalSystolic => 'Systolic pressure (mmHg)';
+
+  @override
+  String get vitalDiastolic => 'Diastolic pressure (mmHg)';
+
+  @override
+  String get vitalPulse => 'Pulse (beats/min)';
+
+  @override
+  String get vitalTemperature => 'Temperature (°C)';
+
+  @override
+  String get vitalGlucose => 'Blood glucose (g/L)';
+
+  @override
+  String get vitalSpo2 => 'Oxygen saturation (%)';
+
+  @override
+  String vitalOutOfRange(String min, String max) {
+    return 'Expected a value between $min and $max.';
+  }
+
+  @override
+  String get reportObservations => 'Observations';
+
+  @override
+  String get reportObservationsRequired => 'Describe the care provided.';
+
+  @override
+  String get reportActsTitle => 'Procedures performed';
+
+  @override
+  String get reportActAdd => 'Add a procedure';
+
+  @override
+  String get reportConsumablesTitle => 'Supplies used';
+
+  @override
+  String get reportConsumableAdd => 'Add a supply';
+
+  @override
+  String get reportLineLabel => 'Description';
+
+  @override
+  String get reportLineQuantity => 'Quantity';
+
+  @override
+  String reportLineWithQuantity(String label, String quantity) {
+    return '$label × $quantity';
+  }
+
+  @override
+  String get reportPhotosTitle => 'Photos';
+
+  @override
+  String reportPhotosCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count photos',
+      one: '1 photo',
+      zero: 'No photo',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get reportPhotoAdd => 'Add a photo';
+
+  @override
+  String get reportSignatureTitle => 'Patient signature';
+
+  @override
+  String get reportSign => 'Get signature';
+
+  @override
+  String get reportSignAgain => 'Sign again';
+
+  @override
+  String reportSignedBy(String name) {
+    return 'Signed by $name';
+  }
+
+  @override
+  String get reportNotSigned => 'Not signed yet';
+
+  @override
+  String get signatureName => 'Name of the person signing';
+
+  @override
+  String get signatureHelp =>
+      'The patient, or a relative who is present, signs in the box with a finger.';
+
+  @override
+  String get signatureClear => 'Clear';
+
+  @override
+  String get signatureConfirm => 'Confirm signature';
+
+  @override
+  String get signatureEmpty => 'The signature is empty.';
+
+  @override
+  String reportCashCollected(String amount) {
+    return 'I received $amount in cash';
+  }
+
+  @override
+  String get reportSaveDraft => 'Save draft';
+
+  @override
+  String get reportSaved => 'Draft saved.';
+
+  @override
+  String get reportComplete => 'Finish the visit';
+
+  @override
+  String get reportCompleteTitle => 'Finish the visit?';
+
+  @override
+  String get reportCompleteBody =>
+      'The report will be validated and can no longer be changed.';
+
+  @override
+  String get reportSignatureRequired =>
+      'Get the patient signature before finishing.';
+
+  @override
+  String get reportCompleted => 'Visit finished. The report is validated.';
+
+  @override
+  String get bookingProfessional => 'Caregiver';
+
+  @override
+  String get trackingOnTheWay => 'Your caregiver is on the way.';
+
+  @override
+  String trackingEta(int minutes) {
+    return 'Your caregiver arrives in about $minutes min.';
+  }
+
+  @override
+  String get bookingReportOpen => 'View the report';
+
+  @override
+  String reportAmended(String reason) {
+    return 'This report was corrected. Reason: $reason';
+  }
 }

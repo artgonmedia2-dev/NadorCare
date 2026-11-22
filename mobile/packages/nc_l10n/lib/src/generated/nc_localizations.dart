@@ -1611,6 +1611,312 @@ abstract class NcLocalizations {
   /// In fr, this message translates to:
   /// **'Motif'**
   String get missionWithdrawReason;
+
+  /// No description provided for @add.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter'**
+  String get add;
+
+  /// No description provided for @missionDepart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Je pars'**
+  String get missionDepart;
+
+  /// No description provided for @missionArrive.
+  ///
+  /// In fr, this message translates to:
+  /// **'Je suis arrivé'**
+  String get missionArrive;
+
+  /// No description provided for @missionOpenReport.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rédiger le compte rendu'**
+  String get missionOpenReport;
+
+  /// No description provided for @journeySharing.
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre position est partagée avec le patient jusqu\'à votre arrivée.'**
+  String get journeySharing;
+
+  /// No description provided for @journeyLocationOff.
+  ///
+  /// In fr, this message translates to:
+  /// **'Position indisponible. Activez la localisation pour que le patient suive votre arrivée.'**
+  String get journeyLocationOff;
+
+  /// No description provided for @journeyEta.
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrivée estimée dans {minutes} min'**
+  String journeyEta(int minutes);
+
+  /// No description provided for @reportTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Compte rendu'**
+  String get reportTitle;
+
+  /// No description provided for @reportVitalsTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Constantes'**
+  String get reportVitalsTitle;
+
+  /// No description provided for @vitalSystolic.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tension systolique (mmHg)'**
+  String get vitalSystolic;
+
+  /// No description provided for @vitalDiastolic.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tension diastolique (mmHg)'**
+  String get vitalDiastolic;
+
+  /// No description provided for @vitalPulse.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pouls (battements/min)'**
+  String get vitalPulse;
+
+  /// No description provided for @vitalTemperature.
+  ///
+  /// In fr, this message translates to:
+  /// **'Température (°C)'**
+  String get vitalTemperature;
+
+  /// No description provided for @vitalGlucose.
+  ///
+  /// In fr, this message translates to:
+  /// **'Glycémie (g/L)'**
+  String get vitalGlucose;
+
+  /// No description provided for @vitalSpo2.
+  ///
+  /// In fr, this message translates to:
+  /// **'Saturation en oxygène (%)'**
+  String get vitalSpo2;
+
+  /// No description provided for @vitalOutOfRange.
+  ///
+  /// In fr, this message translates to:
+  /// **'Valeur attendue entre {min} et {max}.'**
+  String vitalOutOfRange(String min, String max);
+
+  /// No description provided for @reportObservations.
+  ///
+  /// In fr, this message translates to:
+  /// **'Observations'**
+  String get reportObservations;
+
+  /// No description provided for @reportObservationsRequired.
+  ///
+  /// In fr, this message translates to:
+  /// **'Décrivez le soin réalisé.'**
+  String get reportObservationsRequired;
+
+  /// No description provided for @reportActsTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Actes réalisés'**
+  String get reportActsTitle;
+
+  /// No description provided for @reportActAdd.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter un acte'**
+  String get reportActAdd;
+
+  /// No description provided for @reportConsumablesTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Consommables utilisés'**
+  String get reportConsumablesTitle;
+
+  /// No description provided for @reportConsumableAdd.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter un consommable'**
+  String get reportConsumableAdd;
+
+  /// No description provided for @reportLineLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Désignation'**
+  String get reportLineLabel;
+
+  /// No description provided for @reportLineQuantity.
+  ///
+  /// In fr, this message translates to:
+  /// **'Quantité'**
+  String get reportLineQuantity;
+
+  /// No description provided for @reportLineWithQuantity.
+  ///
+  /// In fr, this message translates to:
+  /// **'{label} × {quantity}'**
+  String reportLineWithQuantity(String label, String quantity);
+
+  /// No description provided for @reportPhotosTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Photos'**
+  String get reportPhotosTitle;
+
+  /// No description provided for @reportPhotosCount.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =0{Aucune photo} =1{1 photo} other{{count} photos}}'**
+  String reportPhotosCount(int count);
+
+  /// No description provided for @reportPhotoAdd.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter une photo'**
+  String get reportPhotoAdd;
+
+  /// No description provided for @reportSignatureTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Signature du patient'**
+  String get reportSignatureTitle;
+
+  /// No description provided for @reportSign.
+  ///
+  /// In fr, this message translates to:
+  /// **'Faire signer'**
+  String get reportSign;
+
+  /// No description provided for @reportSignAgain.
+  ///
+  /// In fr, this message translates to:
+  /// **'Refaire signer'**
+  String get reportSignAgain;
+
+  /// No description provided for @reportSignedBy.
+  ///
+  /// In fr, this message translates to:
+  /// **'Signé par {name}'**
+  String reportSignedBy(String name);
+
+  /// No description provided for @reportNotSigned.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pas encore signé'**
+  String get reportNotSigned;
+
+  /// No description provided for @signatureName.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nom de la personne qui signe'**
+  String get signatureName;
+
+  /// No description provided for @signatureHelp.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le patient, ou un proche présent, signe dans le cadre avec le doigt.'**
+  String get signatureHelp;
+
+  /// No description provided for @signatureClear.
+  ///
+  /// In fr, this message translates to:
+  /// **'Effacer'**
+  String get signatureClear;
+
+  /// No description provided for @signatureConfirm.
+  ///
+  /// In fr, this message translates to:
+  /// **'Valider la signature'**
+  String get signatureConfirm;
+
+  /// No description provided for @signatureEmpty.
+  ///
+  /// In fr, this message translates to:
+  /// **'La signature est vide.'**
+  String get signatureEmpty;
+
+  /// No description provided for @reportCashCollected.
+  ///
+  /// In fr, this message translates to:
+  /// **'J\'ai reçu {amount} en espèces'**
+  String reportCashCollected(String amount);
+
+  /// No description provided for @reportSaveDraft.
+  ///
+  /// In fr, this message translates to:
+  /// **'Enregistrer le brouillon'**
+  String get reportSaveDraft;
+
+  /// No description provided for @reportSaved.
+  ///
+  /// In fr, this message translates to:
+  /// **'Brouillon enregistré.'**
+  String get reportSaved;
+
+  /// No description provided for @reportComplete.
+  ///
+  /// In fr, this message translates to:
+  /// **'Terminer l\'intervention'**
+  String get reportComplete;
+
+  /// No description provided for @reportCompleteTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Terminer l\'intervention ?'**
+  String get reportCompleteTitle;
+
+  /// No description provided for @reportCompleteBody.
+  ///
+  /// In fr, this message translates to:
+  /// **'Le compte rendu sera validé : il ne pourra plus être modifié.'**
+  String get reportCompleteBody;
+
+  /// No description provided for @reportSignatureRequired.
+  ///
+  /// In fr, this message translates to:
+  /// **'Faites signer le patient avant de terminer.'**
+  String get reportSignatureRequired;
+
+  /// No description provided for @reportCompleted.
+  ///
+  /// In fr, this message translates to:
+  /// **'Intervention terminée. Le compte rendu est validé.'**
+  String get reportCompleted;
+
+  /// No description provided for @bookingProfessional.
+  ///
+  /// In fr, this message translates to:
+  /// **'Soignant'**
+  String get bookingProfessional;
+
+  /// No description provided for @trackingOnTheWay.
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre soignant est en route.'**
+  String get trackingOnTheWay;
+
+  /// No description provided for @trackingEta.
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre soignant arrive dans environ {minutes} min.'**
+  String trackingEta(int minutes);
+
+  /// No description provided for @bookingReportOpen.
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir le compte rendu'**
+  String get bookingReportOpen;
+
+  /// No description provided for @reportAmended.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce compte rendu a été corrigé. Motif : {reason}'**
+  String reportAmended(String reason);
 }
 
 class _NcLocalizationsDelegate extends LocalizationsDelegate<NcLocalizations> {
