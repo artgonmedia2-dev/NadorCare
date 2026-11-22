@@ -34,6 +34,9 @@
         },
         {
             "name": "Professionnel \u2014 missions"
+        },
+        {
+            "name": "Professionnel \u2014 intervention"
         }
     ],
     "security": [
@@ -1424,6 +1427,49 @@
                 }
             }
         },
+        "/bookings/{booking}/report": {
+            "get": {
+                "operationId": "v1.bookings.report",
+                "description": "Disponible une fois le soin termin\u00e9. Renvoie la version qui fait foi (le dernier\navenant s'il y en a) et l'historique des versions. Cette lecture est inscrite au\njournal des acc\u00e8s.",
+                "summary": "Compte rendu de l'intervention",
+                "tags": [
+                    "R\u00e9servations"
+                ],
+                "parameters": [
+                    {
+                        "name": "booking",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`InterventionResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/InterventionResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/pro/profile": {
             "get": {
                 "operationId": "v1.pro.profile.show",
@@ -2115,6 +2161,808 @@
                 }
             }
         },
+        "/pro/missions/{mission}/depart": {
+            "post": {
+                "operationId": "v1.pro.missions.depart",
+                "description": "La r\u00e9servation passe \u00ab en route \u00bb. Le patient est pr\u00e9venu et peut suivre l'arriv\u00e9e.",
+                "summary": "Partir vers le domicile",
+                "tags": [
+                    "Professionnel \u2014 intervention"
+                ],
+                "parameters": [
+                    {
+                        "name": "mission",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`MissionResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/MissionResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/pro/missions/{mission}/location": {
+            "post": {
+                "operationId": "v1.pro.missions.location",
+                "description": "\u00c0 appeler r\u00e9guli\u00e8rement pendant le trajet. Refus\u00e9 (`location_not_expected`) en dehors :\nla position n'est suivie que lorsque le professionnel est en route.",
+                "summary": "Envoyer ma position",
+                "tags": [
+                    "Professionnel \u2014 intervention"
+                ],
+                "parameters": [
+                    {
+                        "name": "mission",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "latitude": {
+                                        "type": "number",
+                                        "minimum": -90,
+                                        "maximum": 90
+                                    },
+                                    "longitude": {
+                                        "type": "number",
+                                        "minimum": -180,
+                                        "maximum": 180
+                                    },
+                                    "accuracy": {
+                                        "type": [
+                                            "integer",
+                                            "null"
+                                        ],
+                                        "description": "Pr\u00e9cision annonc\u00e9e par le t\u00e9l\u00e9phone, en m\u00e8tres.",
+                                        "minimum": 0,
+                                        "maximum": 5000
+                                    }
+                                },
+                                "required": [
+                                    "latitude",
+                                    "longitude"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "eta_seconds": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "description": "Dur\u00e9e estim\u00e9e du trajet restant, en secondes."
+                                                }
+                                            },
+                                            "required": [
+                                                "eta_seconds"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Too many requests",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview."
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/pro/missions/{mission}/arrive": {
+            "post": {
+                "operationId": "v1.pro.missions.arrive",
+                "description": "La r\u00e9servation passe \u00ab en cours \u00bb et le compte rendu s'ouvre en brouillon.",
+                "summary": "Pointer mon arriv\u00e9e",
+                "tags": [
+                    "Professionnel \u2014 intervention"
+                ],
+                "parameters": [
+                    {
+                        "name": "mission",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "latitude": {
+                                        "type": [
+                                            "number",
+                                            "null"
+                                        ],
+                                        "minimum": -90,
+                                        "maximum": 90
+                                    },
+                                    "longitude": {
+                                        "type": [
+                                            "number",
+                                            "null"
+                                        ],
+                                        "minimum": -180,
+                                        "maximum": 180
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "`InterventionResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/InterventionResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/pro/missions/{mission}/reference": {
+            "get": {
+                "operationId": "v1.pro.missions.reference",
+                "description": "Listes dans lesquelles choisir pour remplir le compte rendu d'une mission. Un acte ou un\nconsommable absent de la liste peut \u00eatre saisi librement.",
+                "summary": "Actes et consommables propos\u00e9s",
+                "tags": [
+                    "Professionnel \u2014 intervention"
+                ],
+                "parameters": [
+                    {
+                        "name": "mission",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "acts": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "string"
+                                                            },
+                                                            "name": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "name"
+                                                        ]
+                                                    }
+                                                },
+                                                "consumables": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "string"
+                                                            },
+                                                            "name": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "unit": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "name",
+                                                            "unit"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "acts",
+                                                "consumables"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/pro/missions/{mission}/intervention": {
+            "get": {
+                "operationId": "v1.pro.missions.intervention",
+                "summary": "Lire le compte rendu en cours",
+                "tags": [
+                    "Professionnel \u2014 intervention"
+                ],
+                "parameters": [
+                    {
+                        "name": "mission",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`InterventionResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/InterventionResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/pro/missions/{mission}/report": {
+            "put": {
+                "operationId": "v1.pro.missions.report",
+                "description": "Brouillon, enregistrable autant de fois que n\u00e9cessaire. Les listes d'actes et de\nconsommables remplacent les pr\u00e9c\u00e9dentes.",
+                "summary": "Enregistrer le compte rendu",
+                "tags": [
+                    "Professionnel \u2014 intervention"
+                ],
+                "parameters": [
+                    {
+                        "name": "mission",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "vitals": {
+                                        "type": [
+                                            "array",
+                                            "null"
+                                        ],
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "observations": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 5000
+                                    },
+                                    "acts": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "act_id": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "label": {
+                                                    "type": "string",
+                                                    "maxLength": 200
+                                                },
+                                                "quantity": {
+                                                    "type": "integer",
+                                                    "minimum": 1,
+                                                    "maximum": 100
+                                                }
+                                            },
+                                            "required": [
+                                                "label"
+                                            ]
+                                        },
+                                        "maxItems": 50
+                                    },
+                                    "consumables": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "consumable_id": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "label": {
+                                                    "type": "string",
+                                                    "maxLength": 200
+                                                },
+                                                "quantity": {
+                                                    "type": "number",
+                                                    "minimum": 0.01,
+                                                    "maximum": 1000
+                                                }
+                                            },
+                                            "required": [
+                                                "label"
+                                            ]
+                                        },
+                                        "maxItems": 50
+                                    },
+                                    "client_created_at": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "format": "date-time"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`InterventionResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/InterventionResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/pro/missions/{mission}/report/photos": {
+            "post": {
+                "operationId": "v1.pro.missions.report.photos",
+                "summary": "Ajouter une photo au compte rendu",
+                "tags": [
+                    "Professionnel \u2014 intervention"
+                ],
+                "parameters": [
+                    {
+                        "name": "mission",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "file": {
+                                        "type": "string",
+                                        "format": "binary",
+                                        "contentMediaType": "application/octet-stream",
+                                        "description": "Maximum file size: 10240 kilobytes."
+                                    }
+                                },
+                                "required": [
+                                    "file"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "`InterventionResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/InterventionResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/pro/missions/{mission}/report/signature": {
+            "post": {
+                "operationId": "v1.pro.missions.report.signature",
+                "description": "Signature trac\u00e9e \u00e0 l'\u00e9cran (image PNG) et nom de la personne qui signe : le patient,\nou un proche pr\u00e9sent s'il ne peut pas signer.",
+                "summary": "Enregistrer la signature",
+                "tags": [
+                    "Professionnel \u2014 intervention"
+                ],
+                "parameters": [
+                    {
+                        "name": "mission",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "file": {
+                                        "type": "string",
+                                        "format": "binary",
+                                        "contentMediaType": "application/octet-stream",
+                                        "description": "Maximum file size: 2048 kilobytes."
+                                    },
+                                    "signed_by_name": {
+                                        "type": "string",
+                                        "minLength": 2,
+                                        "maxLength": 120
+                                    }
+                                },
+                                "required": [
+                                    "file",
+                                    "signed_by_name"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`InterventionResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/InterventionResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/pro/missions/{mission}/complete": {
+            "post": {
+                "operationId": "v1.pro.missions.complete",
+                "description": "Pointe la fin, valide le compte rendu (il n'est plus modifiable) et termine la\nr\u00e9servation. Exige des observations et la signature.",
+                "summary": "Terminer l'intervention",
+                "tags": [
+                    "Professionnel \u2014 intervention"
+                ],
+                "parameters": [
+                    {
+                        "name": "mission",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "cash_collected": {
+                                        "type": "boolean",
+                                        "description": "Les esp\u00e8ces ont \u00e9t\u00e9 remises au professionnel."
+                                    },
+                                    "latitude": {
+                                        "type": [
+                                            "number",
+                                            "null"
+                                        ],
+                                        "minimum": -90,
+                                        "maximum": 90
+                                    },
+                                    "longitude": {
+                                        "type": [
+                                            "number",
+                                            "null"
+                                        ],
+                                        "minimum": -180,
+                                        "maximum": 180
+                                    }
+                                },
+                                "required": [
+                                    "cash_collected"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`InterventionResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/InterventionResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/pro/interventions/{intervention}/amendments": {
+            "post": {
+                "operationId": "v1.pro.interventions.amend",
+                "description": "L'original reste intact : la correction devient une nouvelle version, avec son motif.",
+                "summary": "Corriger un compte rendu valid\u00e9 (avenant)",
+                "tags": [
+                    "Professionnel \u2014 intervention"
+                ],
+                "parameters": [
+                    {
+                        "name": "intervention",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "reason": {
+                                        "type": "string",
+                                        "minLength": 5,
+                                        "maxLength": 500
+                                    },
+                                    "observations": {
+                                        "type": "string",
+                                        "maxLength": 5000
+                                    },
+                                    "vitals": {
+                                        "type": [
+                                            "array",
+                                            "null"
+                                        ],
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    }
+                                },
+                                "required": [
+                                    "reason",
+                                    "observations"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "`InterventionResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/InterventionResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/health": {
             "get": {
                 "operationId": "v1.health",
@@ -2418,6 +3266,65 @@
                             "currency"
                         ]
                     },
+                    "professional": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "description": "Soignant affect\u00e9, d\u00e8s qu'il y en a un.",
+                        "properties": {
+                            "name": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "profession": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "name",
+                            "profession"
+                        ]
+                    },
+                    "tracking": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "description": "Position du soignant et dur\u00e9e estim\u00e9e avant son arriv\u00e9e. Pr\u00e9sent uniquement pendant le trajet.",
+                        "properties": {
+                            "latitude": {
+                                "type": "number"
+                            },
+                            "longitude": {
+                                "type": "number"
+                            },
+                            "eta_minutes": {
+                                "type": [
+                                    "integer",
+                                    "null"
+                                ]
+                            },
+                            "updated_at": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "latitude",
+                            "longitude",
+                            "eta_minutes",
+                            "updated_at"
+                        ]
+                    },
+                    "has_report": {
+                        "type": "boolean",
+                        "description": "Le compte rendu de l'intervention est disponible."
+                    },
                     "payment_method": {
                         "type": "string"
                     },
@@ -2492,6 +3399,9 @@
                     "patient",
                     "address",
                     "price",
+                    "professional",
+                    "tracking",
+                    "has_report",
                     "payment_method",
                     "has_prescription",
                     "can_cancel",
@@ -2510,6 +3420,188 @@
                     "pro"
                 ],
                 "title": "ClientApp"
+            },
+            "InterventionResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "booking_id": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string",
+                        "description": "`in_progress` tant que le compte rendu n'est pas valid\u00e9, puis `validated`."
+                    },
+                    "arrived_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "ended_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "report": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "properties": {
+                            "version": {
+                                "type": "integer"
+                            },
+                            "vitals": {
+                                "description": "Constantes relev\u00e9es : `systolic`, `diastolic`, `pulse`, `temperature`, `glucose`, `spo2`.",
+                                "anyOf": [
+                                    {
+                                        "type": "object",
+                                        "additionalProperties": {}
+                                    },
+                                    {
+                                        "type": "string"
+                                    }
+                                ]
+                            },
+                            "observations": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "signed_by_name": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "is_signed": {
+                                "type": "boolean"
+                            },
+                            "photos_count": {
+                                "type": "integer"
+                            },
+                            "validated_at": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "amendment_reason": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "description": "Motif de la correction, si cette version est un avenant."
+                            }
+                        },
+                        "required": [
+                            "version",
+                            "vitals",
+                            "observations",
+                            "signed_by_name",
+                            "is_signed",
+                            "photos_count",
+                            "validated_at",
+                            "amendment_reason"
+                        ]
+                    },
+                    "acts": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "act_id": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                },
+                                "label": {
+                                    "type": "string"
+                                },
+                                "quantity": {
+                                    "type": "integer"
+                                }
+                            },
+                            "required": [
+                                "act_id",
+                                "label",
+                                "quantity"
+                            ]
+                        }
+                    },
+                    "consumables": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "consumable_id": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                },
+                                "label": {
+                                    "type": "string"
+                                },
+                                "quantity": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "consumable_id",
+                                "label",
+                                "quantity"
+                            ]
+                        }
+                    },
+                    "versions": {
+                        "type": "array",
+                        "description": "Historique des versions : l'original puis les avenants.",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "version": {
+                                    "type": "integer"
+                                },
+                                "validated_at": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                },
+                                "amendment_reason": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                }
+                            },
+                            "required": [
+                                "version",
+                                "validated_at",
+                                "amendment_reason"
+                            ]
+                        }
+                    }
+                },
+                "required": [
+                    "id",
+                    "booking_id",
+                    "status",
+                    "arrived_at",
+                    "ended_at",
+                    "report",
+                    "acts",
+                    "consumables",
+                    "versions"
+                ],
+                "title": "InterventionResource"
             },
             "MissionOfferResource": {
                 "type": "object",
