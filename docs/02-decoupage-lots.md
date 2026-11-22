@@ -46,6 +46,16 @@ Tâche 4.4 et début de 4.5 livrés le 2026-11-21 (162 tests côté API, 73 côt
 - Non fait dans 4.4 : choix de l'adresse sur une carte (clé Google Maps). Non fait dans 4.5 : passage automatique à la coordination après un délai, sans objet tant que toute demande est validée par un coordinateur.
 - Toujours aucun essai sur un appareil ; l'appareil photo et la galerie (ordonnance) s'ajoutent aux éléments natifs jamais lancés.
 
+Affectation livrée le 2026-11-22 (tâche 6.2, et partie serveur de 5.3) — 191 tests côté API :
+
+- Le coordinateur choisit parmi les professionnels éligibles, classés par zone couverte, disponibilité, distance et note. Deux modes : affectation directe, ou proposition avec délai de réponse (120 secondes par défaut, réglable).
+- Conditions obligatoires, même pour une affectation directe : compte actif et vérifié, assurance responsabilité civile approuvée et valable le jour du soin, profession exigée par le service, aucune autre mission au même moment.
+- Côté professionnel (API seulement) : propositions en attente, acceptation, refus, mes missions, détail d'une mission, désistement avant le départ, enregistrement de l'appareil pour les notifications.
+- Avant d'accepter, le professionnel ne voit que le soin, le créneau, la zone et la distance.
+- Non fait : écrans de l'application professionnel (5.3), affectation automatique (6.3), inscription et vérification des professionnels (5.1, 6.5). En attendant, `php artisan db:seed --class=DemoProfessionalsSeeder` installe cinq professionnels fictifs.
+- Question 20 toujours ouverte : une seule proposition à la fois (choix fait ici), ou diffusion à plusieurs professionnels en même temps.
+- Les notifications partent par le service factice : aucun téléphone ne reçoit rien tant que Firebase n'est pas branché.
+
 ## Lot 3 — Socle technique
 
 | N° | Tâche | Résultat vérifiable |

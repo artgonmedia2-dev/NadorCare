@@ -11,6 +11,7 @@ Plateforme de coordination de soins à domicile à Nador (Maroc) : application p
 - Étape 1 (cadrage) : validée le 2026-11-21.
 - Étape 2 (socle technique, lot 3) : livrée le 2026-11-21 (avancement en tête de `docs/02-decoupage-lots.md`). Reste du lot 3 reporté au lot 6 : écrans Filament de gestion des utilisateurs, des rôles et des journaux.
 - Lot 4 : tâches 4.0 (socle Flutter), 4.1 (compte), 4.2 (profils de patients, adresses) 4.3 (catalogue, avec sa gestion dans le back-office) et 4.4 (réservation, dans un cadre provisoire : espèces, créneaux de journée) livrées le 2026-11-21. Jamais compilé ni lancé sur un appareil : à faire avant d'aller plus loin côté mobile.
+- Affectation (6.2 et partie serveur de 5.3) livrée le 2026-11-22 : back-office et API, pas encore d'écran dans l'application professionnel.
 - Suite des lots 4 à 7 : en attente des points à trancher (`docs/03-questions-ouvertes.md`, sections B et C).
 - Dépôt : `https://github.com/artgonmedia2-dev/NadorCare.git`, branche `main`.
 
@@ -55,6 +56,7 @@ Organisation de `/api/app` :
 - `lang/{fr,ar,en}/api.php` : tous les textes renvoyés par l'API. `lang/{fr,ar,en}/admin.php` : tous les libellés du back-office.
 - `Filament/Resources/<Pluriel>` : écrans du back-office (structure générée par `make:filament-resource`). Chaque ressource limite son accès par `canAccess()` et une permission. Les champs traduisibles passent par `Filament\Support\TranslatableFields`.
 - Les textes stockés en `{fr, ar, en}` se lisent avec `Support\Translated::pick()`. Ne pas comparer ces tableaux avec `assertSame` : PostgreSQL ne garde pas l'ordre des clés d'un `jsonb`.
+- Une liste Filament charge souvent une relation avec quelques colonnes seulement (`service:id,name`) : une action métier ne doit pas compter sur une relation déjà chargée, elle relit ce dont elle a besoin (défaut rencontré le 2026-11-22 dans l'affectation).
 - Dans les tests, la langue par défaut est le français (`Accept-Language: fr`, posé par `Tests\TestCase`).
 
 Points d'entrée obligatoires :
@@ -62,6 +64,8 @@ Points d'entrée obligatoires :
 - lire les données de santé d'un patient : `ReadPatientRecord` (vérifie le droit, journalise) ;
 - lire ou écrire un fichier privé : `EncryptedFileStore` ;
 - changer le statut d'une réservation : `TransitionBooking` ; créer une réservation : `CreateBooking` ; l'annuler : `CancelBooking` (calcule les frais) ;
+- savoir qui peut prendre une réservation : `Services\Assignment\ProfessionalMatcher` (seule source des conditions d'éligibilité) ; affecter : `Actions\Assignment\AssignProfessional`, `OfferMission`, `RespondToOffer`, `UnassignProfessional` ;
+- prévenir un professionnel : `Services\Notifications\MissionNotifier` (jamais de donnée du patient dans une notification) ;
 - lire un paramètre de gestion : `Services\Settings\Settings` (valeurs par défaut dans `Settings::DEFAULTS`) ;
 - calculer un prix : `Services\Bookings\PriceCalculator` ; savoir si un créneau est réservable : `Services\Bookings\BookingSchedule` ;
 - renvoyer une erreur métier : `ApiException('code')`, avec le texte dans `lang/*/api.php`.
@@ -120,6 +124,8 @@ docker compose logs horizon --tail 20
 php artisan serve                      # http://localhost:8000
 php artisan migrate:fresh --seed
 php artisan db:seed --class=DemoCatalogueSeeder   # catalogue de démonstration (prix inventés, jamais en production)
+php artisan db:seed --class=DemoProfessionalsSeeder   # cinq professionnels fictifs, pour essayer l'affectation
+php artisan nadorcare:expire-offers    # clôt les propositions sans réponse (lancée chaque minute par le planificateur)
 php artisan nadorcare:create-staff     # compte du back-office
 php artisan nadorcare:files-key        # clé de chiffrement des fichiers
 composer test                          # tests, base nadorcare_test dans Docker
