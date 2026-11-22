@@ -1,8 +1,10 @@
 <?php
 
-use Illuminate\Foundation\Inspiring;
-use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Schedule;
 
-Artisan::command('inspire', function () {
-    $this->comment(Inspiring::quote());
-})->purpose('Display an inspiring quote');
+/*
+| Tâches planifiées. En local, le conteneur « scheduler » les exécute (php artisan schedule:work).
+*/
+
+// Propositions de mission restées sans réponse après le délai.
+Schedule::command('nadorcare:expire-offers')->everyMinute()->withoutOverlapping();

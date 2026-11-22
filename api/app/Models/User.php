@@ -31,6 +31,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property array<string>|null $app_authentication_recovery_codes
  * @property Carbon|null $phone_verified_at
  * @property Carbon|null $last_login_at
+ * @property-read Professional|null $professional
  */
 class User extends Authenticatable implements FilamentUser, HasAppAuthentication, HasAppAuthenticationRecovery
 {
