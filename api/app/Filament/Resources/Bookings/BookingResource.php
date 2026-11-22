@@ -2,6 +2,9 @@
 
 namespace App\Filament\Resources\Bookings;
 
+use App\Actions\Assignment\AssignProfessional;
+use App\Actions\Assignment\OfferMission;
+use App\Actions\Assignment\UnassignProfessional;
 use App\Actions\Bookings\CancelBooking;
 use App\Actions\Bookings\TransitionBooking;
 use App\Enums\BookingStatus;
@@ -9,9 +12,12 @@ use App\Enums\Permission;
 use App\Exceptions\ApiException;
 use App\Filament\Resources\Bookings\Pages\ListBookings;
 use App\Models\Booking;
+use App\Models\Professional;
+use App\Services\Assignment\ProfessionalMatcher;
 use App\Support\Translated;
 use BackedEnum;
 use Filament\Actions\Action;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
@@ -88,7 +94,7 @@ class BookingResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn (Builder $query) => $query->with(['service:id,name', 'patientProfile:id,first_name,last_name', 'user:id,phone']))
+            ->modifyQueryUsing(fn (Builder $query) => $query->with(['service:id,name', 'patientProfile:id,first_name,last_name', 'user:id,phone', 'professional.user:id,name']))
             ->defaultSort('scheduled_at')
             ->columns([
                 TextColumn::make('reference')
@@ -114,6 +120,9 @@ class BookingResource extends Resource
                 TextColumn::make('patient')
                     ->label(__('admin.bookings.patient'))
                     ->state(fn (Booking $record) => trim($record->patientProfile->first_name.' '.$record->patientProfile->last_name)),
+                TextColumn::make('professional.user.name')
+                    ->label(__('admin.bookings.professional'))
+                    ->placeholder('—'),
                 TextColumn::make('user.phone')
                     ->label(__('admin.bookings.phone')),
                 TextColumn::make('address')
@@ -142,6 +151,43 @@ class BookingResource extends Resource
                         fn () => app(TransitionBooking::class)->handle($record, BookingStatus::Confirmed, auth()->user()),
                         __('admin.bookings.confirmed'),
                     )),
+                // Affectation directe : la coordination désigne le soignant sans attendre sa réponse.
+                Action::make('assign')
+                    ->label(__('admin.bookings.assign'))
+                    ->icon(Heroicon::OutlinedUserPlus)
+                    ->color('primary')
+                    ->schema(fn (Booking $record) => [self::candidateSelect($record)])
+                    ->visible(fn (Booking $record) => $record->status === BookingStatus::Confirmed && self::mayAssign())
+                    ->action(fn (Booking $record, array $data) => self::run(
+                        fn () => app(AssignProfessional::class)->handle($record, Professional::query()->findOrFail($data['professional_id']), auth()->user()),
+                        __('admin.bookings.assigned'),
+                    )),
+                // Proposition : le soignant a un délai pour accepter ou refuser dans son application.
+                Action::make('offer')
+                    ->label(__('admin.bookings.offer'))
+                    ->icon(Heroicon::OutlinedPaperAirplane)
+                    ->color('gray')
+                    ->schema(fn (Booking $record) => [self::candidateSelect($record)])
+                    ->visible(fn (Booking $record) => $record->status === BookingStatus::Confirmed && self::mayAssign())
+                    ->action(fn (Booking $record, array $data) => self::run(
+                        fn () => app(OfferMission::class)->handle($record, Professional::query()->findOrFail($data['professional_id']), auth()->user()),
+                        __('admin.bookings.offered'),
+                    )),
+                Action::make('unassign')
+                    ->label(__('admin.bookings.unassign'))
+                    ->icon(Heroicon::OutlinedArrowUturnLeft)
+                    ->color('warning')
+                    ->schema([
+                        Textarea::make('reason')
+                            ->label(__('admin.bookings.unassign_reason'))
+                            ->required()
+                            ->maxLength(500),
+                    ])
+                    ->visible(fn (Booking $record) => in_array($record->status, [BookingStatus::Assigned, BookingStatus::EnRoute], true) && self::mayAssign())
+                    ->action(fn (Booking $record, array $data) => self::run(
+                        fn () => app(UnassignProfessional::class)->handle($record, auth()->user(), $data['reason']),
+                        __('admin.bookings.unassigned'),
+                    )),
                 Action::make('cancel')
                     ->label(__('admin.bookings.cancel'))
                     ->icon(Heroicon::OutlinedXMark)
@@ -159,6 +205,38 @@ class BookingResource extends Resource
                         __('admin.bookings.cancelled'),
                     )),
             ]);
+    }
+
+    private static function mayAssign(): bool
+    {
+        return auth()->user()?->can(Permission::BookingsAssign->value) ?? false;
+    }
+
+    /**
+     * Liste des professionnels qui peuvent prendre la réservation, les mieux placés d'abord
+     * (zone couverte, disponibilité, distance, note). Seuls les éligibles y figurent.
+     */
+    private static function candidateSelect(Booking $booking): Select
+    {
+        $options = [];
+
+        foreach (app(ProfessionalMatcher::class)->candidatesFor($booking) as $candidate) {
+            $details = array_filter([
+                $candidate->distanceMeters === null ? null : number_format($candidate->distanceMeters / 1000, 1, ',', ' ').' km',
+                $candidate->coversZone ? __('admin.bookings.candidate.covers_zone') : __('admin.bookings.candidate.outside_zone'),
+                $candidate->available ? __('admin.bookings.candidate.available') : __('admin.bookings.candidate.unavailable'),
+                $candidate->rating === null ? null : number_format($candidate->rating, 1, ',', ' ').' / 5',
+            ]);
+
+            $options[$candidate->professional->id] = ($candidate->professional->user->name ?? $candidate->professional->user->phone)
+                .' — '.implode(' · ', $details);
+        }
+
+        return Select::make('professional_id')
+            ->label(__('admin.bookings.professional'))
+            ->helperText($options === [] ? __('admin.bookings.candidate.none') : __('admin.bookings.candidate.help'))
+            ->options($options)
+            ->required();
     }
 
     /**
