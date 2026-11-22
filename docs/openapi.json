@@ -30,6 +30,9 @@
             "name": "R\u00e9servations"
         },
         {
+            "name": "Professionnel \u2014 dossier"
+        },
+        {
             "name": "Professionnel \u2014 missions"
         }
     ],
@@ -846,6 +849,124 @@
                 "security": []
             }
         },
+        "/catalogue/professional-categories": {
+            "get": {
+                "operationId": "v1.catalogue.professional-categories",
+                "description": "Professions de sant\u00e9 accept\u00e9es sur la plateforme, avec les justificatifs exig\u00e9s pour\nchacune. Sert \u00e0 l'inscription d'un professionnel.",
+                "summary": "Professions",
+                "tags": [
+                    "Catalogue"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string"
+                                                    },
+                                                    "code": {
+                                                        "type": "string"
+                                                    },
+                                                    "name": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "has_order": {
+                                                        "type": "boolean",
+                                                        "description": "La profession a un Ordre : son inscription est exig\u00e9e."
+                                                    },
+                                                    "required_documents": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "string"
+                                                        }
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "code",
+                                                    "name",
+                                                    "has_order",
+                                                    "required_documents"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": []
+            }
+        },
+        "/catalogue/zones": {
+            "get": {
+                "operationId": "v1.catalogue.zones",
+                "description": "Zones o\u00f9 le service est ouvert.",
+                "summary": "Zones desservies",
+                "tags": [
+                    "Catalogue"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string"
+                                                    },
+                                                    "slug": {
+                                                        "type": "string"
+                                                    },
+                                                    "name": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "slug",
+                                                    "name"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": []
+            }
+        },
         "/files/prescriptions": {
             "post": {
                 "operationId": "v1.prescriptions.store",
@@ -1285,6 +1406,407 @@
                                     "properties": {
                                         "data": {
                                             "$ref": "#/components/schemas/BookingResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/pro/profile": {
+            "get": {
+                "operationId": "v1.pro.profile.show",
+                "description": "R\u00e9pond `professional_profile_required` tant que le dossier n'a pas \u00e9t\u00e9 cr\u00e9\u00e9.",
+                "summary": "Mon dossier professionnel",
+                "tags": [
+                    "Professionnel \u2014 dossier"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`ProfessionalFileResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ProfessionalFileResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "put": {
+                "operationId": "v1.pro.profile.save",
+                "description": "Possible tant que le dossier n'est pas soumis, ou apr\u00e8s un refus.",
+                "summary": "Cr\u00e9er ou modifier mon dossier",
+                "tags": [
+                    "Professionnel \u2014 dossier"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "professional_category_id": {
+                                        "type": "string",
+                                        "description": "Profession, parmi celles de `GET /catalogue/professional-categories`."
+                                    },
+                                    "license_number": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "description": "Num\u00e9ro d'autorisation d'exercice.",
+                                        "maxLength": 60
+                                    },
+                                    "order_number": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "description": "Num\u00e9ro d'inscription \u00e0 l'Ordre, pour les professions qui en ont un.",
+                                        "maxLength": 60
+                                    }
+                                },
+                                "required": [
+                                    "professional_category_id"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`ProfessionalFileResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ProfessionalFileResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/pro/profile/documents": {
+            "post": {
+                "operationId": "v1.pro.profile.documents.store",
+                "description": "Photo ou PDF, chiffr\u00e9 avant stockage. La date d'expiration est obligatoire pour\nl'assurance responsabilit\u00e9 civile.",
+                "summary": "D\u00e9poser un justificatif",
+                "tags": [
+                    "Professionnel \u2014 dossier"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "type": {
+                                        "type": "string",
+                                        "description": "`identity`, `diploma`, `practice_authorization`, `order_registration` ou `rc_insurance`.",
+                                        "enum": [
+                                            "identity",
+                                            "diploma",
+                                            "practice_authorization",
+                                            "order_registration",
+                                            "rc_insurance"
+                                        ]
+                                    },
+                                    "file": {
+                                        "type": "string",
+                                        "format": "binary",
+                                        "contentMediaType": "application/octet-stream",
+                                        "description": "Image JPEG ou PNG, ou PDF. 10 Mo au plus."
+                                    },
+                                    "expires_at": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "format": "date",
+                                        "description": "Date de fin de validit\u00e9, `AAAA-MM-JJ`."
+                                    }
+                                },
+                                "required": [
+                                    "type",
+                                    "file"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "`ProfessionalFileResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ProfessionalFileResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/pro/profile/submit": {
+            "post": {
+                "operationId": "v1.pro.profile.submit",
+                "description": "R\u00e9pond `documents_missing` avec la liste des justificatifs qui manquent.",
+                "summary": "Soumettre mon dossier \u00e0 la v\u00e9rification",
+                "tags": [
+                    "Professionnel \u2014 dossier"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`ProfessionalFileResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ProfessionalFileResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/pro/profile/zones": {
+            "put": {
+                "operationId": "v1.pro.profile.zones",
+                "description": "Remplace la liste des zones couvertes, parmi celles de `GET /catalogue/zones`.",
+                "summary": "Choisir mes zones",
+                "tags": [
+                    "Professionnel \u2014 dossier"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "zone_ids": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "maxItems": 50,
+                                        "uniqueItems": true
+                                    }
+                                },
+                                "required": [
+                                    "zone_ids"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`ProfessionalFileResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ProfessionalFileResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/pro/profile/availabilities": {
+            "put": {
+                "operationId": "v1.pro.profile.availabilities",
+                "description": "Remplace toutes les plages. Heures de Nador ; `weekday` : 0 = dimanche \u2026 6 = samedi.",
+                "summary": "D\u00e9finir mon agenda hebdomadaire",
+                "tags": [
+                    "Professionnel \u2014 dossier"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "availabilities": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "weekday": {
+                                                    "type": "integer",
+                                                    "minimum": 0,
+                                                    "maximum": 6
+                                                },
+                                                "start_time": {
+                                                    "type": "string"
+                                                },
+                                                "end_time": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "weekday",
+                                                "start_time",
+                                                "end_time"
+                                            ]
+                                        },
+                                        "maxItems": 42
+                                    }
+                                },
+                                "required": [
+                                    "availabilities"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`ProfessionalFileResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ProfessionalFileResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/pro/profile/online": {
+            "put": {
+                "operationId": "v1.pro.profile.online",
+                "description": "R\u00e9serv\u00e9 aux professionnels v\u00e9rifi\u00e9s.",
+                "summary": "Me mettre en ligne ou hors ligne",
+                "tags": [
+                    "Professionnel \u2014 dossier"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "is_online": {
+                                        "type": "boolean"
+                                    }
+                                },
+                                "required": [
+                                    "is_online"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`ProfessionalFileResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ProfessionalFileResource"
                                         }
                                     },
                                     "required": [
@@ -2328,6 +2850,178 @@
                     "other"
                 ],
                 "title": "PatientRelationship"
+            },
+            "ProfessionalFileResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "verification_status": {
+                        "type": "string",
+                        "description": "`draft`, `submitted`, `under_review`, `verified`, `rejected` ou `suspended`.",
+                        "enum": [
+                            "draft",
+                            "submitted",
+                            "under_review",
+                            "verified",
+                            "rejected",
+                            "suspended"
+                        ]
+                    },
+                    "status_reason": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Motif du refus ou de la suspension."
+                    },
+                    "category": {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "string"
+                            },
+                            "code": {
+                                "type": "string"
+                            },
+                            "name": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "code",
+                            "name"
+                        ]
+                    },
+                    "license_number": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "order_number": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "is_online": {
+                        "type": "boolean"
+                    },
+                    "required_documents": {
+                        "type": "string",
+                        "description": "Justificatifs exig\u00e9s pour cette profession."
+                    },
+                    "missing_documents": {
+                        "type": "string",
+                        "description": "Justificatifs exig\u00e9s qui restent \u00e0 d\u00e9poser."
+                    },
+                    "documents": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "id": {
+                                    "type": "string"
+                                },
+                                "type": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "string"
+                                },
+                                "expires_at": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                },
+                                "rejection_reason": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                }
+                            },
+                            "required": [
+                                "id",
+                                "type",
+                                "status",
+                                "expires_at",
+                                "rejection_reason"
+                            ]
+                        }
+                    },
+                    "can_submit": {
+                        "type": "boolean",
+                        "description": "Le dossier est complet et peut \u00eatre soumis."
+                    },
+                    "zones": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "id": {
+                                    "type": "string"
+                                },
+                                "name": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                }
+                            },
+                            "required": [
+                                "id",
+                                "name"
+                            ]
+                        }
+                    },
+                    "availabilities": {
+                        "type": "array",
+                        "description": "Agenda hebdomadaire, heures de Nador. `weekday` : 0 = dimanche \u2026 6 = samedi.",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "weekday": {
+                                    "type": "integer"
+                                },
+                                "start_time": {
+                                    "type": "string"
+                                },
+                                "end_time": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "weekday",
+                                "start_time",
+                                "end_time"
+                            ]
+                        }
+                    }
+                },
+                "required": [
+                    "id",
+                    "verification_status",
+                    "status_reason",
+                    "category",
+                    "license_number",
+                    "order_number",
+                    "is_online",
+                    "required_documents",
+                    "missing_documents",
+                    "documents",
+                    "can_submit",
+                    "zones",
+                    "availabilities"
+                ],
+                "title": "ProfessionalFileResource"
             },
             "RequestOtpRequest": {
                 "type": "object",

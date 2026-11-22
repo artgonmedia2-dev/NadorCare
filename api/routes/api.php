@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\PatientProfileController;
 use App\Http\Controllers\Api\V1\PrescriptionController;
 use App\Http\Controllers\Api\V1\Pro\MissionController;
+use App\Http\Controllers\Api\V1\Pro\ProfileController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -23,6 +24,8 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::get('/categories', [CatalogueController::class, 'categories'])->name('categories');
         Route::get('/services', [CatalogueController::class, 'services'])->name('services');
         Route::get('/services/{slug}', [CatalogueController::class, 'service'])->name('service');
+        Route::get('/professional-categories', [CatalogueController::class, 'professionalCategories'])->name('professional-categories');
+        Route::get('/zones', [CatalogueController::class, 'zones'])->name('zones');
     });
 
     Route::prefix('auth')->name('auth.')->group(function () {
@@ -39,6 +42,14 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
 
     // Réservé aux jetons de l'application professionnel.
     Route::middleware(['auth:sanctum', 'ability:app:pro'])->prefix('pro')->name('pro.')->group(function () {
+        Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
+        Route::put('/profile', [ProfileController::class, 'save'])->name('profile.save');
+        Route::post('/profile/documents', [ProfileController::class, 'uploadDocument'])->name('profile.documents.store');
+        Route::post('/profile/submit', [ProfileController::class, 'submit'])->name('profile.submit');
+        Route::put('/profile/zones', [ProfileController::class, 'zones'])->name('profile.zones');
+        Route::put('/profile/availabilities', [ProfileController::class, 'availabilities'])->name('profile.availabilities');
+        Route::put('/profile/online', [ProfileController::class, 'online'])->name('profile.online');
+
         Route::get('/offers', [MissionController::class, 'offers'])->name('offers.index');
         Route::post('/offers/{offer}/accept', [MissionController::class, 'accept'])->name('offers.accept');
         Route::post('/offers/{offer}/decline', [MissionController::class, 'decline'])->name('offers.decline');

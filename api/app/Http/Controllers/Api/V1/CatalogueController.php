@@ -6,9 +6,13 @@ use App\Actions\Catalogue\SearchServices;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\V1\ServiceCategoryResource;
 use App\Http\Resources\Api\V1\ServiceResource;
+use App\Models\ProfessionalCategory;
 use App\Models\ServiceCategory;
+use App\Models\Zone;
+use App\Support\Translated;
 use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
@@ -39,6 +43,49 @@ class CatalogueController extends Controller
                 ->orderBy('id')
                 ->get()
         );
+    }
+
+    /**
+     * Professions
+     *
+     * Professions de santé acceptées sur la plateforme, avec les justificatifs exigés pour
+     * chacune. Sert à l'inscription d'un professionnel.
+     *
+     * @unauthenticated
+     */
+    public function professionalCategories(): JsonResponse
+    {
+        return response()->json([
+            'data' => ProfessionalCategory::query()->where('is_active', true)->orderBy('code')->get()
+                ->map(fn (ProfessionalCategory $category) => [
+                    'id' => $category->id,
+                    'code' => $category->code,
+                    'name' => Translated::pick($category->name),
+                    /** La profession a un Ordre : son inscription est exigée. */
+                    'has_order' => $category->has_order,
+                    /** @var list<string> */
+                    'required_documents' => array_values($category->required_document_types ?? []),
+                ])->all(),
+        ]);
+    }
+
+    /**
+     * Zones desservies
+     *
+     * Zones où le service est ouvert.
+     *
+     * @unauthenticated
+     */
+    public function zones(): JsonResponse
+    {
+        return response()->json([
+            'data' => Zone::query()->where('is_active', true)->orderBy('sort')->get(['id', 'name', 'slug'])
+                ->map(fn (Zone $zone) => [
+                    'id' => $zone->id,
+                    'slug' => $zone->slug,
+                    'name' => Translated::pick($zone->name),
+                ])->all(),
+        ]);
     }
 
     /**

@@ -122,7 +122,7 @@ class MissionController extends Controller
 
     private function professional(Request $request): Professional
     {
-        $professional = $request->user()->professional;
+        $professional = $request->user()->professional()->first();
 
         if (! $professional) {
             throw new ApiException('professional_profile_required', 403);
