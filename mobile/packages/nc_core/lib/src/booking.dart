@@ -125,6 +125,25 @@ class BookingDraft {
       };
 }
 
+/// Suivi de l'arrivée du soignant pendant son trajet.
+class BookingTracking {
+  const BookingTracking({required this.latitude, required this.longitude, this.etaMinutes});
+
+  factory BookingTracking.fromJson(Map<String, dynamic> json) {
+    return BookingTracking(
+      latitude: (json['latitude'] as num).toDouble(),
+      longitude: (json['longitude'] as num).toDouble(),
+      etaMinutes: (json['eta_minutes'] as num?)?.toInt(),
+    );
+  }
+
+  final double latitude;
+  final double longitude;
+
+  /// Durée estimée avant l'arrivée ; `null` si elle n'a pas pu être calculée.
+  final int? etaMinutes;
+}
+
 /// Réservation, telle que renvoyée par l'API.
 class Booking {
   const Booking({
@@ -143,12 +162,18 @@ class Booking {
     this.cancellationFeeIfCancelledNow,
     this.cancellationFee,
     this.patientNote,
+    this.professionalName,
+    this.professionalProfession,
+    this.tracking,
+    this.hasReport = false,
   });
 
   factory Booking.fromJson(Map<String, dynamic> json) {
     final service = (json['service'] as Map<String, dynamic>?) ?? const <String, dynamic>{};
     final patient = (json['patient'] as Map<String, dynamic>?) ?? const <String, dynamic>{};
     final address = (json['address'] as Map<String, dynamic>?) ?? const <String, dynamic>{};
+    final professional = json['professional'] as Map<String, dynamic>?;
+    final tracking = json['tracking'] as Map<String, dynamic>?;
 
     return Booking(
       id: json['id'] as String,
@@ -166,6 +191,10 @@ class Booking {
       cancellationFeeIfCancelledNow: (json['cancellation_fee_if_cancelled_now'] as num?)?.toInt(),
       cancellationFee: (json['cancellation_fee'] as num?)?.toInt(),
       patientNote: json['patient_note'] as String?,
+      professionalName: professional?['name'] as String?,
+      professionalProfession: professional?['profession'] as String?,
+      tracking: tracking == null ? null : BookingTracking.fromJson(tracking),
+      hasReport: (json['has_report'] as bool?) ?? false,
     );
   }
 
@@ -194,6 +223,16 @@ class Booking {
   /// Frais retenus après annulation, en centimes.
   final int? cancellationFee;
   final String? patientNote;
+
+  /// Soignant affecté, dès qu'il y en a un.
+  final String? professionalName;
+  final String? professionalProfession;
+
+  /// Position du soignant ; présente uniquement pendant son trajet.
+  final BookingTracking? tracking;
+
+  /// Le compte rendu de l'intervention peut être lu.
+  final bool hasReport;
 
   bool get isClosed => status == BookingStatus.completed || status == BookingStatus.cancelled;
 }

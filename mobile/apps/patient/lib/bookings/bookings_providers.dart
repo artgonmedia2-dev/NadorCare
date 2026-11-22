@@ -12,6 +12,8 @@ String routeBookingNew(String serviceSlug) => '/bookings/new/$serviceSlug';
 
 String routeBooking(String id) => '/bookings/detail/$id';
 
+String routeBookingReport(String id) => '/bookings/detail/$id/report';
+
 final bookingsApiProvider = Provider<BookingsApi>((ref) => HttpBookingsApi(ref.watch(apiClientProvider)));
 
 final prescriptionPickerProvider = Provider<PrescriptionPicker>((ref) => DevicePrescriptionPicker());
@@ -46,6 +48,12 @@ final bookingDetailProvider = FutureProvider.autoDispose.family<Booking, String>
     ref.watch(settingsControllerProvider.select((settings) => settings.languageCode));
     return ref.watch(bookingsApiProvider).get(id);
   },
+  retry: (retryCount, error) => null,
+);
+
+/// Compte rendu d'un soin terminé.
+final bookingReportProvider = FutureProvider.autoDispose.family<Intervention, String>(
+  (ref, id) => ref.watch(bookingsApiProvider).report(id),
   retry: (retryCount, error) => null,
 );
 

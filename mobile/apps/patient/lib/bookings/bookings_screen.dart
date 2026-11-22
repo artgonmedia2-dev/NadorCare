@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -82,8 +84,30 @@ class BookingDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _BookingDetailScreenState extends ConsumerState<BookingDetailScreen> {
+  /// Tant que les notifications ne sont pas branchées, la fiche se relit d'elle-même
+  /// quand un soignant est attendu : départ, arrivée estimée, début du soin.
+  static const Duration _refreshEvery = Duration(seconds: 20);
+
+  Timer? _timer;
   bool _cancelling = false;
   String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(_refreshEvery, (_) {
+      final status = ref.read(bookingDetailProvider(widget.bookingId)).value?.status;
+      if (mounted && (status == BookingStatus.assigned || status == BookingStatus.enRoute)) {
+        ref.invalidate(bookingDetailProvider(widget.bookingId));
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
 
   Future<void> _cancel(Booking booking) async {
     final l10n = context.l10n;
@@ -135,11 +159,17 @@ class _BookingDetailScreenState extends ConsumerState<BookingDetailScreen> {
     final detail = ref.watch(bookingDetailProvider(widget.bookingId));
 
     return switch (detail) {
-      AsyncData<Booking>(value: final booking) => NcPage(
+      AsyncValue<Booking>(value: final booking?) => NcPage(
           appBar: AppBar(),
           title: booking.serviceName,
           subtitle: l10n.bookingReference(isolateLtr(booking.reference)),
           actions: <Widget>[
+            if (booking.hasReport)
+              NcPrimaryButton(
+                key: const ValueKey<String>('booking-report'),
+                label: l10n.bookingReportOpen,
+                onPressed: () => context.push(routeBookingReport(booking.id)),
+              ),
             if (booking.canCancel)
               NcSecondaryButton(
                 key: const ValueKey<String>('booking-cancel'),
@@ -161,7 +191,23 @@ class _BookingDetailScreenState extends ConsumerState<BookingDetailScreen> {
               const SizedBox(height: NcSpacing.sm),
               Text(l10n.bookingFeeCharged(formatDirhams(booking.cancellationFee!, language))),
             ],
+            if (booking.status == BookingStatus.enRoute) ...<Widget>[
+              const SizedBox(height: NcSpacing.sm),
+              NcNotice(
+                key: const ValueKey<String>('booking-tracking'),
+                message: booking.tracking?.etaMinutes == null
+                    ? l10n.trackingOnTheWay
+                    : l10n.trackingEta(booking.tracking!.etaMinutes!),
+              ),
+            ],
             const SizedBox(height: NcSpacing.lg),
+            if ((booking.professionalName ?? '').isNotEmpty)
+              SummaryRow(
+                label: l10n.bookingProfessional,
+                value: <String?>[booking.professionalName, booking.professionalProfession]
+                    .whereType<String>()
+                    .join('\n'),
+              ),
             SummaryRow(label: l10n.summaryPatient, value: booking.patientName),
             SummaryRow(
               label: l10n.summarySlot,

@@ -117,13 +117,15 @@ class FakeBookingsApi implements BookingsApi {
   final List<String> uploads = <String>[];
   final List<Booking> bookings = <Booking>[];
   final List<String> cancelled = <String>[];
+  final List<String> reportReads = <String>[];
+  Intervention? validatedReport;
 
   PriceQuote _price(int base) {
     final extra = surcharges.fold<int>(0, (sum, line) => sum + line.amount);
     return PriceQuote(base: base, surcharges: surcharges, total: base + extra);
   }
 
-  Booking _booking(String id, BookingStatus status, {int? fee}) {
+  Booking _booking(String id, BookingStatus status, {int? fee, bool withProfessional = false, int? etaMinutes}) {
     return Booking(
       id: id,
       reference: 'NC-2026-000042',
@@ -139,6 +141,12 @@ class FakeBookingsApi implements BookingsApi {
       cancellationFeeIfCancelledNow: feeIfCancelledNow,
       cancellationFee: fee,
       patientNote: 'Sonner deux fois',
+      professionalName: withProfessional ? 'Samira' : null,
+      professionalProfession: withProfessional ? 'Infirmier' : null,
+      tracking: etaMinutes == null
+          ? null
+          : BookingTracking(latitude: 35.176, longitude: -2.92, etaMinutes: etaMinutes),
+      hasReport: status == BookingStatus.completed,
     );
   }
 
@@ -189,6 +197,12 @@ class FakeBookingsApi implements BookingsApi {
     final updated = _booking(id, BookingStatus.cancelled, fee: feeIfCancelledNow);
     bookings[bookings.indexWhere((booking) => booking.id == id)] = updated;
     return updated;
+  }
+
+  @override
+  Future<Intervention> report(String bookingId) async {
+    reportReads.add(bookingId);
+    return validatedReport!;
   }
 }
 
@@ -481,6 +495,78 @@ void main() {
     await tapAndSettle(tester, find.text(fr.bookingsPast));
     expect(byName('booking-B7'), findsOneWidget);
     expect(find.text(fr.statusCancelled), findsOneWidget);
+  });
+
+  testWidgets('pendant le trajet, le patient voit son soignant et l arrivée estimée', (tester) async {
+    final env = Env();
+    env.bookings.bookings
+        .add(env.bookings._booking('B7', BookingStatus.enRoute, withProfessional: true, etaMinutes: 7));
+    await env.pump(tester);
+
+    await tapAndSettle(tester, byName('home-bookings'));
+    await tapAndSettle(tester, byName('booking-B7'));
+
+    expect(find.text(fr.statusEnRoute), findsOneWidget);
+    expect(find.text('Samira\nInfirmier'), findsOneWidget);
+    expect(find.text(fr.trackingEta(7)), findsOneWidget);
+    expect(byName('booking-report'), findsNothing);
+
+    // Le soignant arrive : la fiche se met à jour d'elle-même.
+    env.bookings.bookings[0] = env.bookings._booking('B7', BookingStatus.inProgress, withProfessional: true);
+    await tester.pump(const Duration(seconds: 21));
+    await tester.pumpAndSettle();
+
+    expect(find.text(fr.statusInProgress), findsOneWidget);
+    expect(byName('booking-tracking'), findsNothing);
+  });
+
+  testWidgets('sans position récente, le patient sait seulement que le soignant est en route', (tester) async {
+    final env = Env();
+    env.bookings.bookings.add(env.bookings._booking('B7', BookingStatus.enRoute, withProfessional: true));
+    await env.pump(tester);
+
+    await tapAndSettle(tester, byName('home-bookings'));
+    await tapAndSettle(tester, byName('booking-B7'));
+
+    expect(find.text(fr.trackingOnTheWay), findsOneWidget);
+  });
+
+  testWidgets('une fois le soin terminé, le patient lit le compte rendu', (tester) async {
+    final env = Env();
+    env.bookings
+      ..bookings.add(env.bookings._booking('B7', BookingStatus.completed, withProfessional: true))
+      ..validatedReport = const Intervention(
+        id: 'I1',
+        bookingId: 'B7',
+        status: 'validated',
+        version: 2,
+        amendmentReason: 'Erreur de saisie sur la tension',
+        vitals: <Vital, num>{Vital.systolic: 125, Vital.temperature: 37.2},
+        observations: 'Pansement refait, plaie propre.',
+        acts: <ReportLine>[ReportLine(label: 'Réfection de pansement')],
+        consumables: <ReportLine>[ReportLine(label: 'Compresses stériles', quantity: 4)],
+        signedByName: 'Aïcha Benali',
+        isSigned: true,
+      );
+    await env.pump(tester);
+
+    await tapAndSettle(tester, byName('home-bookings'));
+    await tapAndSettle(tester, byName('bookings-scope-true'));
+    await tapAndSettle(tester, byName('booking-B7'));
+    expect(env.bookings.reportReads, isEmpty, reason: 'le compte rendu n est lu que sur demande');
+
+    await tapAndSettle(tester, byName('booking-report'));
+
+    expect(env.bookings.reportReads, <String>['B7']);
+    expect(find.text('Pansement refait, plaie propre.'), findsOneWidget);
+    expect(find.text(fr.vitalSystolic), findsOneWidget);
+    expect(find.text('125'), findsOneWidget);
+    expect(find.text('37.2'), findsOneWidget);
+    expect(find.text(fr.vitalPulse), findsNothing);
+    expect(find.text('Réfection de pansement'), findsOneWidget);
+    expect(find.text(fr.reportLineWithQuantity('Compresses stériles', '4')), findsOneWidget);
+    expect(find.text(fr.reportSignedBy('Aïcha Benali')), findsOneWidget);
+    expect(find.text(fr.reportAmended('Erreur de saisie sur la tension')), findsOneWidget);
   });
 
   testWidgets('en arabe, le parcours se lit de droite à gauche et l heure reste lisible', (tester) async {

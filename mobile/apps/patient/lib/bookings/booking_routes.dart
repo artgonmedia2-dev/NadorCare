@@ -1,6 +1,7 @@
 import 'package:go_router/go_router.dart';
 
 import 'booking_flow_screen.dart';
+import 'booking_report_screen.dart';
 import 'bookings_providers.dart';
 import 'bookings_screen.dart';
 
@@ -14,5 +15,9 @@ final List<RouteBase> bookingRoutes = <RouteBase>[
   GoRoute(
     path: '/bookings/detail/:id',
     builder: (context, state) => BookingDetailScreen(bookingId: state.pathParameters['id']!),
+  ),
+  GoRoute(
+    path: '/bookings/detail/:id/report',
+    builder: (context, state) => BookingReportScreen(bookingId: state.pathParameters['id']!),
   ),
 ];

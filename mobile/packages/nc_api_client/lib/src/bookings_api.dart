@@ -23,6 +23,9 @@ abstract interface class BookingsApi {
   Future<Booking> get(String id);
 
   Future<Booking> cancel(String id, {String? reason});
+
+  /// Compte rendu d'un soin terminé. Le serveur journalise cette lecture.
+  Future<Intervention> report(String bookingId);
 }
 
 class HttpBookingsApi implements BookingsApi {
@@ -73,5 +76,10 @@ class HttpBookingsApi implements BookingsApi {
   Future<Booking> cancel(String id, {String? reason}) async {
     final json = await _client.post('/bookings/$id/cancel', <String, dynamic>{'reason': ?reason});
     return Booking.fromJson(_data(json));
+  }
+
+  @override
+  Future<Intervention> report(String bookingId) async {
+    return Intervention.fromJson(_data(await _client.get('/bookings/$bookingId/report')));
   }
 }
