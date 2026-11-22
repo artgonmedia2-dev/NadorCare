@@ -12,7 +12,7 @@ Plateforme de coordination de soins à domicile à Nador (Maroc) : application p
 - Étape 2 (socle technique, lot 3) : livrée le 2026-11-21 (avancement en tête de `docs/02-decoupage-lots.md`). Reste du lot 3 reporté au lot 6 : écrans Filament de gestion des utilisateurs, des rôles et des journaux.
 - Lot 4 : tâches 4.0 (socle Flutter), 4.1 (compte), 4.2 (profils de patients, adresses) 4.3 (catalogue, avec sa gestion dans le back-office) et 4.4 (réservation, dans un cadre provisoire : espèces, créneaux de journée) livrées le 2026-11-21. Jamais compilé ni lancé sur un appareil : à faire avant d'aller plus loin côté mobile.
 - Affectation (6.2 et partie serveur de 5.3) livrée le 2026-11-22 : back-office et API, pas encore d'écran dans l'application professionnel.
-- Dossier des professionnels (parties serveur de 5.1 et 5.2, tâche 6.5) livré le 2026-11-22 : inscription, justificatifs, vérification, suspension, zones, agenda. L'application professionnel n'a encore aucun écran au-delà du compte.
+- Dossier des professionnels (parties serveur de 5.1 et 5.2, tâche 6.5) livré le 2026-11-22 : inscription, justificatifs, vérification, suspension, zones, agenda. Les écrans correspondants de l'application professionnel (5.1 à 5.3) sont livrés le même jour ; restent le déplacement, l'intervention et le compte rendu (5.4 à 5.6).
 - Suite des lots 4 à 7 : en attente des points à trancher (`docs/03-questions-ouvertes.md`, sections B et C).
 - Dépôt : `https://github.com/artgonmedia2-dev/NadorCare.git`, branche `main`.
 
@@ -89,6 +89,9 @@ Règles mobiles :
 - les erreurs d'API arrivent en `ApiFailure` ; le message du serveur est déjà traduit, `failureMessage()` le choisit ;
 - les numéros de téléphone et les codes s'affichent toujours de gauche à droite ; un numéro inséré dans une phrase passe par `isolateLtr()` (ne jamais écrire le caractère U+2066 dans le code, l'analyseur le refuse) ;
 - les heures de soin sont celles de Nador : l'application affiche `scheduled_date` et `scheduled_time` tels que le serveur les envoie, sans conversion vers le fuseau du téléphone ;
+- montants, dates et distances passent par les formateurs de `nc_l10n` (`formatDirhams`, `longDate`, `apiDate`, `formatDistance`) ;
+- un champ de saisie dans une fenêtre de dialogue vit dans un `StatefulWidget` qui possède son contrôleur : le détruire dès la fermeture casse l'animation de sortie (défaut rencontré le 2026-11-22) ;
+- tant que les notifications ne sont pas branchées, l'accueil du professionnel se rafraîchit seul toutes les 15 secondes ;
 - dans un test d'écran, agrandir la surface (`tester.view.physicalSize`) : les listes ne construisent que ce qui est visible.
 
 ## Règles non négociables
@@ -142,7 +145,7 @@ composer require <paquet> --ignore-platform-req=ext-pcntl --ignore-platform-req=
 # Mobile (dans /mobile)
 flutter pub get
 flutter analyze                               # tout l'espace de travail
-cd packages\nc_account; flutter test          # idem dans packages\nc_api_client et apps\patient
+cd packages\nc_account; flutter test          # idem dans packages\nc_api_client, apps\patient et apps\pro
 cd packages\nc_l10n; flutter gen-l10n         # après toute modification d'un fichier .arb
 cd apps\patient; flutter run                  # ou apps\pro ; API vue par l'émulateur sur 10.0.2.2:8000
 

@@ -66,6 +66,16 @@ Dossier des professionnels livré le 2026-11-22 (parties serveur de 5.1 et 5.2, 
 - Zones couvertes, agenda hebdomadaire et bascule en ligne (réservée aux professionnels vérifiés).
 - Non fait : les écrans de l'application professionnel pour tout cela, et l'envoi d'une alerte (notification ou e-mail) à l'approche d'une expiration.
 
+Écrans de l'application professionnel livrés le 2026-11-22 (5.1, 5.2 et 5.3) — 90 tests côté Flutter :
+
+- L'accueil suit l'état du dossier : création, justificatifs à déposer, vérification en cours, dossier à corriger, compte suspendu, puis propositions et missions une fois vérifié.
+- Dossier : choix de la profession, dépôt de chaque justificatif par l'appareil photo ou la galerie, date de fin de validité de l'assurance, envoi.
+- Zones couvertes, agenda hebdomadaire (une plage par jour à l'écran, l'API en accepte plusieurs), bascule en ligne.
+- Propositions : soin, créneau, zone, distance, heure limite de réponse ; accepter ou refuser. Missions : liste, fiche avec les informations utiles au soin, désistement avec motif.
+- Sans notifications (Firebase non branché), l'accueil se rafraîchit seul toutes les 15 secondes : c'est ainsi que les propositions et la validation du dossier apparaissent.
+- Non fait : itinéraire vers le domicile, départ, arrivée et compte rendu (5.4 à 5.6).
+- Toujours aucun essai sur un appareil, application professionnel comprise.
+
 ## Lot 3 — Socle technique
 
 | N° | Tâche | Résultat vérifiable |
