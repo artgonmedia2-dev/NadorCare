@@ -10,7 +10,9 @@ use App\Exceptions\ApiException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\StoreBookingRequest;
 use App\Http\Resources\Api\V1\BookingResource;
+use App\Http\Resources\Api\V1\InterventionResource;
 use App\Models\Booking;
+use App\Models\Intervention;
 use App\Models\Service;
 use App\Services\Bookings\BookingSchedule;
 use App\Services\Bookings\PriceCalculator;
@@ -26,7 +28,12 @@ use Illuminate\Validation\Rule;
 #[Group('Réservations', weight: 6)]
 class BookingController extends Controller
 {
-    private const RELATIONS = ['service:id,slug,name', 'patientProfile:id,first_name,last_name'];
+    private const RELATIONS = [
+        'service:id,slug,name',
+        'patientProfile:id,first_name,last_name',
+        'professional.user:id,name',
+        'professional.category:id,name',
+    ];
 
     /**
      * Créneaux réservables
@@ -154,6 +161,32 @@ class BookingController extends Controller
         $cancelled = $cancel->handle($this->find($request, $booking), $request->user(), $input['reason'] ?? null);
 
         return (new BookingResource($cancelled->load([...self::RELATIONS, 'statusHistory'])))->detailed();
+    }
+
+    /**
+     * Compte rendu de l'intervention
+     *
+     * Disponible une fois le soin terminé. Renvoie la version qui fait foi (le dernier
+     * avenant s'il y en a) et l'historique des versions. Cette lecture est inscrite au
+     * journal des accès.
+     */
+    public function report(Request $request, string $booking, AccessLogger $logger): InterventionResource
+    {
+        $found = $this->find($request, $booking);
+
+        $intervention = Intervention::query()
+            ->with('reports')
+            ->where('booking_id', $found->id)
+            ->where('status', Intervention::STATUS_VALIDATED)
+            ->first();
+
+        if (! $intervention) {
+            throw new ApiException('report_not_available', 404);
+        }
+
+        $logger->record(AccessAction::View, $intervention, $found->patient_profile_id, $found->id, $request->user());
+
+        return new InterventionResource($intervention);
     }
 
     private function find(Request $request, string $id): Booking

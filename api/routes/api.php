@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\V1\DeviceController;
 use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\PatientProfileController;
 use App\Http\Controllers\Api\V1\PrescriptionController;
+use App\Http\Controllers\Api\V1\Pro\InterventionController;
 use App\Http\Controllers\Api\V1\Pro\MissionController;
 use App\Http\Controllers\Api\V1\Pro\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -56,6 +57,17 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::get('/missions', [MissionController::class, 'index'])->name('missions.index');
         Route::get('/missions/{mission}', [MissionController::class, 'show'])->name('missions.show');
         Route::post('/missions/{mission}/withdraw', [MissionController::class, 'withdraw'])->name('missions.withdraw');
+
+        Route::post('/missions/{mission}/depart', [InterventionController::class, 'depart'])->name('missions.depart');
+        Route::post('/missions/{mission}/location', [InterventionController::class, 'location'])->middleware('throttle:120,1')->name('missions.location');
+        Route::post('/missions/{mission}/arrive', [InterventionController::class, 'arrive'])->name('missions.arrive');
+        Route::get('/missions/{mission}/reference', [InterventionController::class, 'reference'])->name('missions.reference');
+        Route::get('/missions/{mission}/intervention', [InterventionController::class, 'show'])->name('missions.intervention');
+        Route::put('/missions/{mission}/report', [InterventionController::class, 'saveReport'])->name('missions.report');
+        Route::post('/missions/{mission}/report/photos', [InterventionController::class, 'addPhoto'])->name('missions.report.photos');
+        Route::post('/missions/{mission}/report/signature', [InterventionController::class, 'sign'])->name('missions.report.signature');
+        Route::post('/missions/{mission}/complete', [InterventionController::class, 'complete'])->name('missions.complete');
+        Route::post('/interventions/{intervention}/amendments', [InterventionController::class, 'amend'])->name('interventions.amend');
     });
 
     // Réservé aux jetons de l'application patient (et du site) : un jeton de l'application
@@ -72,5 +84,6 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::post('/bookings', [BookingController::class, 'store'])->name('bookings.store');
         Route::get('/bookings/{booking}', [BookingController::class, 'show'])->name('bookings.show');
         Route::post('/bookings/{booking}/cancel', [BookingController::class, 'cancel'])->name('bookings.cancel');
+        Route::get('/bookings/{booking}/report', [BookingController::class, 'report'])->name('bookings.report');
     });
 });

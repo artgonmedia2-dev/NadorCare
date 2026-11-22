@@ -3,12 +3,15 @@
 namespace App\Http\Resources\Api\V1;
 
 use App\Actions\Bookings\CancelBooking;
+use App\Actions\Interventions\RunIntervention;
 use App\Enums\BookingStatus;
 use App\Models\Booking;
 use App\Models\BookingStatusHistory;
 use App\Support\Translated;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 /**
  * @mixin Booking
@@ -26,6 +29,38 @@ class BookingResource extends JsonResource
         $this->detailed = true;
 
         return $this;
+    }
+
+    /**
+     * Dernière position connue du soignant, seulement pendant qu'il est en route et si elle
+     * date de moins de dix minutes.
+     *
+     * @return array{latitude: float, longitude: float, eta_minutes: int|null, updated_at: string}|null
+     */
+    private function tracking(): ?array
+    {
+        if ($this->status !== BookingStatus::EnRoute || $this->professional_id === null) {
+            return null;
+        }
+
+        $position = DB::selectOne(
+            'SELECT ST_Y(last_location::geometry) AS latitude, ST_X(last_location::geometry) AS longitude, last_location_at
+             FROM professionals WHERE id = ? AND last_location IS NOT NULL AND last_location_at >= ?',
+            [$this->professional_id, now()->subMinutes(10)],
+        );
+
+        if (! $position) {
+            return null;
+        }
+
+        $eta = app(RunIntervention::class)->etaSeconds($this->resource, (float) $position->latitude, (float) $position->longitude);
+
+        return [
+            'latitude' => (float) $position->latitude,
+            'longitude' => (float) $position->longitude,
+            'eta_minutes' => $eta === null ? null : (int) ceil($eta / 60),
+            'updated_at' => Carbon::parse($position->last_location_at)->toIso8601String(),
+        ];
     }
 
     /**
@@ -77,6 +112,15 @@ class BookingResource extends JsonResource
                 'total' => $this->total_price,
                 'currency' => 'MAD',
             ],
+            /** Soignant affecté, dès qu'il y en a un. */
+            'professional' => $this->professional ? [
+                'name' => $this->professional->user->name,
+                'profession' => Translated::pick($this->professional->category->name),
+            ] : null,
+            /** Position du soignant et durée estimée avant son arrivée. Présent uniquement pendant le trajet. */
+            'tracking' => $this->tracking(),
+            /** Le compte rendu de l'intervention est disponible. */
+            'has_report' => $this->status === BookingStatus::Completed,
             'payment_method' => $this->payment_method,
             'has_prescription' => $this->prescription_file_id !== null,
             'can_cancel' => $cancellable,

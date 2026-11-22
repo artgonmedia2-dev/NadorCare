@@ -34,6 +34,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $prescription_file_id
  * @property array<string, mixed>|null $address_snapshot
  * @property array<string, mixed>|null $price_snapshot
+ * @property-read Professional|null $professional
  * @property-read Service $service
  * @property-read PatientProfile $patientProfile
  * @property-read Collection<int, BookingStatusHistory> $statusHistory
