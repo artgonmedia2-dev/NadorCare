@@ -8,6 +8,10 @@
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
 	<string>Nador Care Pro</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Nador Care utilise l'appareil photo pour photographier vos justificatifs.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Nador Care accède à vos photos pour joindre vos justificatifs.</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Nador Care utilise Face ID pour verrouiller l'application.</string>
 	<key>CFBundleExecutable</key>
