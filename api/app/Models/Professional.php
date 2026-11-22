@@ -18,6 +18,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string $professional_category_id
  * @property VerificationStatus $verification_status
  * @property bool $is_online
+ * @property string|null $license_number
+ * @property string|null $order_number
+ * @property string|null $suspension_reason
  * @property string|null $rating_avg
  * @property-read User $user
  * @property-read ProfessionalCategory $category

@@ -17,6 +17,9 @@ use Illuminate\Support\Carbon;
  * @property string $file_id
  * @property Carbon|null $expires_at
  * @property string $status
+ * @property string|null $rejection_reason
+ * @property-read File|null $file
+ * @property-read Professional $professional
  */
 class ProfessionalDocument extends Model
 {
@@ -40,6 +43,14 @@ class ProfessionalDocument extends Model
             'expires_at' => 'date',
             'reviewed_at' => 'datetime',
         ];
+    }
+
+    /**
+     * @return BelongsTo<File, $this>
+     */
+    public function file(): BelongsTo
+    {
+        return $this->belongsTo(File::class);
     }
 
     /**
