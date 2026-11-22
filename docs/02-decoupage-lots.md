@@ -76,6 +76,19 @@ Dossier des professionnels livré le 2026-11-22 (parties serveur de 5.1 et 5.2, 
 - Non fait : itinéraire vers le domicile, départ, arrivée et compte rendu (5.4 à 5.6).
 - Toujours aucun essai sur un appareil, application professionnel comprise.
 
+Déroulement de l'intervention livré le 2026-11-22 (5.4, 5.5, 5.6 sauf le paiement en ligne, et le suivi côté patient de 4.6 et 4.7) — 229 tests côté API, 103 côté Flutter :
+
+- Le professionnel part, pointe son arrivée, rédige le compte rendu (constantes avec bornes plausibles, observations, actes, consommables, photos), fait signer à l'écran, déclare les espèces reçues et termine. Le compte rendu validé est figé par la base elle-même ; une correction passe par un avenant qui garde l'original.
+- La position du professionnel n'est envoyée que pendant le trajet (du départ au pointage d'arrivée) et le serveur la refuse en dehors. Le patient ne voit qu'une position de moins de dix minutes.
+- Le patient voit le nom et la profession du soignant, l'arrivée estimée, puis lit le compte rendu une fois le soin terminé. Chaque lecture et chaque écriture du compte rendu est inscrite au journal des accès.
+- Le partage de position ne fonctionne qu'application ouverte, au premier plan : le suivi en arrière-plan demande une autorisation et un service natifs, à faire avec les essais sur appareil.
+- La durée d'arrivée vient du service de cartographie factice (distance à vol d'oiseau), en attendant la clé Google Maps. Pas de carte à l'écran pour la même raison.
+- Les actes et les consommables se saisissent librement : les référentiels existent en base et dans l'API, mais leur gestion au back-office reste à faire (tâche 6.7).
+- L'avenant existe dans l'API, pas encore dans l'application : il lui faut un écran d'historique des missions terminées.
+- Tant que les notifications ne sont pas branchées, la fiche du patient se relit toutes les 20 secondes quand un soignant est attendu ; chaque relecture s'inscrit au journal des accès.
+- Les espèces déclarées créent une ligne de paiement ; le grand livre, les commissions et les reversements restent à faire (tâches 5.8 et 6.9).
+- Le compte rendu se rédige en ligne : le brouillon hors ligne arrive avec la tâche 5.7.
+
 ## Lot 3 — Socle technique
 
 | N° | Tâche | Résultat vérifiable |

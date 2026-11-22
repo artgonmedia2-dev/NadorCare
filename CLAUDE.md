@@ -12,7 +12,7 @@ Plateforme de coordination de soins à domicile à Nador (Maroc) : application p
 - Étape 2 (socle technique, lot 3) : livrée le 2026-11-21 (avancement en tête de `docs/02-decoupage-lots.md`). Reste du lot 3 reporté au lot 6 : écrans Filament de gestion des utilisateurs, des rôles et des journaux.
 - Lot 4 : tâches 4.0 (socle Flutter), 4.1 (compte), 4.2 (profils de patients, adresses) 4.3 (catalogue, avec sa gestion dans le back-office) et 4.4 (réservation, dans un cadre provisoire : espèces, créneaux de journée) livrées le 2026-11-21. Jamais compilé ni lancé sur un appareil : à faire avant d'aller plus loin côté mobile.
 - Affectation (6.2 et partie serveur de 5.3) livrée le 2026-11-22 : back-office et API, pas encore d'écran dans l'application professionnel.
-- Dossier des professionnels (parties serveur de 5.1 et 5.2, tâche 6.5) livré le 2026-11-22 : inscription, justificatifs, vérification, suspension, zones, agenda. Les écrans correspondants de l'application professionnel (5.1 à 5.3) sont livrés le même jour ; restent le déplacement, l'intervention et le compte rendu (5.4 à 5.6).
+- Dossier des professionnels (parties serveur de 5.1 et 5.2, tâche 6.5) livré le 2026-11-22 : inscription, justificatifs, vérification, suspension, zones, agenda. Les écrans correspondants de l'application professionnel (5.1 à 5.3) sont livrés le même jour ; le déplacement, l'intervention et le compte rendu (5.4 à 5.6) aussi, avec le suivi et la lecture du compte rendu côté patient. Restent pour le professionnel : avenant dans l'application, suivi de position en arrière-plan, mode hors ligne (5.7), paiements (5.8).
 - Suite des lots 4 à 7 : en attente des points à trancher (`docs/03-questions-ouvertes.md`, sections B et C).
 - Dépôt : `https://github.com/artgonmedia2-dev/NadorCare.git`, branche `main`.
 
@@ -60,6 +60,7 @@ Organisation de `/api/app` :
 - Une liste Filament charge souvent une relation avec quelques colonnes seulement (`service:id,name`) : une action métier ne doit pas compter sur une relation déjà chargée, elle relit ce dont elle a besoin (défaut rencontré le 2026-11-22 dans l'affectation).
 - De même, ne pas décider à partir d'une relation gardée en mémoire sur l'utilisateur (`$user->professional`) : relire l'état en base (`$user->professional()->first()`), car il change par le back-office.
 - Dans un test qui mélange API et back-office, `Sanctum::actingAs()` change le garde par défaut : se connecter ensuite au back-office avec `actingAs($staff, 'web')`.
+- Horodater avec l'horloge de l'application (`now()` passé en paramètre), pas avec le `now()` de PostgreSQL : les tests figent l'horloge de l'application (défaut rencontré le 2026-11-22 sur la position du professionnel).
 - Dans les tests, la langue par défaut est le français (`Accept-Language: fr`, posé par `Tests\TestCase`).
 
 Points d'entrée obligatoires :
@@ -72,6 +73,7 @@ Points d'entrée obligatoires :
 - tracer une action sensible du back-office : `Services\Audit\AuditLogger` ;
 - prévenir un professionnel : `Services\Notifications\MissionNotifier` (jamais de donnée du patient dans une notification) ;
 - lire un paramètre de gestion : `Services\Settings\Settings` (valeurs par défaut dans `Settings::DEFAULTS`) ;
+- déroulement d'une mission : `Actions\Interventions\RunIntervention` (départ, position, arrivée) ; compte rendu : `Actions\Interventions\WriteReport` (brouillon, photos, signature, clôture, avenant) ;
 - calculer un prix : `Services\Bookings\PriceCalculator` ; savoir si un créneau est réservable : `Services\Bookings\BookingSchedule` ;
 - renvoyer une erreur métier : `ApiException('code')`, avec le texte dans `lang/*/api.php`.
 
@@ -91,7 +93,9 @@ Règles mobiles :
 - les heures de soin sont celles de Nador : l'application affiche `scheduled_date` et `scheduled_time` tels que le serveur les envoie, sans conversion vers le fuseau du téléphone ;
 - montants, dates et distances passent par les formateurs de `nc_l10n` (`formatDirhams`, `longDate`, `apiDate`, `formatDistance`) ;
 - un champ de saisie dans une fenêtre de dialogue vit dans un `StatefulWidget` qui possède son contrôleur : le détruire dès la fermeture casse l'animation de sortie (défaut rencontré le 2026-11-22) ;
-- tant que les notifications ne sont pas branchées, l'accueil du professionnel se rafraîchit seul toutes les 15 secondes ;
+- tant que les notifications ne sont pas branchées, l'accueil du professionnel se rafraîchit seul toutes les 15 secondes, et la fiche de réservation du patient toutes les 20 secondes quand un soignant est attendu ;
+- la position du professionnel ne part que pendant un trajet : `JourneyTracker` (application professionnel) se règle sur la liste des missions, seule source du démarrage et de l'arrêt ;
+- les constantes d'un compte rendu ont leurs bornes dans `Vital` (`nc_core`), à garder identiques à `InterventionReport::VITALS` côté serveur ;
 - dans un test d'écran, agrandir la surface (`tester.view.physicalSize`) : les listes ne construisent que ce qui est visible.
 
 ## Règles non négociables
