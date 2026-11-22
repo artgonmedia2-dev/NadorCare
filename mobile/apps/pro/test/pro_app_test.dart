@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nadorcare_pro/home_screen.dart';
 import 'package:nadorcare_pro/main.dart';
+import 'package:nadorcare_pro/missions/signature_screen.dart';
 import 'package:nadorcare_pro/pro_providers.dart';
 import 'package:nc_account/nc_account.dart';
 import 'package:nc_api_client/nc_api_client.dart';
@@ -236,6 +237,112 @@ class FakeProApi implements ProApi {
     withdrawals.add((id: missionId, reason: reason));
     activeMissions.removeWhere((item) => item.id == missionId);
   }
+
+  // --- Intervention ---
+
+  final List<GeoPoint> positions = <GeoPoint>[];
+  GeoPoint? arrivalPosition;
+  bool arrived = false;
+  Map<Vital, num> vitals = <Vital, num>{};
+  String? observations;
+  List<ReportLine> acts = <ReportLine>[];
+  List<ReportLine> consumables = <ReportLine>[];
+  int photos = 0;
+  int saves = 0;
+  String? signedBy;
+  Uint8List? signaturePng;
+  bool? cashCollected;
+
+  Intervention _intervention(String missionId, {bool validated = false}) => Intervention(
+        id: 'I-$missionId',
+        bookingId: missionId,
+        status: validated ? 'validated' : 'in_progress',
+        vitals: vitals,
+        observations: observations,
+        acts: acts,
+        consumables: consumables,
+        photosCount: photos,
+        signedByName: signedBy,
+        isSigned: signedBy != null,
+      );
+
+  Mission _move(String missionId, String status) {
+    final index = activeMissions.indexWhere((item) => item.id == missionId);
+    return activeMissions[index] = buildMission(missionId, status: status);
+  }
+
+  @override
+  Future<Mission> depart(String missionId) async => _move(missionId, 'en_route');
+
+  @override
+  Future<int?> sendLocation(String missionId, {required double latitude, required double longitude}) async {
+    positions.add((latitude: latitude, longitude: longitude));
+    return 420;
+  }
+
+  @override
+  Future<Intervention> arrive(String missionId, {double? latitude, double? longitude}) async {
+    arrived = true;
+    arrivalPosition = latitude == null ? null : (latitude: latitude, longitude: longitude!);
+    _move(missionId, 'in_progress');
+    return _intervention(missionId);
+  }
+
+  @override
+  Future<Intervention> intervention(String missionId) async => _intervention(missionId);
+
+  @override
+  Future<Intervention> saveReport(String missionId, ReportDraft draft) async {
+    saves++;
+    vitals = draft.vitals;
+    observations = draft.observations;
+    acts = draft.acts;
+    consumables = draft.consumables;
+    return _intervention(missionId);
+  }
+
+  @override
+  Future<Intervention> addReportPhoto(String missionId, {required Uint8List bytes, required String filename}) async {
+    photos++;
+    return _intervention(missionId);
+  }
+
+  @override
+  Future<Intervention> signReport(String missionId, {required Uint8List png, required String signedByName}) async {
+    signaturePng = png;
+    signedBy = signedByName;
+    return _intervention(missionId);
+  }
+
+  @override
+  Future<Intervention> complete(String missionId, {required bool cashCollected}) async {
+    this.cashCollected = cashCollected;
+    activeMissions.removeWhere((item) => item.id == missionId);
+    return _intervention(missionId, validated: true);
+  }
+}
+
+class FakeLocationService implements LocationService {
+  LocationFailureReason? failure;
+
+  @override
+  Future<GeoPoint> currentPosition() async {
+    if (failure != null) {
+      throw LocationFailure(failure!);
+    }
+    return (latitude: 35.176, longitude: -2.92);
+  }
+}
+
+/// Évite le rendu d'image, indisponible dans un test d'écran.
+class FakeSignatureEncoder implements SignatureEncoder {
+  int strokes = 0;
+
+  @override
+  Future<Uint8List> encode(List<List<Offset>> strokes, Size size) async {
+    this.strokes = strokes.length;
+    return Uint8List.fromList(<int>[9, 9]);
+  }
 }
 
 class FakeDocumentPicker implements DocumentPicker {
@@ -268,6 +375,8 @@ Future<void> pumpProApp(
   WidgetTester tester, {
   required FakeProApi api,
   FakeDocumentPicker? picker,
+  FakeLocationService? location,
+  FakeSignatureEncoder? encoder,
   String language = 'fr',
 }) async {
   tester.view.physicalSize = const Size(800, 4200);
@@ -285,6 +394,8 @@ Future<void> pumpProApp(
         authApiProvider.overrideWithValue(_SignedInAuthApi()),
         proApiProvider.overrideWithValue(api),
         documentPickerProvider.overrideWithValue(picker ?? FakeDocumentPicker()),
+        locationServiceProvider.overrideWithValue(location ?? FakeLocationService()),
+        signatureEncoderProvider.overrideWithValue(encoder ?? FakeSignatureEncoder()),
       ],
       child: NadorCareApp(homeBuilder: (context) => const ProHomeScreen(), extraRoutes: proAppRoutes),
     ),
@@ -532,6 +643,168 @@ void main() {
 
       expect(find.text(fr.missionStatusEnRoute), findsOneWidget);
       expect(byName('mission-withdraw'), findsNothing);
+    });
+  });
+
+  group('intervention', () {
+    testWidgets('au départ, la mission passe en route et la position est partagée', (tester) async {
+      final api = FakeProApi(status: VerificationStatus.verified)..activeMissions.add(buildMission('M1'));
+      await pumpProApp(tester, api: api);
+      expect(api.positions, isEmpty, reason: 'aucune position hors trajet');
+
+      await tapAndSettle(tester, byName('mission-M1'));
+      await tapAndSettle(tester, byName('mission-depart'));
+
+      expect(find.text(fr.missionStatusEnRoute), findsOneWidget);
+      expect(byName('mission-withdraw'), findsNothing);
+      expect(byName('mission-arrive'), findsOneWidget);
+      expect(api.positions.single, (latitude: 35.176, longitude: -2.92));
+      expect(find.textContaining(fr.journeySharing), findsOneWidget);
+      expect(find.textContaining(fr.journeyEta(7)), findsOneWidget);
+
+      // La position est renvoyée régulièrement pendant le trajet.
+      await tester.pump(const Duration(seconds: 21));
+      await tester.pumpAndSettle();
+      expect(api.positions, hasLength(2));
+    });
+
+    testWidgets('sans localisation, le trajet continue et le professionnel est prévenu', (tester) async {
+      final api = FakeProApi(status: VerificationStatus.verified)..activeMissions.add(buildMission('M1'));
+      final location = FakeLocationService()..failure = LocationFailureReason.denied;
+      await pumpProApp(tester, api: api, location: location);
+
+      await tapAndSettle(tester, byName('mission-M1'));
+      await tapAndSettle(tester, byName('mission-depart'));
+
+      expect(byName('journey-location-off'), findsOneWidget);
+      expect(api.positions, isEmpty);
+
+      // Le pointage d'arrivée reste possible, sans position.
+      await tapAndSettle(tester, byName('mission-arrive'));
+      expect(api.arrived, isTrue);
+      expect(api.arrivalPosition, isNull);
+      expect(find.text(fr.reportTitle), findsOneWidget);
+    });
+
+    testWidgets('à l arrivée, le compte rendu s ouvre et la position n est plus envoyée', (tester) async {
+      final api = FakeProApi(status: VerificationStatus.verified)
+        ..activeMissions.add(buildMission('M1', status: 'en_route'));
+      await pumpProApp(tester, api: api);
+      expect(api.positions, hasLength(1), reason: 'le suivi reprend à l ouverture de l application');
+
+      await tapAndSettle(tester, byName('mission-M1'));
+      await tapAndSettle(tester, byName('mission-arrive'));
+
+      expect(api.arrivalPosition, (latitude: 35.176, longitude: -2.92));
+      expect(find.text(fr.reportTitle), findsOneWidget);
+      expect(find.text(fr.reportNotSigned), findsOneWidget);
+
+      await tester.pump(const Duration(seconds: 45));
+      await tester.pumpAndSettle();
+      expect(api.positions, hasLength(1));
+    });
+
+    testWidgets('le compte rendu s enregistre en brouillon, les constantes invraisemblables sont refusées', (tester) async {
+      final api = FakeProApi(status: VerificationStatus.verified)
+        ..activeMissions.add(buildMission('M1', status: 'in_progress'))
+        ..observations = 'Patient calme.'
+        ..vitals = <Vital, num>{Vital.pulse: 72};
+      final picker = FakeDocumentPicker();
+      await pumpProApp(tester, api: api, picker: picker);
+      await tapAndSettle(tester, byName('mission-M1'));
+      await tapAndSettle(tester, byName('mission-report'));
+
+      // Le brouillon déjà enregistré est repris.
+      expect(find.text('Patient calme.'), findsOneWidget);
+      expect(find.text('72'), findsOneWidget);
+
+      await tester.enterText(byName('vital-systolic'), '1350');
+      await tester.enterText(byName('vital-temperature'), '37,2');
+      await tapAndSettle(tester, byName('report-save'));
+      expect(find.text(fr.vitalOutOfRange('50', '260')), findsOneWidget);
+      expect(api.saves, 0);
+
+      await tester.enterText(byName('vital-systolic'), '135');
+      await tester.enterText(byName('report-observations'), 'Pansement refait, plaie propre.');
+
+      await tapAndSettle(tester, byName('report-add-act'));
+      await tapAndSettle(tester, find.widgetWithText(TextButton, fr.add));
+      expect(find.text(fr.fieldRequired), findsOneWidget);
+      await tester.enterText(byName('line-label'), 'Réfection de pansement');
+      await tapAndSettle(tester, find.widgetWithText(TextButton, fr.add));
+
+      await tapAndSettle(tester, byName('report-add-consumable'));
+      await tester.enterText(byName('line-label'), 'Compresses stériles');
+      await tester.enterText(byName('line-quantity'), '4');
+      await tapAndSettle(tester, find.widgetWithText(TextButton, fr.add));
+      expect(find.text(fr.reportLineWithQuantity('Compresses stériles', '4')), findsOneWidget);
+
+      await tapAndSettle(tester, byName('report-add-photo'));
+      expect(picker.calls, <bool>[true]);
+      expect(find.text(fr.reportPhotosCount(1)), findsOneWidget);
+
+      await tapAndSettle(tester, byName('report-save'));
+      expect(find.text(fr.reportSaved), findsOneWidget);
+      expect(api.vitals, <Vital, num>{Vital.systolic: 135, Vital.pulse: 72, Vital.temperature: 37.2});
+      expect(api.observations, 'Pansement refait, plaie propre.');
+      expect(api.acts.single.label, 'Réfection de pansement');
+      expect(api.acts.single.quantity, 1);
+      expect(api.consumables.single.quantity, 4);
+    });
+
+    testWidgets('la clôture exige des observations et la signature, puis valide et encaisse', (tester) async {
+      final api = FakeProApi(status: VerificationStatus.verified)
+        ..activeMissions.add(buildMission('M1', status: 'in_progress'));
+      final encoder = FakeSignatureEncoder();
+      await pumpProApp(tester, api: api, encoder: encoder);
+      await tapAndSettle(tester, byName('mission-M1'));
+      await tapAndSettle(tester, byName('mission-report'));
+
+      await tapAndSettle(tester, byName('report-complete'));
+      expect(find.text(fr.reportObservationsRequired), findsOneWidget);
+
+      await tester.enterText(byName('report-observations'), 'Soin réalisé sans difficulté.');
+      await tapAndSettle(tester, byName('report-complete'));
+      expect(find.text(fr.reportSignatureRequired), findsOneWidget);
+      expect(api.cashCollected, isNull);
+
+      // Signature : le nom du patient est proposé, un tracé vide est refusé.
+      await tapAndSettle(tester, byName('report-sign'));
+      expect(find.text('Aïcha Benali'), findsOneWidget);
+      await tapAndSettle(tester, byName('signature-confirm'));
+      expect(find.text(fr.signatureEmpty), findsOneWidget);
+
+      await tester.drag(byName('signature-pad'), const Offset(160, 60));
+      await tester.pumpAndSettle();
+      await tapAndSettle(tester, byName('signature-confirm'));
+
+      expect(encoder.strokes, 1);
+      expect(api.signedBy, 'Aïcha Benali');
+      expect(api.signaturePng, <int>[9, 9]);
+      expect(find.text(fr.reportSignedBy('Aïcha Benali')), findsOneWidget);
+
+      await tapAndSettle(tester, byName('report-cash'));
+      await tapAndSettle(tester, byName('report-complete'));
+      expect(find.text(fr.reportCompleteBody), findsOneWidget);
+      await tapAndSettle(tester, find.widgetWithText(TextButton, fr.reportComplete));
+
+      expect(api.cashCollected, isTrue);
+      expect(api.observations, 'Soin réalisé sans difficulté.');
+      // Retour à l'accueil : la mission est terminée.
+      expect(find.text(fr.reportCompleted), findsOneWidget);
+      expect(find.text(fr.proMissionsEmpty), findsOneWidget);
+    });
+
+    testWidgets('en arabe, le compte rendu se lit de droite à gauche et les mesures de gauche à droite', (tester) async {
+      final api = FakeProApi(status: VerificationStatus.verified)
+        ..activeMissions.add(buildMission('M1', status: 'in_progress'));
+      await pumpProApp(tester, api: api, language: 'ar');
+      await tapAndSettle(tester, byName('mission-M1'));
+      await tapAndSettle(tester, byName('mission-report'));
+
+      expect(Directionality.of(tester.element(find.text(ar.reportTitle))), TextDirection.rtl);
+      expect(tester.widget<TextField>(byName('vital-systolic')).textDirection, TextDirection.ltr);
+      expect(find.text(ar.reportComplete), findsOneWidget);
     });
   });
 

@@ -8,8 +8,10 @@
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
 	<string>Nador Care Pro</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Nador Care partage votre position avec le patient pendant votre trajet vers son domicile.</string>
 	<key>NSCameraUsageDescription</key>
-	<string>Nador Care utilise l'appareil photo pour photographier vos justificatifs.</string>
+	<string>Nador Care utilise l'appareil photo pour photographier vos justificatifs et les photos des comptes rendus.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Nador Care accède à vos photos pour joindre vos justificatifs.</string>
 	<key>NSFaceIDUsageDescription</key>

@@ -2,6 +2,9 @@
     <uses-permission android:name="android.permission.INTERNET"/>
     <!-- Verrouillage de l'application par empreinte ou visage. -->
     <uses-permission android:name="android.permission.USE_BIOMETRIC"/>
+    <!-- Position partagée avec le patient pendant le trajet, application ouverte. -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
 
     <application
         android:label="Nador Care Pro"

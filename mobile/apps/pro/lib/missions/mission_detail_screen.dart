@@ -7,6 +7,7 @@ import 'package:nc_design_system/nc_design_system.dart';
 import 'package:nc_l10n/nc_l10n.dart';
 
 import '../pro_providers.dart';
+import 'journey_tracker.dart';
 
 /// Fiche d'une mission : ce qu'il faut pour se rendre chez le patient et réaliser le soin.
 /// Son ouverture est inscrite au journal des accès par le serveur.
@@ -53,18 +54,90 @@ class _MissionDetailScreenState extends ConsumerState<MissionDetailScreen> {
     }
   }
 
+  /// Exécute une étape de la mission, puis relit la fiche et la liste.
+  Future<bool> _step(Future<void> Function() action) async {
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+
+    try {
+      await action();
+      ref
+        ..invalidate(missionDetailProvider(widget.missionId))
+        ..invalidate(missionsProvider);
+      return true;
+    } on ApiFailure catch (failure) {
+      if (mounted) {
+        setState(() => _error = failureMessage(context, failure));
+      }
+      return false;
+    } finally {
+      if (mounted) {
+        setState(() => _busy = false);
+      }
+    }
+  }
+
+  /// Le partage de position démarre de lui-même : l'accueil l'aligne sur la liste des
+  /// missions, que le départ vient de faire relire.
+  Future<void> _depart() => _step(() => ref.read(proApiProvider).depart(widget.missionId));
+
+  Future<void> _arrive() async {
+    final arrived = await _step(() async {
+      // La position du pointage est jointe quand elle est disponible ; sinon on pointe sans.
+      GeoPoint? position;
+      try {
+        position = await ref.read(locationServiceProvider).currentPosition();
+      } on LocationFailure {
+        position = null;
+      }
+      await ref
+          .read(proApiProvider)
+          .arrive(widget.missionId, latitude: position?.latitude, longitude: position?.longitude);
+    });
+
+    if (arrived) {
+      ref.read(journeyTrackerProvider.notifier).stop();
+      if (mounted) {
+        await context.push(routeReport(widget.missionId));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final language = Localizations.localeOf(context).languageCode;
     final detail = ref.watch(missionDetailProvider(widget.missionId));
+    final journey = ref.watch(journeyTrackerProvider);
 
     return switch (detail) {
-      AsyncData<Mission>(value: final mission) => NcPage(
+      AsyncValue<Mission>(value: final mission?) => NcPage(
           appBar: AppBar(),
           title: mission.serviceName,
           subtitle: l10n.dateAtTime(longDate(mission.scheduledDate, language), mission.scheduledTime),
           actions: <Widget>[
+            if (mission.status == 'assigned')
+              NcPrimaryButton(
+                key: const ValueKey<String>('mission-depart'),
+                label: l10n.missionDepart,
+                isLoading: _busy,
+                onPressed: _busy ? null : _depart,
+              ),
+            if (mission.status == 'en_route')
+              NcPrimaryButton(
+                key: const ValueKey<String>('mission-arrive'),
+                label: l10n.missionArrive,
+                isLoading: _busy,
+                onPressed: _busy ? null : _arrive,
+              ),
+            if (mission.status == 'in_progress')
+              NcPrimaryButton(
+                key: const ValueKey<String>('mission-report'),
+                label: l10n.missionOpenReport,
+                onPressed: () => context.push(routeReport(widget.missionId)),
+              ),
             if (mission.canWithdraw)
               NcSecondaryButton(
                 key: const ValueKey<String>('mission-withdraw'),
@@ -78,6 +151,22 @@ class _MissionDetailScreenState extends ConsumerState<MissionDetailScreen> {
               const SizedBox(height: NcSpacing.md),
             ],
             NcNotice(message: missionStatusLabel(l10n, mission.status)),
+            if (mission.status == 'en_route') ...<Widget>[
+              const SizedBox(height: NcSpacing.sm),
+              if (journey.locationUnavailable)
+                NcNotice(
+                  key: const ValueKey<String>('journey-location-off'),
+                  message: l10n.journeyLocationOff,
+                  kind: NcNoticeKind.warning,
+                )
+              else
+                NcNotice(
+                  key: const ValueKey<String>('journey-sharing'),
+                  message: journey.etaSeconds == null
+                      ? l10n.journeySharing
+                      : '${l10n.journeySharing}\n${l10n.journeyEta((journey.etaSeconds! / 60).ceil())}',
+                ),
+            ],
             const SizedBox(height: NcSpacing.lg),
             _Info(label: l10n.summaryPatient, value: mission.patientName),
             _Info(

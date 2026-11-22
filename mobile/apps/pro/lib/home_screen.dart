@@ -9,6 +9,7 @@ import 'package:nc_core/nc_core.dart';
 import 'package:nc_design_system/nc_design_system.dart';
 import 'package:nc_l10n/nc_l10n.dart';
 
+import 'missions/journey_tracker.dart';
 import 'pro_providers.dart';
 
 /// Accueil de l'application professionnel. Ce qu'il montre dépend de l'état du dossier :
@@ -194,6 +195,13 @@ class _ProHomeScreenState extends ConsumerState<ProHomeScreen> {
     final language = Localizations.localeOf(context).languageCode;
     final offers = ref.watch(missionOffersProvider);
     final missions = ref.watch(missionsProvider);
+
+    // La position n'est partagée que pendant un trajet : le suivi s'aligne sur les missions.
+    ref.listen(missionsProvider, (previous, next) {
+      if (next case AsyncData<List<Mission>>(:final value)) {
+        ref.read(journeyTrackerProvider.notifier).sync(value);
+      }
+    });
     final workingDays = file.availabilities.map((slot) => slot.weekday).toSet().length;
 
     return NcPage(

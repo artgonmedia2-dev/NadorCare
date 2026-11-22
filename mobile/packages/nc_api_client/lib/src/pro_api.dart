@@ -45,6 +45,28 @@ abstract interface class ProApi {
 
   /// Se désister d'une mission, tant que le professionnel n'est pas parti.
   Future<void> withdraw(String missionId, {required String reason});
+
+  /// Départ vers le domicile : la mission passe « en route ».
+  Future<Mission> depart(String missionId);
+
+  /// Envoie la position pendant le trajet. Renvoie la durée restante estimée, en secondes.
+  Future<int?> sendLocation(String missionId, {required double latitude, required double longitude});
+
+  /// Pointage d'arrivée : la mission passe « en cours » et le compte rendu s'ouvre.
+  Future<Intervention> arrive(String missionId, {double? latitude, double? longitude});
+
+  /// Compte rendu en cours d'une mission. Le serveur journalise cette lecture.
+  Future<Intervention> intervention(String missionId);
+
+  Future<Intervention> saveReport(String missionId, ReportDraft draft);
+
+  Future<Intervention> addReportPhoto(String missionId, {required Uint8List bytes, required String filename});
+
+  /// Signature tracée à l'écran (PNG) et nom de la personne qui signe.
+  Future<Intervention> signReport(String missionId, {required Uint8List png, required String signedByName});
+
+  /// Termine l'intervention : le compte rendu est validé et n'est plus modifiable.
+  Future<Intervention> complete(String missionId, {required bool cashCollected});
 }
 
 class HttpProApi implements ProApi {
@@ -162,5 +184,68 @@ class HttpProApi implements ProApi {
   @override
   Future<void> withdraw(String missionId, {required String reason}) async {
     await _client.post('/pro/missions/$missionId/withdraw', <String, dynamic>{'reason': reason});
+  }
+
+  static Intervention _intervention(Map<String, dynamic> json) => Intervention.fromJson(_data(json));
+
+  @override
+  Future<Mission> depart(String missionId) async {
+    return Mission.fromJson(_data(await _client.post('/pro/missions/$missionId/depart')));
+  }
+
+  @override
+  Future<int?> sendLocation(String missionId, {required double latitude, required double longitude}) async {
+    final json = await _client.post('/pro/missions/$missionId/location', <String, dynamic>{
+      'latitude': latitude,
+      'longitude': longitude,
+    });
+    return (_data(json)['eta_seconds'] as num?)?.toInt();
+  }
+
+  @override
+  Future<Intervention> arrive(String missionId, {double? latitude, double? longitude}) async {
+    return _intervention(
+      await _client.post('/pro/missions/$missionId/arrive', <String, dynamic>{
+        'latitude': ?latitude,
+        'longitude': ?longitude,
+      }),
+    );
+  }
+
+  @override
+  Future<Intervention> intervention(String missionId) async {
+    return _intervention(await _client.get('/pro/missions/$missionId/intervention'));
+  }
+
+  @override
+  Future<Intervention> saveReport(String missionId, ReportDraft draft) async {
+    return _intervention(await _client.put('/pro/missions/$missionId/report', draft.toJson()));
+  }
+
+  @override
+  Future<Intervention> addReportPhoto(String missionId, {required Uint8List bytes, required String filename}) async {
+    return _intervention(
+      await _client.upload('/pro/missions/$missionId/report/photos', field: 'file', bytes: bytes, filename: filename),
+    );
+  }
+
+  @override
+  Future<Intervention> signReport(String missionId, {required Uint8List png, required String signedByName}) async {
+    return _intervention(
+      await _client.upload(
+        '/pro/missions/$missionId/report/signature',
+        field: 'file',
+        bytes: png,
+        filename: 'signature.png',
+        fields: <String, String>{'signed_by_name': signedByName},
+      ),
+    );
+  }
+
+  @override
+  Future<Intervention> complete(String missionId, {required bool cashCollected}) async {
+    return _intervention(
+      await _client.post('/pro/missions/$missionId/complete', <String, dynamic>{'cash_collected': cashCollected}),
+    );
   }
 }

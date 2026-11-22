@@ -6,6 +6,7 @@ import 'file/file_screen.dart';
 import 'file/profession_screen.dart';
 import 'home_screen.dart';
 import 'missions/mission_detail_screen.dart';
+import 'missions/report_screen.dart';
 import 'pro_providers.dart';
 import 'schedule/schedule_screen.dart';
 import 'schedule/zones_screen.dart';
@@ -19,6 +20,10 @@ final List<RouteBase> proAppRoutes = <RouteBase>[
   GoRoute(
     path: '/missions/:id',
     builder: (context, state) => MissionDetailScreen(missionId: state.pathParameters['id']!),
+  ),
+  GoRoute(
+    path: '/missions/:id/report',
+    builder: (context, state) => ReportScreen(missionId: state.pathParameters['id']!),
   ),
 ];
 

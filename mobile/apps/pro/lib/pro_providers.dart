@@ -14,6 +14,8 @@ const String routeSchedule = '/schedule';
 
 String routeMission(String id) => '/missions/$id';
 
+String routeReport(String missionId) => '/missions/$missionId/report';
+
 final proApiProvider = Provider<ProApi>((ref) => HttpProApi(ref.watch(apiClientProvider)));
 
 typedef PickedDocument = ({Uint8List bytes, String filename});
