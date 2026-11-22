@@ -8,6 +8,7 @@ import 'package:flutter/widgets.dart';
 
 import 'src/generated/nc_localizations.dart';
 
+export 'src/formatters.dart';
 export 'src/generated/nc_localizations.dart';
 
 extension NcLocalizationsContext on BuildContext {

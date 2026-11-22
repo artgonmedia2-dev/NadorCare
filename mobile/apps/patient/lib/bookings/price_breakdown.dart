@@ -3,8 +3,6 @@ import 'package:nc_core/nc_core.dart';
 import 'package:nc_design_system/nc_design_system.dart';
 import 'package:nc_l10n/nc_l10n.dart';
 
-import '../catalogue/catalogue_providers.dart';
-
 /// Détail d'un prix : tarif, majorations, total.
 class PriceBreakdown extends StatelessWidget {
   const PriceBreakdown({required this.price, super.key});

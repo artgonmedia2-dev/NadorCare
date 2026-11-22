@@ -1197,6 +1197,420 @@ abstract class NcLocalizations {
   /// In fr, this message translates to:
   /// **'Retour'**
   String get back;
+
+  /// No description provided for @refresh.
+  ///
+  /// In fr, this message translates to:
+  /// **'Actualiser'**
+  String get refresh;
+
+  /// No description provided for @proCreateFileTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Créez votre dossier professionnel'**
+  String get proCreateFileTitle;
+
+  /// No description provided for @proCreateFileIntro.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pour recevoir des missions, votre dossier doit être vérifié par Nador Care.'**
+  String get proCreateFileIntro;
+
+  /// No description provided for @proStart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Commencer'**
+  String get proStart;
+
+  /// No description provided for @professionLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre profession'**
+  String get professionLabel;
+
+  /// No description provided for @professionRequired.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisissez votre profession.'**
+  String get professionRequired;
+
+  /// No description provided for @licenseNumberLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Numéro d\'autorisation d\'exercice'**
+  String get licenseNumberLabel;
+
+  /// No description provided for @orderNumberLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Numéro d\'inscription à l\'Ordre'**
+  String get orderNumberLabel;
+
+  /// No description provided for @proFileTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mon dossier'**
+  String get proFileTitle;
+
+  /// No description provided for @proDocumentsTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Justificatifs'**
+  String get proDocumentsTitle;
+
+  /// No description provided for @docIdentity.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pièce d\'identité'**
+  String get docIdentity;
+
+  /// No description provided for @docDiploma.
+  ///
+  /// In fr, this message translates to:
+  /// **'Diplôme'**
+  String get docDiploma;
+
+  /// No description provided for @docPracticeAuthorization.
+  ///
+  /// In fr, this message translates to:
+  /// **'Autorisation d\'exercice'**
+  String get docPracticeAuthorization;
+
+  /// No description provided for @docOrderRegistration.
+  ///
+  /// In fr, this message translates to:
+  /// **'Inscription à l\'Ordre'**
+  String get docOrderRegistration;
+
+  /// No description provided for @docRcInsurance.
+  ///
+  /// In fr, this message translates to:
+  /// **'Assurance responsabilité civile'**
+  String get docRcInsurance;
+
+  /// No description provided for @docStatusMissing.
+  ///
+  /// In fr, this message translates to:
+  /// **'À déposer'**
+  String get docStatusMissing;
+
+  /// No description provided for @docStatusPending.
+  ///
+  /// In fr, this message translates to:
+  /// **'Déposé, en attente de contrôle'**
+  String get docStatusPending;
+
+  /// No description provided for @docStatusApproved.
+  ///
+  /// In fr, this message translates to:
+  /// **'Approuvé'**
+  String get docStatusApproved;
+
+  /// No description provided for @docStatusRejected.
+  ///
+  /// In fr, this message translates to:
+  /// **'Refusé : {reason}'**
+  String docStatusRejected(String reason);
+
+  /// No description provided for @docStatusExpired.
+  ///
+  /// In fr, this message translates to:
+  /// **'Périmé, à renouveler'**
+  String get docStatusExpired;
+
+  /// No description provided for @docTakePhoto.
+  ///
+  /// In fr, this message translates to:
+  /// **'Prendre en photo'**
+  String get docTakePhoto;
+
+  /// No description provided for @docChoosePhoto.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisir une photo'**
+  String get docChoosePhoto;
+
+  /// No description provided for @docExpiryChoose.
+  ///
+  /// In fr, this message translates to:
+  /// **'Date de fin de validité de l\'assurance'**
+  String get docExpiryChoose;
+
+  /// No description provided for @docExpiryRequired.
+  ///
+  /// In fr, this message translates to:
+  /// **'Indiquez d\'abord la date de fin de validité de l\'assurance.'**
+  String get docExpiryRequired;
+
+  /// No description provided for @docValidUntil.
+  ///
+  /// In fr, this message translates to:
+  /// **'Valable jusqu\'au {date}'**
+  String docValidUntil(String date);
+
+  /// No description provided for @proSubmit.
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyer mon dossier'**
+  String get proSubmit;
+
+  /// No description provided for @proSubmitIncomplete.
+  ///
+  /// In fr, this message translates to:
+  /// **'Déposez tous les justificatifs pour envoyer votre dossier.'**
+  String get proSubmitIncomplete;
+
+  /// No description provided for @proChangeProfession.
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier ma profession'**
+  String get proChangeProfession;
+
+  /// No description provided for @proStatusSubmittedTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Dossier en cours de vérification'**
+  String get proStatusSubmittedTitle;
+
+  /// No description provided for @proStatusSubmittedBody.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nous vérifions vos justificatifs. Vous pourrez recevoir des missions dès que votre dossier sera validé.'**
+  String get proStatusSubmittedBody;
+
+  /// No description provided for @proStatusRejectedTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre dossier est à corriger'**
+  String get proStatusRejectedTitle;
+
+  /// No description provided for @proStatusSuspendedTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Compte suspendu'**
+  String get proStatusSuspendedTitle;
+
+  /// No description provided for @proStatusSuspendedBody.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous ne recevez plus de mission. Contactez la coordination.'**
+  String get proStatusSuspendedBody;
+
+  /// No description provided for @proReason.
+  ///
+  /// In fr, this message translates to:
+  /// **'Motif : {reason}'**
+  String proReason(String reason);
+
+  /// No description provided for @proOnline.
+  ///
+  /// In fr, this message translates to:
+  /// **'En ligne'**
+  String get proOnline;
+
+  /// No description provided for @proOffline.
+  ///
+  /// In fr, this message translates to:
+  /// **'Hors ligne'**
+  String get proOffline;
+
+  /// No description provided for @proOnlineHelp.
+  ///
+  /// In fr, this message translates to:
+  /// **'En ligne, vous pouvez recevoir des propositions de mission.'**
+  String get proOnlineHelp;
+
+  /// No description provided for @proZones.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mes zones'**
+  String get proZones;
+
+  /// No description provided for @proZonesTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Zones où vous intervenez'**
+  String get proZonesTitle;
+
+  /// No description provided for @proZonesEmpty.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune zone n\'est encore ouverte.'**
+  String get proZonesEmpty;
+
+  /// No description provided for @proZonesCount.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =0{Aucune zone choisie} =1{1 zone} other{{count} zones}}'**
+  String proZonesCount(int count);
+
+  /// No description provided for @proSchedule.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mon agenda'**
+  String get proSchedule;
+
+  /// No description provided for @proScheduleTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Jours et heures de travail'**
+  String get proScheduleTitle;
+
+  /// No description provided for @proScheduleHelp.
+  ///
+  /// In fr, this message translates to:
+  /// **'Les heures sont celles de Nador.'**
+  String get proScheduleHelp;
+
+  /// No description provided for @proScheduleCount.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =0{Aucun jour travaillé} =1{1 jour par semaine} other{{count} jours par semaine}}'**
+  String proScheduleCount(int count);
+
+  /// No description provided for @scheduleRange.
+  ///
+  /// In fr, this message translates to:
+  /// **'{start} à {end}'**
+  String scheduleRange(String start, String end);
+
+  /// No description provided for @scheduleStart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Début'**
+  String get scheduleStart;
+
+  /// No description provided for @scheduleEnd.
+  ///
+  /// In fr, this message translates to:
+  /// **'Fin'**
+  String get scheduleEnd;
+
+  /// No description provided for @scheduleInvalid.
+  ///
+  /// In fr, this message translates to:
+  /// **'L\'heure de fin doit être après l\'heure de début.'**
+  String get scheduleInvalid;
+
+  /// No description provided for @proOffersTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Propositions de mission'**
+  String get proOffersTitle;
+
+  /// No description provided for @proOffersEmpty.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune proposition pour le moment.'**
+  String get proOffersEmpty;
+
+  /// No description provided for @offerAnswerBefore.
+  ///
+  /// In fr, this message translates to:
+  /// **'Répondre avant {time}'**
+  String offerAnswerBefore(String time);
+
+  /// No description provided for @offerDistance.
+  ///
+  /// In fr, this message translates to:
+  /// **'À {distance}'**
+  String offerDistance(String distance);
+
+  /// No description provided for @offerAccept.
+  ///
+  /// In fr, this message translates to:
+  /// **'Accepter'**
+  String get offerAccept;
+
+  /// No description provided for @offerDecline.
+  ///
+  /// In fr, this message translates to:
+  /// **'Refuser'**
+  String get offerDecline;
+
+  /// No description provided for @proMissionsTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mes missions'**
+  String get proMissionsTitle;
+
+  /// No description provided for @proMissionsEmpty.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune mission affectée.'**
+  String get proMissionsEmpty;
+
+  /// No description provided for @missionStatusAssigned.
+  ///
+  /// In fr, this message translates to:
+  /// **'À venir'**
+  String get missionStatusAssigned;
+
+  /// No description provided for @missionStatusEnRoute.
+  ///
+  /// In fr, this message translates to:
+  /// **'En route'**
+  String get missionStatusEnRoute;
+
+  /// No description provided for @missionStatusInProgress.
+  ///
+  /// In fr, this message translates to:
+  /// **'En cours'**
+  String get missionStatusInProgress;
+
+  /// No description provided for @missionAccessNotes.
+  ///
+  /// In fr, this message translates to:
+  /// **'Repères d\'accès'**
+  String get missionAccessNotes;
+
+  /// No description provided for @missionCareNotes.
+  ///
+  /// In fr, this message translates to:
+  /// **'Informations utiles au soin'**
+  String get missionCareNotes;
+
+  /// No description provided for @missionPatientNote.
+  ///
+  /// In fr, this message translates to:
+  /// **'Note du patient'**
+  String get missionPatientNote;
+
+  /// No description provided for @missionAmount.
+  ///
+  /// In fr, this message translates to:
+  /// **'À encaisser en espèces'**
+  String get missionAmount;
+
+  /// No description provided for @missionPrescription.
+  ///
+  /// In fr, this message translates to:
+  /// **'Une ordonnance est jointe à la demande.'**
+  String get missionPrescription;
+
+  /// No description provided for @missionWithdraw.
+  ///
+  /// In fr, this message translates to:
+  /// **'Me désister'**
+  String get missionWithdraw;
+
+  /// No description provided for @missionWithdrawTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous désister de cette mission ?'**
+  String get missionWithdrawTitle;
+
+  /// No description provided for @missionWithdrawBody.
+  ///
+  /// In fr, this message translates to:
+  /// **'La coordination cherchera un autre soignant.'**
+  String get missionWithdrawBody;
+
+  /// No description provided for @missionWithdrawReason.
+  ///
+  /// In fr, this message translates to:
+  /// **'Motif'**
+  String get missionWithdrawReason;
 }
 
 class _NcLocalizationsDelegate extends LocalizationsDelegate<NcLocalizations> {

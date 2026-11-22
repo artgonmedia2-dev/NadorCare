@@ -617,4 +617,249 @@ class NcLocalizationsFr extends NcLocalizations {
 
   @override
   String get back => 'Retour';
+
+  @override
+  String get refresh => 'Actualiser';
+
+  @override
+  String get proCreateFileTitle => 'Créez votre dossier professionnel';
+
+  @override
+  String get proCreateFileIntro =>
+      'Pour recevoir des missions, votre dossier doit être vérifié par Nador Care.';
+
+  @override
+  String get proStart => 'Commencer';
+
+  @override
+  String get professionLabel => 'Votre profession';
+
+  @override
+  String get professionRequired => 'Choisissez votre profession.';
+
+  @override
+  String get licenseNumberLabel => 'Numéro d\'autorisation d\'exercice';
+
+  @override
+  String get orderNumberLabel => 'Numéro d\'inscription à l\'Ordre';
+
+  @override
+  String get proFileTitle => 'Mon dossier';
+
+  @override
+  String get proDocumentsTitle => 'Justificatifs';
+
+  @override
+  String get docIdentity => 'Pièce d\'identité';
+
+  @override
+  String get docDiploma => 'Diplôme';
+
+  @override
+  String get docPracticeAuthorization => 'Autorisation d\'exercice';
+
+  @override
+  String get docOrderRegistration => 'Inscription à l\'Ordre';
+
+  @override
+  String get docRcInsurance => 'Assurance responsabilité civile';
+
+  @override
+  String get docStatusMissing => 'À déposer';
+
+  @override
+  String get docStatusPending => 'Déposé, en attente de contrôle';
+
+  @override
+  String get docStatusApproved => 'Approuvé';
+
+  @override
+  String docStatusRejected(String reason) {
+    return 'Refusé : $reason';
+  }
+
+  @override
+  String get docStatusExpired => 'Périmé, à renouveler';
+
+  @override
+  String get docTakePhoto => 'Prendre en photo';
+
+  @override
+  String get docChoosePhoto => 'Choisir une photo';
+
+  @override
+  String get docExpiryChoose => 'Date de fin de validité de l\'assurance';
+
+  @override
+  String get docExpiryRequired =>
+      'Indiquez d\'abord la date de fin de validité de l\'assurance.';
+
+  @override
+  String docValidUntil(String date) {
+    return 'Valable jusqu\'au $date';
+  }
+
+  @override
+  String get proSubmit => 'Envoyer mon dossier';
+
+  @override
+  String get proSubmitIncomplete =>
+      'Déposez tous les justificatifs pour envoyer votre dossier.';
+
+  @override
+  String get proChangeProfession => 'Modifier ma profession';
+
+  @override
+  String get proStatusSubmittedTitle => 'Dossier en cours de vérification';
+
+  @override
+  String get proStatusSubmittedBody =>
+      'Nous vérifions vos justificatifs. Vous pourrez recevoir des missions dès que votre dossier sera validé.';
+
+  @override
+  String get proStatusRejectedTitle => 'Votre dossier est à corriger';
+
+  @override
+  String get proStatusSuspendedTitle => 'Compte suspendu';
+
+  @override
+  String get proStatusSuspendedBody =>
+      'Vous ne recevez plus de mission. Contactez la coordination.';
+
+  @override
+  String proReason(String reason) {
+    return 'Motif : $reason';
+  }
+
+  @override
+  String get proOnline => 'En ligne';
+
+  @override
+  String get proOffline => 'Hors ligne';
+
+  @override
+  String get proOnlineHelp =>
+      'En ligne, vous pouvez recevoir des propositions de mission.';
+
+  @override
+  String get proZones => 'Mes zones';
+
+  @override
+  String get proZonesTitle => 'Zones où vous intervenez';
+
+  @override
+  String get proZonesEmpty => 'Aucune zone n\'est encore ouverte.';
+
+  @override
+  String proZonesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count zones',
+      one: '1 zone',
+      zero: 'Aucune zone choisie',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get proSchedule => 'Mon agenda';
+
+  @override
+  String get proScheduleTitle => 'Jours et heures de travail';
+
+  @override
+  String get proScheduleHelp => 'Les heures sont celles de Nador.';
+
+  @override
+  String proScheduleCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count jours par semaine',
+      one: '1 jour par semaine',
+      zero: 'Aucun jour travaillé',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String scheduleRange(String start, String end) {
+    return '$start à $end';
+  }
+
+  @override
+  String get scheduleStart => 'Début';
+
+  @override
+  String get scheduleEnd => 'Fin';
+
+  @override
+  String get scheduleInvalid =>
+      'L\'heure de fin doit être après l\'heure de début.';
+
+  @override
+  String get proOffersTitle => 'Propositions de mission';
+
+  @override
+  String get proOffersEmpty => 'Aucune proposition pour le moment.';
+
+  @override
+  String offerAnswerBefore(String time) {
+    return 'Répondre avant $time';
+  }
+
+  @override
+  String offerDistance(String distance) {
+    return 'À $distance';
+  }
+
+  @override
+  String get offerAccept => 'Accepter';
+
+  @override
+  String get offerDecline => 'Refuser';
+
+  @override
+  String get proMissionsTitle => 'Mes missions';
+
+  @override
+  String get proMissionsEmpty => 'Aucune mission affectée.';
+
+  @override
+  String get missionStatusAssigned => 'À venir';
+
+  @override
+  String get missionStatusEnRoute => 'En route';
+
+  @override
+  String get missionStatusInProgress => 'En cours';
+
+  @override
+  String get missionAccessNotes => 'Repères d\'accès';
+
+  @override
+  String get missionCareNotes => 'Informations utiles au soin';
+
+  @override
+  String get missionPatientNote => 'Note du patient';
+
+  @override
+  String get missionAmount => 'À encaisser en espèces';
+
+  @override
+  String get missionPrescription => 'Une ordonnance est jointe à la demande.';
+
+  @override
+  String get missionWithdraw => 'Me désister';
+
+  @override
+  String get missionWithdrawTitle => 'Vous désister de cette mission ?';
+
+  @override
+  String get missionWithdrawBody =>
+      'La coordination cherchera un autre soignant.';
+
+  @override
+  String get missionWithdrawReason => 'Motif';
 }

@@ -600,4 +600,248 @@ class NcLocalizationsEn extends NcLocalizations {
 
   @override
   String get back => 'Back';
+
+  @override
+  String get refresh => 'Refresh';
+
+  @override
+  String get proCreateFileTitle => 'Create your professional file';
+
+  @override
+  String get proCreateFileIntro =>
+      'To receive assignments, your file must be verified by Nador Care.';
+
+  @override
+  String get proStart => 'Start';
+
+  @override
+  String get professionLabel => 'Your profession';
+
+  @override
+  String get professionRequired => 'Choose your profession.';
+
+  @override
+  String get licenseNumberLabel => 'Practice authorisation number';
+
+  @override
+  String get orderNumberLabel => 'Order registration number';
+
+  @override
+  String get proFileTitle => 'My file';
+
+  @override
+  String get proDocumentsTitle => 'Documents';
+
+  @override
+  String get docIdentity => 'Identity document';
+
+  @override
+  String get docDiploma => 'Diploma';
+
+  @override
+  String get docPracticeAuthorization => 'Practice authorisation';
+
+  @override
+  String get docOrderRegistration => 'Order registration';
+
+  @override
+  String get docRcInsurance => 'Professional liability insurance';
+
+  @override
+  String get docStatusMissing => 'To upload';
+
+  @override
+  String get docStatusPending => 'Uploaded, waiting to be checked';
+
+  @override
+  String get docStatusApproved => 'Approved';
+
+  @override
+  String docStatusRejected(String reason) {
+    return 'Rejected: $reason';
+  }
+
+  @override
+  String get docStatusExpired => 'Expired, to renew';
+
+  @override
+  String get docTakePhoto => 'Take a photo';
+
+  @override
+  String get docChoosePhoto => 'Choose a photo';
+
+  @override
+  String get docExpiryChoose => 'Insurance expiry date';
+
+  @override
+  String get docExpiryRequired =>
+      'First enter the expiry date of the insurance.';
+
+  @override
+  String docValidUntil(String date) {
+    return 'Valid until $date';
+  }
+
+  @override
+  String get proSubmit => 'Send my file';
+
+  @override
+  String get proSubmitIncomplete =>
+      'Upload all the documents to send your file.';
+
+  @override
+  String get proChangeProfession => 'Change my profession';
+
+  @override
+  String get proStatusSubmittedTitle => 'File being verified';
+
+  @override
+  String get proStatusSubmittedBody =>
+      'We are checking your documents. You will be able to receive assignments once your file is validated.';
+
+  @override
+  String get proStatusRejectedTitle => 'Your file needs correcting';
+
+  @override
+  String get proStatusSuspendedTitle => 'Account suspended';
+
+  @override
+  String get proStatusSuspendedBody =>
+      'You no longer receive assignments. Contact the coordination team.';
+
+  @override
+  String proReason(String reason) {
+    return 'Reason: $reason';
+  }
+
+  @override
+  String get proOnline => 'Online';
+
+  @override
+  String get proOffline => 'Offline';
+
+  @override
+  String get proOnlineHelp => 'When online, you can receive assignment offers.';
+
+  @override
+  String get proZones => 'My areas';
+
+  @override
+  String get proZonesTitle => 'Areas where you work';
+
+  @override
+  String get proZonesEmpty => 'No area is open yet.';
+
+  @override
+  String proZonesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count areas',
+      one: '1 area',
+      zero: 'No area chosen',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get proSchedule => 'My schedule';
+
+  @override
+  String get proScheduleTitle => 'Working days and hours';
+
+  @override
+  String get proScheduleHelp => 'Times are Nador times.';
+
+  @override
+  String proScheduleCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days a week',
+      one: '1 day a week',
+      zero: 'No working day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String scheduleRange(String start, String end) {
+    return '$start to $end';
+  }
+
+  @override
+  String get scheduleStart => 'Start';
+
+  @override
+  String get scheduleEnd => 'End';
+
+  @override
+  String get scheduleInvalid => 'The end time must be after the start time.';
+
+  @override
+  String get proOffersTitle => 'Assignment offers';
+
+  @override
+  String get proOffersEmpty => 'No offer for now.';
+
+  @override
+  String offerAnswerBefore(String time) {
+    return 'Answer before $time';
+  }
+
+  @override
+  String offerDistance(String distance) {
+    return '$distance away';
+  }
+
+  @override
+  String get offerAccept => 'Accept';
+
+  @override
+  String get offerDecline => 'Decline';
+
+  @override
+  String get proMissionsTitle => 'My assignments';
+
+  @override
+  String get proMissionsEmpty => 'No assignment.';
+
+  @override
+  String get missionStatusAssigned => 'Upcoming';
+
+  @override
+  String get missionStatusEnRoute => 'On the way';
+
+  @override
+  String get missionStatusInProgress => 'In progress';
+
+  @override
+  String get missionAccessNotes => 'Access landmarks';
+
+  @override
+  String get missionCareNotes => 'Useful information for the care';
+
+  @override
+  String get missionPatientNote => 'Patient\'s note';
+
+  @override
+  String get missionAmount => 'Cash to collect';
+
+  @override
+  String get missionPrescription =>
+      'A prescription is attached to the request.';
+
+  @override
+  String get missionWithdraw => 'Withdraw';
+
+  @override
+  String get missionWithdrawTitle => 'Withdraw from this assignment?';
+
+  @override
+  String get missionWithdrawBody =>
+      'The coordination team will look for another caregiver.';
+
+  @override
+  String get missionWithdrawReason => 'Reason';
 }

@@ -602,4 +602,248 @@ class NcLocalizationsAr extends NcLocalizations {
 
   @override
   String get back => 'رجوع';
+
+  @override
+  String get refresh => 'تحديث';
+
+  @override
+  String get proCreateFileTitle => 'أنشئ ملفك المهني';
+
+  @override
+  String get proCreateFileIntro =>
+      'لاستقبال المهام، يجب أن يتحقق Nador Care من ملفك.';
+
+  @override
+  String get proStart => 'ابدأ';
+
+  @override
+  String get professionLabel => 'مهنتك';
+
+  @override
+  String get professionRequired => 'اختر مهنتك.';
+
+  @override
+  String get licenseNumberLabel => 'رقم رخصة المزاولة';
+
+  @override
+  String get orderNumberLabel => 'رقم التسجيل في الهيئة';
+
+  @override
+  String get proFileTitle => 'ملفي';
+
+  @override
+  String get proDocumentsTitle => 'الوثائق';
+
+  @override
+  String get docIdentity => 'وثيقة الهوية';
+
+  @override
+  String get docDiploma => 'الدبلوم';
+
+  @override
+  String get docPracticeAuthorization => 'رخصة المزاولة';
+
+  @override
+  String get docOrderRegistration => 'التسجيل في الهيئة';
+
+  @override
+  String get docRcInsurance => 'تأمين المسؤولية المدنية';
+
+  @override
+  String get docStatusMissing => 'يجب إيداعها';
+
+  @override
+  String get docStatusPending => 'تم الإيداع، في انتظار المراقبة';
+
+  @override
+  String get docStatusApproved => 'مقبولة';
+
+  @override
+  String docStatusRejected(String reason) {
+    return 'مرفوضة: $reason';
+  }
+
+  @override
+  String get docStatusExpired => 'منتهية الصلاحية، يجب تجديدها';
+
+  @override
+  String get docTakePhoto => 'التقاط صورة';
+
+  @override
+  String get docChoosePhoto => 'اختيار صورة';
+
+  @override
+  String get docExpiryChoose => 'تاريخ انتهاء صلاحية التأمين';
+
+  @override
+  String get docExpiryRequired => 'أدخل أولا تاريخ انتهاء صلاحية التأمين.';
+
+  @override
+  String docValidUntil(String date) {
+    return 'صالحة إلى غاية $date';
+  }
+
+  @override
+  String get proSubmit => 'إرسال ملفي';
+
+  @override
+  String get proSubmitIncomplete => 'أودع جميع الوثائق لإرسال ملفك.';
+
+  @override
+  String get proChangeProfession => 'تغيير مهنتي';
+
+  @override
+  String get proStatusSubmittedTitle => 'الملف قيد التحقق';
+
+  @override
+  String get proStatusSubmittedBody =>
+      'نقوم بمراقبة وثائقك. يمكنك استقبال المهام فور قبول ملفك.';
+
+  @override
+  String get proStatusRejectedTitle => 'ملفك يحتاج إلى تصحيح';
+
+  @override
+  String get proStatusSuspendedTitle => 'الحساب موقوف';
+
+  @override
+  String get proStatusSuspendedBody => 'لن تستقبل أي مهمة. اتصل بفريق التنسيق.';
+
+  @override
+  String proReason(String reason) {
+    return 'السبب: $reason';
+  }
+
+  @override
+  String get proOnline => 'متصل';
+
+  @override
+  String get proOffline => 'غير متصل';
+
+  @override
+  String get proOnlineHelp =>
+      'عندما تكون متصلا، يمكنك استقبال اقتراحات المهام.';
+
+  @override
+  String get proZones => 'مناطقي';
+
+  @override
+  String get proZonesTitle => 'المناطق التي تشتغل فيها';
+
+  @override
+  String get proZonesEmpty => 'لا توجد أي منطقة مفتوحة بعد.';
+
+  @override
+  String proZonesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count منطقة',
+      few: '$count مناطق',
+      two: 'منطقتان',
+      one: 'منطقة واحدة',
+      zero: 'لم تختر أي منطقة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get proSchedule => 'جدولي';
+
+  @override
+  String get proScheduleTitle => 'أيام وساعات العمل';
+
+  @override
+  String get proScheduleHelp => 'الأوقات بتوقيت الناظور.';
+
+  @override
+  String proScheduleCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count يوما في الأسبوع',
+      few: '$count أيام في الأسبوع',
+      two: 'يومان في الأسبوع',
+      one: 'يوم واحد في الأسبوع',
+      zero: 'لا يوجد يوم عمل',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String scheduleRange(String start, String end) {
+    return 'من $start إلى $end';
+  }
+
+  @override
+  String get scheduleStart => 'البداية';
+
+  @override
+  String get scheduleEnd => 'النهاية';
+
+  @override
+  String get scheduleInvalid => 'يجب أن تكون ساعة النهاية بعد ساعة البداية.';
+
+  @override
+  String get proOffersTitle => 'اقتراحات المهام';
+
+  @override
+  String get proOffersEmpty => 'لا يوجد أي اقتراح حاليا.';
+
+  @override
+  String offerAnswerBefore(String time) {
+    return 'الرد قبل $time';
+  }
+
+  @override
+  String offerDistance(String distance) {
+    return 'على بعد $distance';
+  }
+
+  @override
+  String get offerAccept => 'قبول';
+
+  @override
+  String get offerDecline => 'رفض';
+
+  @override
+  String get proMissionsTitle => 'مهامي';
+
+  @override
+  String get proMissionsEmpty => 'لا توجد أي مهمة.';
+
+  @override
+  String get missionStatusAssigned => 'قادمة';
+
+  @override
+  String get missionStatusEnRoute => 'في الطريق';
+
+  @override
+  String get missionStatusInProgress => 'جارية';
+
+  @override
+  String get missionAccessNotes => 'علامات الوصول';
+
+  @override
+  String get missionCareNotes => 'معلومات مفيدة للعلاج';
+
+  @override
+  String get missionPatientNote => 'ملاحظة المريض';
+
+  @override
+  String get missionAmount => 'المبلغ الواجب تحصيله نقدا';
+
+  @override
+  String get missionPrescription => 'وصفة طبية مرفقة بالطلب.';
+
+  @override
+  String get missionWithdraw => 'الانسحاب';
+
+  @override
+  String get missionWithdrawTitle => 'الانسحاب من هذه المهمة؟';
+
+  @override
+  String get missionWithdrawBody => 'سيبحث فريق التنسيق عن معالج آخر.';
+
+  @override
+  String get missionWithdrawReason => 'السبب';
 }

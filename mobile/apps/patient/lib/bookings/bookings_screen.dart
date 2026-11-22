@@ -6,7 +6,6 @@ import 'package:nc_core/nc_core.dart';
 import 'package:nc_design_system/nc_design_system.dart';
 import 'package:nc_l10n/nc_l10n.dart';
 
-import '../catalogue/catalogue_providers.dart';
 import 'bookings_providers.dart';
 import 'price_breakdown.dart';
 

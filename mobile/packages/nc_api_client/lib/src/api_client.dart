@@ -55,17 +55,24 @@ class ApiClient {
   Future<Map<String, dynamic>> patch(String path, Map<String, dynamic> body) =>
       _send(() => _dio.patch<dynamic>(path, data: body));
 
-  /// Envoi d'un fichier en `multipart/form-data`.
+  Future<Map<String, dynamic>> put(String path, Map<String, dynamic> body) =>
+      _send(() => _dio.put<dynamic>(path, data: body));
+
+  /// Envoi d'un fichier en `multipart/form-data`, avec d'éventuels champs texte.
   Future<Map<String, dynamic>> upload(
     String path, {
     required String field,
     required List<int> bytes,
     required String filename,
+    Map<String, String> fields = const <String, String>{},
   }) {
     return _send(
       () => _dio.post<dynamic>(
         path,
-        data: FormData.fromMap(<String, dynamic>{field: MultipartFile.fromBytes(bytes, filename: filename)}),
+        data: FormData.fromMap(<String, dynamic>{
+          ...fields,
+          field: MultipartFile.fromBytes(bytes, filename: filename),
+        }),
       ),
     );
   }

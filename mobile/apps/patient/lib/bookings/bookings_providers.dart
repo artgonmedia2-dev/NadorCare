@@ -1,5 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart' show DateFormat;
 import 'package:nc_account/nc_account.dart';
 import 'package:nc_api_client/nc_api_client.dart';
 import 'package:nc_core/nc_core.dart';
@@ -62,11 +61,3 @@ String bookingStatusLabel(NcLocalizations l10n, BookingStatus status) {
     BookingStatus.disputed => l10n.statusDisputed,
   };
 }
-
-/// Jour au format de l'API : `AAAA-MM-JJ`.
-String apiDate(DateTime day) {
-  return '${day.year.toString().padLeft(4, '0')}-${day.month.toString().padLeft(2, '0')}-${day.day.toString().padLeft(2, '0')}';
-}
-
-/// Jour écrit en toutes lettres dans la langue de l'écran : « mardi 8 décembre 2026 ».
-String longDate(DateTime day, String languageCode) => DateFormat.yMMMMEEEEd(languageCode).format(day);

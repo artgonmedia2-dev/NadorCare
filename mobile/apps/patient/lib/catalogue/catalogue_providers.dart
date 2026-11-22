@@ -1,5 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart' show NumberFormat;
 import 'package:nc_account/nc_account.dart';
 import 'package:nc_api_client/nc_api_client.dart';
 import 'package:nc_core/nc_core.dart';
@@ -41,10 +40,3 @@ final careServiceProvider = FutureProvider.autoDispose.family<CareService, Strin
   },
   retry: (retryCount, error) => null,
 );
-
-/// Montant en dirhams à partir de centimes : « 150 », « 80,5 ». Les chiffres restent
-/// latins en arabe, comme c'est l'usage au Maroc.
-String formatDirhams(int centimes, String languageCode) {
-  final locale = languageCode == 'ar' ? 'ar_MA' : languageCode;
-  return NumberFormat('#,##0.##', locale).format(centimes / 100);
-}
