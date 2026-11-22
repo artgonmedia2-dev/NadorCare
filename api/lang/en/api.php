@@ -5,6 +5,11 @@ return [
         'sms' => ':code is your Nador Care code. It expires in :minutes minutes. Do not share it with anyone.',
         'sent' => 'If this number is valid, a code has just been sent to it by SMS.',
     ],
+    'push' => [
+        'offer' => ['title' => 'New assignment offered', 'body' => 'Open the app to answer before the deadline.'],
+        'assigned' => ['title' => 'Assignment given', 'body' => 'The coordination team gave you an assignment. Open the app to see it.'],
+        'withdrawn' => ['title' => 'Assignment withdrawn', 'body' => 'An assignment is no longer yours. Open the app for details.'],
+    ],
     'auth' => [
         'logged_out' => 'You are signed out.',
     ],
@@ -35,6 +40,10 @@ return [
         'outside_service_hours' => 'The service is closed at this time. Choose a time slot.',
         'prescription_required' => 'This care requires a prescription. Add a photo of it.',
         'booking_duplicate' => 'An identical request already exists for this patient at this time.',
+        'professional_not_eligible' => 'This professional cannot take this assignment (account, insurance, profession or another assignment at the same time).',
+        'professional_profile_required' => 'Your professional file does not exist yet.',
+        'offer_unavailable' => 'This offer is no longer available.',
+        'offer_already_pending' => 'An offer is already waiting for an answer for this request.',
         'server_error' => 'Something went wrong. Try again later.',
     ],
 ];

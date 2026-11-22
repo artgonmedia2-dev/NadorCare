@@ -4,9 +4,11 @@ use App\Http\Controllers\Api\V1\AddressController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\BookingController;
 use App\Http\Controllers\Api\V1\CatalogueController;
+use App\Http\Controllers\Api\V1\DeviceController;
 use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\PatientProfileController;
 use App\Http\Controllers\Api\V1\PrescriptionController;
+use App\Http\Controllers\Api\V1\Pro\MissionController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -32,6 +34,17 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('/me', [MeController::class, 'show'])->name('me.show');
         Route::patch('/me', [MeController::class, 'update'])->name('me.update');
+        Route::post('/me/devices', [DeviceController::class, 'store'])->name('me.devices.store');
+    });
+
+    // Réservé aux jetons de l'application professionnel.
+    Route::middleware(['auth:sanctum', 'ability:app:pro'])->prefix('pro')->name('pro.')->group(function () {
+        Route::get('/offers', [MissionController::class, 'offers'])->name('offers.index');
+        Route::post('/offers/{offer}/accept', [MissionController::class, 'accept'])->name('offers.accept');
+        Route::post('/offers/{offer}/decline', [MissionController::class, 'decline'])->name('offers.decline');
+        Route::get('/missions', [MissionController::class, 'index'])->name('missions.index');
+        Route::get('/missions/{mission}', [MissionController::class, 'show'])->name('missions.show');
+        Route::post('/missions/{mission}/withdraw', [MissionController::class, 'withdraw'])->name('missions.withdraw');
     });
 
     // Réservé aux jetons de l'application patient (et du site) : un jeton de l'application

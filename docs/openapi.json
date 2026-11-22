@@ -28,6 +28,9 @@
         },
         {
             "name": "R\u00e9servations"
+        },
+        {
+            "name": "Professionnel \u2014 missions"
         }
     ],
     "security": [
@@ -290,6 +293,59 @@
                     },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/me/devices": {
+            "post": {
+                "operationId": "v1.me.devices.store",
+                "description": "\u00c0 appeler apr\u00e8s la connexion et \u00e0 chaque renouvellement du jeton de notification.\nUn jeton d\u00e9j\u00e0 connu est rattach\u00e9 au compte qui vient de se connecter.",
+                "summary": "Enregistrer l'appareil pour les notifications",
+                "tags": [
+                    "Compte"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "app": {
+                                        "$ref": "#/components/schemas/ClientApp"
+                                    },
+                                    "platform": {
+                                        "type": "string",
+                                        "enum": [
+                                            "android",
+                                            "ios"
+                                        ]
+                                    },
+                                    "fcm_token": {
+                                        "type": "string",
+                                        "description": "Jeton Firebase Cloud Messaging de l'appareil.",
+                                        "maxLength": 512
+                                    }
+                                },
+                                "required": [
+                                    "app",
+                                    "platform",
+                                    "fcm_token"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
                     }
                 }
             }
@@ -1247,6 +1303,296 @@
                 }
             }
         },
+        "/pro/offers": {
+            "get": {
+                "operationId": "v1.pro.offers.index",
+                "description": "Avant d'accepter, le professionnel ne voit que le soin, le cr\u00e9neau, la zone et la distance.",
+                "summary": "Propositions de mission en attente",
+                "tags": [
+                    "Professionnel \u2014 missions"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Array of `MissionOfferResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/MissionOfferResource"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/pro/offers/{offer}/accept": {
+            "post": {
+                "operationId": "v1.pro.offers.accept",
+                "description": "La r\u00e9servation est alors affect\u00e9e au professionnel, qui acc\u00e8de au d\u00e9tail de la mission.\nR\u00e9pond `offer_unavailable` si le d\u00e9lai est d\u00e9pass\u00e9 ou si la proposition a \u00e9t\u00e9 retir\u00e9e.",
+                "summary": "Accepter une proposition",
+                "tags": [
+                    "Professionnel \u2014 missions"
+                ],
+                "parameters": [
+                    {
+                        "name": "offer",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`MissionResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/MissionResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/pro/offers/{offer}/decline": {
+            "post": {
+                "operationId": "v1.pro.offers.decline",
+                "summary": "Refuser une proposition",
+                "tags": [
+                    "Professionnel \u2014 missions"
+                ],
+                "parameters": [
+                    {
+                        "name": "offer",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "reason": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 500
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`MissionOfferResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/MissionOfferResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/pro/missions": {
+            "get": {
+                "operationId": "v1.pro.missions.index",
+                "description": "Missions affect\u00e9es, en route ou en cours. Sans donn\u00e9e de sant\u00e9.",
+                "summary": "Mes missions",
+                "tags": [
+                    "Professionnel \u2014 missions"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Array of `MissionResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/MissionResource"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/pro/missions/{mission}": {
+            "get": {
+                "operationId": "v1.pro.missions.show",
+                "description": "Ajoute les informations utiles au soin et la note du patient. Accessible uniquement\npendant la mission ; chaque lecture est inscrite au journal des acc\u00e8s.",
+                "summary": "D\u00e9tail d'une mission",
+                "tags": [
+                    "Professionnel \u2014 missions"
+                ],
+                "parameters": [
+                    {
+                        "name": "mission",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`MissionResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/MissionResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/pro/missions/{mission}/withdraw": {
+            "post": {
+                "operationId": "v1.pro.missions.withdraw",
+                "description": "Possible tant que le professionnel n'est pas parti. La r\u00e9servation retourne \u00e0 la\ncoordination, qui cherche un autre soignant.",
+                "summary": "Se d\u00e9sister d'une mission",
+                "tags": [
+                    "Professionnel \u2014 missions"
+                ],
+                "parameters": [
+                    {
+                        "name": "mission",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "reason": {
+                                        "type": "string",
+                                        "minLength": 3,
+                                        "maxLength": 500
+                                    }
+                                },
+                                "required": [
+                                    "reason"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`MissionResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/MissionResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/health": {
             "get": {
                 "operationId": "v1.health",
@@ -1642,6 +1988,211 @@
                     "pro"
                 ],
                 "title": "ClientApp"
+            },
+            "MissionOfferResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "expires_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Moment apr\u00e8s lequel la proposition n'est plus valable."
+                    },
+                    "service": {
+                        "type": "object",
+                        "properties": {
+                            "name": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "duration_minutes": {
+                                "type": "integer"
+                            }
+                        },
+                        "required": [
+                            "name",
+                            "duration_minutes"
+                        ]
+                    },
+                    "scheduled_at": {
+                        "type": "string"
+                    },
+                    "scheduled_date": {
+                        "type": "string",
+                        "description": "Jour et heure du soin \u00e0 Nador."
+                    },
+                    "scheduled_time": {
+                        "type": "string"
+                    },
+                    "zone": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "distance_meters": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "description": "Distance depuis la derni\u00e8re position connue du professionnel, en m\u00e8tres."
+                    }
+                },
+                "required": [
+                    "id",
+                    "status",
+                    "expires_at",
+                    "service",
+                    "scheduled_at",
+                    "scheduled_date",
+                    "scheduled_time",
+                    "zone",
+                    "distance_meters"
+                ],
+                "title": "MissionOfferResource"
+            },
+            "MissionResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "reference": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "pending",
+                            "confirmed",
+                            "assigned",
+                            "en_route",
+                            "in_progress",
+                            "completed",
+                            "cancelled",
+                            "disputed"
+                        ]
+                    },
+                    "service": {
+                        "type": "object",
+                        "properties": {
+                            "name": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "duration_minutes": {
+                                "type": "integer"
+                            }
+                        },
+                        "required": [
+                            "name",
+                            "duration_minutes"
+                        ]
+                    },
+                    "scheduled_at": {
+                        "type": "string"
+                    },
+                    "scheduled_date": {
+                        "type": "string"
+                    },
+                    "scheduled_time": {
+                        "type": "string"
+                    },
+                    "patient": {
+                        "type": "object",
+                        "properties": {
+                            "first_name": {
+                                "type": "string"
+                            },
+                            "last_name": {
+                                "type": "string"
+                            },
+                            "birth_date": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "format": "date"
+                            },
+                            "sex": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "care_notes": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "description": "Informations utiles au soin (allergies, mobilit\u00e9\u2026)."
+                            }
+                        },
+                        "required": [
+                            "first_name",
+                            "last_name"
+                        ]
+                    },
+                    "address": {
+                        "type": "object",
+                        "properties": {
+                            "line": {},
+                            "city": {},
+                            "access_notes": {},
+                            "latitude": {},
+                            "longitude": {}
+                        },
+                        "required": [
+                            "line",
+                            "city",
+                            "access_notes",
+                            "latitude",
+                            "longitude"
+                        ]
+                    },
+                    "amount_to_collect": {
+                        "type": "integer",
+                        "description": "Montant \u00e0 encaisser en esp\u00e8ces, en centimes de dirham."
+                    },
+                    "payment_method": {
+                        "type": "string"
+                    },
+                    "has_prescription": {
+                        "type": "boolean"
+                    },
+                    "patient_note": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                },
+                "required": [
+                    "id",
+                    "reference",
+                    "status",
+                    "service",
+                    "scheduled_at",
+                    "scheduled_date",
+                    "scheduled_time",
+                    "patient",
+                    "address",
+                    "amount_to_collect",
+                    "payment_method",
+                    "has_prescription"
+                ],
+                "title": "MissionResource"
             },
             "PatientProfileRequest": {
                 "type": "object",

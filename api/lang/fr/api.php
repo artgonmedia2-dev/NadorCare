@@ -5,6 +5,12 @@ return [
         'sms' => ':code est votre code Nador Care. Il expire dans :minutes minutes. Ne le partagez avec personne.',
         'sent' => 'Si ce numéro est valide, un code vient de lui être envoyé par SMS.',
     ],
+    // Notifications push : jamais de donnée du patient, elles s'affichent sur l'écran verrouillé.
+    'push' => [
+        'offer' => ['title' => 'Nouvelle mission proposée', 'body' => 'Ouvrez l\'application pour répondre avant la fin du délai.'],
+        'assigned' => ['title' => 'Mission affectée', 'body' => 'La coordination vous a confié une mission. Ouvrez l\'application pour la voir.'],
+        'withdrawn' => ['title' => 'Mission retirée', 'body' => 'Une mission ne vous est plus affectée. Ouvrez l\'application pour le détail.'],
+    ],
     'auth' => [
         'logged_out' => 'Vous êtes déconnecté.',
     ],
@@ -35,6 +41,10 @@ return [
         'outside_service_hours' => 'Le service est fermé à cette heure. Choisissez un créneau.',
         'prescription_required' => 'Ce soin exige une ordonnance. Ajoutez-en une photo.',
         'booking_duplicate' => 'Une demande identique existe déjà pour ce patient à ce créneau.',
+        'professional_not_eligible' => 'Ce professionnel ne peut pas prendre cette mission (compte, assurance, profession ou autre mission au même moment).',
+        'professional_profile_required' => 'Votre dossier de professionnel n\'existe pas encore.',
+        'offer_unavailable' => 'Cette proposition n\'est plus disponible.',
+        'offer_already_pending' => 'Une proposition est déjà en attente de réponse pour cette demande.',
         'server_error' => 'Une erreur est survenue. Réessayez plus tard.',
     ],
 ];
