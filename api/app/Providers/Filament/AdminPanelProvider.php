@@ -35,6 +35,8 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->brandName('Nador Care')
             ->login()
+            // Le mode sombre est une fonctionnalité V2 : le panneau reste clair, quel que soit le thème du poste.
+            ->darkMode(false)
             ->profile()
             ->multiFactorAuthentication([
                 AppAuthentication::make()->recoverable()->brandName('Nador Care'),
