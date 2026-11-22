@@ -24,6 +24,7 @@ return [
     'limits' => [
         'patient_profiles' => (int) env('LIMIT_PATIENT_PROFILES', 10),
         'addresses' => (int) env('LIMIT_ADDRESSES', 20),
+        'report_photos' => (int) env('LIMIT_REPORT_PHOTOS', 10),
     ],
 
     'legal' => [
