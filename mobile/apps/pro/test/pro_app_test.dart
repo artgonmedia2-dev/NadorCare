@@ -55,7 +55,7 @@ MissionOffer offer(String id) => MissionOffer(
       distanceMeters: 2400,
     );
 
-Mission buildMission(String id, {String status = 'assigned', bool detailed = false}) => Mission(
+Mission buildMission(String id, {String status = 'assigned', bool detailed = false, bool remote = false}) => Mission(
       id: id,
       reference: 'NC-2026-000042',
       status: status,
@@ -71,6 +71,7 @@ Mission buildMission(String id, {String status = 'assigned', bool detailed = fal
       patientNote: detailed ? 'Sonner deux fois' : null,
       amountToCollect: 10000,
       hasPrescription: true,
+      isRemote: remote,
     );
 
 /// Imite le serveur pour le dossier, les propositions et les missions.
@@ -229,6 +230,7 @@ class FakeProApi implements ProApi {
       patientNote: 'Sonner deux fois',
       amountToCollect: source.amountToCollect,
       hasPrescription: source.hasPrescription,
+      isRemote: source.isRemote,
     );
   }
 
@@ -268,7 +270,8 @@ class FakeProApi implements ProApi {
 
   Mission _move(String missionId, String status) {
     final index = activeMissions.indexWhere((item) => item.id == missionId);
-    return activeMissions[index] = buildMission(missionId, status: status);
+    // Une téléconsultation le reste quand elle change de statut.
+    return activeMissions[index] = buildMission(missionId, status: status, remote: activeMissions[index].isRemote);
   }
 
   @override
@@ -286,6 +289,27 @@ class FakeProApi implements ProApi {
     arrivalPosition = latitude == null ? null : (latitude: latitude, longitude: longitude!);
     _move(missionId, 'in_progress');
     return _intervention(missionId);
+  }
+
+  bool callStarted = false;
+  ApiFailure? callFailure;
+
+  @override
+  Future<Intervention> startTeleconsultation(String missionId) async {
+    if (callFailure != null) {
+      throw callFailure!;
+    }
+    callStarted = true;
+    _move(missionId, 'in_progress');
+    return _intervention(missionId);
+  }
+
+  @override
+  Future<VideoAccess> teleconsultation(String missionId) async {
+    if (callFailure != null) {
+      throw callFailure!;
+    }
+    return VideoAccess(provider: 'fake', room: 'nc-$missionId', token: 'jeton', isHost: true, expiresAt: DateTime(2030));
   }
 
   @override
@@ -684,6 +708,48 @@ void main() {
       expect(api.arrived, isTrue);
       expect(api.arrivalPosition, isNull);
       expect(find.text(fr.reportTitle), findsOneWidget);
+    });
+
+    testWidgets('une téléconsultation démarre par un appel, sans trajet, et se clôt sans signature', (tester) async {
+      final api = FakeProApi(status: VerificationStatus.verified)
+        ..activeMissions.add(buildMission('M1', remote: true));
+      await pumpProApp(tester, api: api);
+
+      await tapAndSettle(tester, byName('mission-M1'));
+      expect(byName('mission-remote'), findsOneWidget);
+      expect(byName('mission-depart'), findsNothing, reason: 'pas de trajet pour un appel vidéo');
+
+      await tapAndSettle(tester, byName('mission-start-call'));
+      expect(api.callStarted, isTrue);
+      expect(byName('call-simulated'), findsOneWidget);
+      expect(api.positions, isEmpty, reason: 'aucune position n est partagée pendant un appel');
+
+      await tapAndSettle(tester, byName('call-hang-up'));
+      expect(byName('mission-join-call'), findsOneWidget);
+
+      await tapAndSettle(tester, byName('mission-report'));
+      expect(byName('report-sign'), findsNothing, reason: 'le patient ne peut pas signer à distance');
+      await tester.enterText(byName('report-observations'), 'Renouvellement de traitement.');
+      await tapAndSettle(tester, byName('report-complete'));
+      expect(find.text(fr.reportSignatureRequired), findsNothing);
+    });
+
+    testWidgets('si la salle n est pas ouverte, la téléconsultation ne démarre pas', (tester) async {
+      final api = FakeProApi(status: VerificationStatus.verified)
+        ..activeMissions.add(buildMission('M1', remote: true))
+        ..callFailure = const ApiFailure(
+          code: 'teleconsultation_not_open',
+          message: 'La salle de téléconsultation n est pas ouverte pour le moment.',
+          status: 409,
+        );
+      await pumpProApp(tester, api: api);
+
+      await tapAndSettle(tester, byName('mission-M1'));
+      await tapAndSettle(tester, byName('mission-start-call'));
+
+      expect(api.callStarted, isFalse);
+      expect(find.text('La salle de téléconsultation n est pas ouverte pour le moment.'), findsOneWidget);
+      expect(byName('mission-start-call'), findsOneWidget);
     });
 
     testWidgets('à l arrivée, le compte rendu s ouvre et la position n est plus envoyée', (tester) async {

@@ -51,24 +51,45 @@ class ServiceDetailScreen extends ConsumerWidget {
       title: service.name,
       subtitle: service.categoryName,
       actions: <Widget>[
-        NcPrimaryButton(label: l10n.bookService, onPressed: () => context.push(routeBookingNew(service.slug))),
+        NcPrimaryButton(
+          label: l10n.bookService,
+          icon: Icons.event_available_outlined,
+          onPressed: () => context.push(routeBookingNew(service.slug)),
+        ),
       ],
       children: <Widget>[
         if (description != null && description.isNotEmpty) ...<Widget>[
           Text(description, style: textTheme.bodyLarge),
           const SizedBox(height: NcSpacing.lg),
         ],
-        _Fact(
-          icon: Icons.schedule,
-          label: l10n.serviceDurationLabel,
-          value: l10n.serviceDuration(service.durationMinutes),
+        if (service.isRemote) ...<Widget>[
+          NcStatusBadge(label: l10n.teleconsultationLabel, icon: Icons.videocam_outlined, tone: NcBadgeTone.success),
+          const SizedBox(height: NcSpacing.sm),
+          NcNotice(key: const ValueKey<String>('teleconsultation-notice'), message: l10n.teleconsultationServiceNote),
+          const SizedBox(height: NcSpacing.md),
+        ],
+        // Durée et tarif : les deux informations qui décident, regroupées dans une carte.
+        NcSurface(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              _Fact(
+                icon: Icons.schedule,
+                label: l10n.serviceDurationLabel,
+                value: l10n.serviceDuration(service.durationMinutes),
+              ),
+              _Fact(
+                icon: Icons.payments_outlined,
+                label: l10n.servicePriceLabel,
+                value: l10n.priceDirhams(formatDirhams(service.priceAmount, language)),
+              ),
+              Text(
+                l10n.servicePriceNote,
+                style: textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+              ),
+            ],
+          ),
         ),
-        _Fact(
-          icon: Icons.payments_outlined,
-          label: l10n.servicePriceLabel,
-          value: l10n.priceDirhams(formatDirhams(service.priceAmount, language)),
-        ),
-        Text(l10n.servicePriceNote, style: textTheme.bodyMedium),
         if (profession != null && profession.isNotEmpty) ...<Widget>[
           const SizedBox(height: NcSpacing.md),
           Text(l10n.serviceProvidedBy(profession), style: textTheme.bodyLarge),

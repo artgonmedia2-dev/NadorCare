@@ -1,10 +1,12 @@
 import 'dart:typed_data';
 
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:nc_account/nc_account.dart';
 import 'package:nc_api_client/nc_api_client.dart';
 import 'package:nc_core/nc_core.dart';
+import 'package:nc_design_system/nc_design_system.dart';
 import 'package:nc_l10n/nc_l10n.dart';
 
 const String routeProfession = '/file/profession';
@@ -164,4 +166,15 @@ String missionStatusLabel(NcLocalizations l10n, String status) {
     'in_progress' => l10n.missionStatusInProgress,
     _ => l10n.missionStatusAssigned,
   };
+}
+
+/// Étiquette d'état d'une mission : icône et texte, pour ne pas dépendre de la couleur.
+NcStatusBadge missionStatusBadge(NcLocalizations l10n, String status) {
+  final (IconData icon, NcBadgeTone tone) = switch (status) {
+    'en_route' => (Icons.directions_car_outlined, NcBadgeTone.progress),
+    'in_progress' => (Icons.medical_services_outlined, NcBadgeTone.success),
+    _ => (Icons.event_outlined, NcBadgeTone.neutral),
+  };
+
+  return NcStatusBadge(label: missionStatusLabel(l10n, status), icon: icon, tone: tone);
 }

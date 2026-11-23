@@ -46,21 +46,11 @@ class CoverageBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final scheme = Theme.of(context).colorScheme;
-    final color = isCovered ? scheme.primary : scheme.error;
 
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: <Widget>[
-        Icon(isCovered ? Icons.check_circle_outline : Icons.info_outline, size: 18, color: color),
-        const SizedBox(width: NcSpacing.xs),
-        Flexible(
-          child: Text(
-            isCovered ? l10n.addressCovered : l10n.addressNotCovered,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: color, fontWeight: FontWeight.w600),
-          ),
-        ),
-      ],
+    return NcStatusBadge(
+      label: isCovered ? l10n.addressCovered : l10n.addressNotCovered,
+      icon: isCovered ? Icons.check_circle_outline : Icons.info_outline,
+      tone: isCovered ? NcBadgeTone.success : NcBadgeTone.danger,
     );
   }
 }

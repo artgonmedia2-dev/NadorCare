@@ -101,6 +101,7 @@ class BookingDraft {
     this.slot,
     this.patientNote,
     this.prescriptionFileId,
+    this.paymentMethod = 'cash',
   });
 
   final String serviceId;
@@ -112,14 +113,16 @@ class BookingDraft {
   final String? patientNote;
   final String? prescriptionFileId;
 
+  /// `cash` (espèces au soignant) ou `card`. Une téléconsultation ne se règle que par carte.
+  final String paymentMethod;
+
   Map<String, dynamic> toJson() => <String, dynamic>{
         'service_id': serviceId,
         'patient_profile_id': patientProfileId,
         'address_id': addressId,
         'type': slot == null ? 'immediate' : 'scheduled',
         'scheduled_at': slot?.startsAt,
-        // Seul le paiement en espèces est ouvert pour l'instant.
-        'payment_method': 'cash',
+        'payment_method': paymentMethod,
         'patient_note': (patientNote == null || patientNote!.isEmpty) ? null : patientNote,
         'prescription_file_id': prescriptionFileId,
       };
@@ -166,6 +169,7 @@ class Booking {
     this.professionalProfession,
     this.tracking,
     this.hasReport = false,
+    this.isRemote = false,
   });
 
   factory Booking.fromJson(Map<String, dynamic> json) {
@@ -195,6 +199,7 @@ class Booking {
       professionalProfession: professional?['profession'] as String?,
       tracking: tracking == null ? null : BookingTracking.fromJson(tracking),
       hasReport: (json['has_report'] as bool?) ?? false,
+      isRemote: json['delivery_mode'] == 'remote',
     );
   }
 
@@ -233,6 +238,13 @@ class Booking {
 
   /// Le compte rendu de l'intervention peut être lu.
   final bool hasReport;
+
+  /// Téléconsultation : appel vidéo, sans déplacement du soignant.
+  final bool isRemote;
+
+  /// La salle vidéo se rejoint une fois le soignant affecté, jusqu'à la fin du soin.
+  bool get canJoinTeleconsultation =>
+      isRemote && (status == BookingStatus.assigned || status == BookingStatus.inProgress);
 
   bool get isClosed => status == BookingStatus.completed || status == BookingStatus.cancelled;
 }

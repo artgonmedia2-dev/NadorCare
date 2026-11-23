@@ -199,7 +199,13 @@ class _AddressFormScreenState extends ConsumerState<AddressFormScreen> {
       title: _isEdit ? l10n.addressEditTitle : l10n.addressNewTitle,
       actions: <Widget>[
         NcPrimaryButton(label: l10n.save, isLoading: _busy, onPressed: _save),
-        if (_isEdit) TextButton(onPressed: _busy ? null : _delete, child: Text(l10n.delete)),
+        if (_isEdit)
+          TextButton.icon(
+            onPressed: _busy ? null : _delete,
+            style: TextButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.error),
+            icon: const Icon(Icons.delete_outline),
+            label: Text(l10n.delete),
+          ),
       ],
       children: <Widget>[
         if (_error != null) ...<Widget>[
@@ -245,8 +251,8 @@ class _AddressFormScreenState extends ConsumerState<AddressFormScreen> {
           ),
         ),
         const SizedBox(height: NcSpacing.md),
-        Text(l10n.locationLabel, style: textTheme.titleMedium),
-        const SizedBox(height: NcSpacing.xs),
+        const SizedBox(height: NcSpacing.sm),
+        NcSectionTitle(l10n.locationLabel),
         Text(l10n.locationHelp, style: textTheme.bodyMedium),
         const SizedBox(height: NcSpacing.sm),
         if (_position != null) ...<Widget>[
@@ -260,7 +266,7 @@ class _AddressFormScreenState extends ConsumerState<AddressFormScreen> {
         if (_locating)
           const Center(child: CircularProgressIndicator())
         else
-          NcSecondaryButton(label: l10n.locationUse, onPressed: _locate),
+          NcSecondaryButton(label: l10n.locationUse, icon: Icons.my_location, onPressed: _locate),
       ],
     );
   }

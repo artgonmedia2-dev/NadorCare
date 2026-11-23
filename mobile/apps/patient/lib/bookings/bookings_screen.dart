@@ -44,7 +44,10 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> {
         const SizedBox(height: NcSpacing.md),
         ...switch (bookings) {
           AsyncData<List<Booking>>(:final value) when value.isEmpty => <Widget>[
-              NcNotice(message: _past ? l10n.bookingsPastEmpty : l10n.bookingsEmpty),
+              NcEmptyState(
+                message: _past ? l10n.bookingsPastEmpty : l10n.bookingsEmpty,
+                icon: Icons.event_busy_outlined,
+              ),
             ],
           AsyncData<List<Booking>>(:final value) => <Widget>[
               for (final booking in value)
@@ -54,17 +57,18 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> {
                   title: booking.serviceName,
                   subtitle:
                       '${booking.patientName}\n${l10n.dateAtTime(longDate(booking.scheduledDate, language), booking.scheduledTime)}',
-                  badge: Text(
-                    bookingStatusLabel(l10n, booking.status),
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
-                  ),
+                  badge: bookingStatusBadge(l10n, booking.status),
                   onTap: () => context.push(routeBooking(booking.id)),
                 ),
             ],
           AsyncError<List<Booking>>(:final error) => <Widget>[
               NcNotice(message: failureMessage(context, error), kind: NcNoticeKind.error),
               const SizedBox(height: NcSpacing.md),
-              NcSecondaryButton(label: l10n.retry, onPressed: () => ref.invalidate(bookingsListProvider(_past))),
+              NcSecondaryButton(
+                label: l10n.retry,
+                icon: Icons.refresh,
+                onPressed: () => ref.invalidate(bookingsListProvider(_past)),
+              ),
             ],
           _ => const <Widget>[Center(child: CircularProgressIndicator())],
         },
@@ -164,10 +168,25 @@ class _BookingDetailScreenState extends ConsumerState<BookingDetailScreen> {
           title: booking.serviceName,
           subtitle: l10n.bookingReference(isolateLtr(booking.reference)),
           actions: <Widget>[
+            if (booking.canJoinTeleconsultation)
+              NcPrimaryButton(
+                key: const ValueKey<String>('booking-join'),
+                label: l10n.teleconsultationJoin,
+                icon: Icons.videocam_outlined,
+                onPressed: () => Navigator.of(context).push<void>(
+                  MaterialPageRoute<void>(
+                    builder: (context) => TeleconsultationScreen(
+                      title: booking.serviceName,
+                      loadAccess: () => ref.read(bookingsApiProvider).teleconsultation(booking.id),
+                    ),
+                  ),
+                ),
+              ),
             if (booking.hasReport)
               NcPrimaryButton(
                 key: const ValueKey<String>('booking-report'),
                 label: l10n.bookingReportOpen,
+                icon: Icons.description_outlined,
                 onPressed: () => context.push(routeBookingReport(booking.id)),
               ),
             if (booking.canCancel)
@@ -182,11 +201,16 @@ class _BookingDetailScreenState extends ConsumerState<BookingDetailScreen> {
               NcNotice(message: _error!, kind: NcNoticeKind.error),
               const SizedBox(height: NcSpacing.md),
             ],
-            NcNotice(
-              key: const ValueKey<String>('booking-status'),
-              message: bookingStatusLabel(l10n, booking.status),
-              kind: booking.status == BookingStatus.cancelled ? NcNoticeKind.warning : NcNoticeKind.info,
-            ),
+            bookingStatusBadge(l10n, booking.status, key: const ValueKey<String>('booking-status')),
+            if (booking.isRemote) ...<Widget>[
+              const SizedBox(height: NcSpacing.sm),
+              NcNotice(
+                key: const ValueKey<String>('booking-remote'),
+                message: booking.canJoinTeleconsultation
+                    ? '${l10n.teleconsultationServiceNote} ${l10n.teleconsultationRoomHelp}'
+                    : l10n.teleconsultationServiceNote,
+              ),
+            ],
             if ((booking.cancellationFee ?? 0) > 0) ...<Widget>[
               const SizedBox(height: NcSpacing.sm),
               Text(l10n.bookingFeeCharged(formatDirhams(booking.cancellationFee!, language))),
@@ -200,27 +224,42 @@ class _BookingDetailScreenState extends ConsumerState<BookingDetailScreen> {
                     : l10n.trackingEta(booking.tracking!.etaMinutes!),
               ),
             ],
-            const SizedBox(height: NcSpacing.lg),
-            if ((booking.professionalName ?? '').isNotEmpty)
-              SummaryRow(
-                label: l10n.bookingProfessional,
-                value: <String?>[booking.professionalName, booking.professionalProfession]
-                    .whereType<String>()
-                    .join('\n'),
+            const SizedBox(height: NcSpacing.md),
+            NcSurface(
+              margin: const EdgeInsets.only(bottom: NcSpacing.md),
+              padding: const EdgeInsets.symmetric(horizontal: NcSpacing.md, vertical: NcSpacing.sm),
+              child: Column(
+                children: <Widget>[
+                  if ((booking.professionalName ?? '').isNotEmpty)
+                    SummaryRow(
+                      icon: Icons.medical_services_outlined,
+                      label: l10n.bookingProfessional,
+                      value: <String?>[booking.professionalName, booking.professionalProfession]
+                          .whereType<String>()
+                          .join('\n'),
+                    ),
+                  SummaryRow(icon: Icons.person_outline, label: l10n.summaryPatient, value: booking.patientName),
+                  SummaryRow(
+                    icon: Icons.event_outlined,
+                    label: l10n.summarySlot,
+                    value: l10n.dateAtTime(longDate(booking.scheduledDate, language), booking.scheduledTime),
+                  ),
+                  SummaryRow(
+                    icon: Icons.place_outlined,
+                    label: l10n.summaryAddress,
+                    value: <String?>[booking.addressLabel, booking.addressLine].whereType<String>().join('\n'),
+                  ),
+                  SummaryRow(
+                    icon: Icons.payments_outlined,
+                    label: l10n.summaryPayment,
+                    value: booking.isRemote ? l10n.paymentCard : l10n.paymentCash,
+                  ),
+                  if ((booking.patientNote ?? '').isNotEmpty)
+                    SummaryRow(icon: Icons.chat_bubble_outline, label: l10n.noteLabel, value: booking.patientNote!),
+                ],
               ),
-            SummaryRow(label: l10n.summaryPatient, value: booking.patientName),
-            SummaryRow(
-              label: l10n.summarySlot,
-              value: l10n.dateAtTime(longDate(booking.scheduledDate, language), booking.scheduledTime),
             ),
-            SummaryRow(
-              label: l10n.summaryAddress,
-              value: <String?>[booking.addressLabel, booking.addressLine].whereType<String>().join('\n'),
-            ),
-            SummaryRow(label: l10n.summaryPayment, value: l10n.paymentCash),
-            if ((booking.patientNote ?? '').isNotEmpty)
-              SummaryRow(label: l10n.noteLabel, value: booking.patientNote!),
-            PriceBreakdown(price: booking.price),
+            NcSurface(child: PriceBreakdown(price: booking.price)),
           ],
         ),
       AsyncError<Booking>(:final error) => NcPage(

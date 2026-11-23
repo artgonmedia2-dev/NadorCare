@@ -152,8 +152,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           NcNotice(message: _error!, kind: NcNoticeKind.error),
           const SizedBox(height: NcSpacing.md),
         ],
-        Text(l10n.nameLabel, style: textTheme.titleMedium),
-        const SizedBox(height: NcSpacing.sm),
+        NcSectionTitle(l10n.nameLabel),
         TextField(
           key: const ValueKey<String>('name-field'),
           controller: _nameController,
@@ -162,34 +161,39 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           decoration: InputDecoration(hintText: l10n.nameHint, errorText: _nameError),
         ),
         const SizedBox(height: NcSpacing.sm),
-        NcPrimaryButton(label: l10n.save, isLoading: _savingName, onPressed: _saveName),
+        // Action secondaire : sur cet écran, aucun bouton ne doit dominer les réglages.
+        NcSecondaryButton(label: l10n.save, onPressed: _savingName ? null : _saveName),
         const SizedBox(height: NcSpacing.xl),
-        Text(l10n.languageLabel, style: textTheme.titleMedium),
-        const SizedBox(height: NcSpacing.sm),
+        NcSectionTitle(l10n.languageLabel),
         LanguageChoice(selected: settings.languageCode, onSelected: _changeLanguage),
         const SizedBox(height: NcSpacing.lg),
-        Text(l10n.textSizeLabel, style: textTheme.titleMedium),
-        const SizedBox(height: NcSpacing.sm),
-        for (final size in NcTextSize.values)
-          ListTile(
-            key: ValueKey<String>('text-size-${size.name}'),
-            contentPadding: EdgeInsets.zero,
-            selected: size == settings.textSize,
-            title: Text(_textSizeLabel(l10n, size)),
-            trailing: Icon(size == settings.textSize ? Icons.check_circle : Icons.circle_outlined),
-            onTap: () => ref.read(settingsControllerProvider.notifier).setTextSize(size),
-          ),
+        NcSectionTitle(l10n.textSizeLabel),
+        // Même présentation que le choix de la langue : une grande ligne par option.
+        NcChoiceList<String>(
+          keyPrefix: 'text-size',
+          selected: settings.textSize.name,
+          onSelected: (name) => ref
+              .read(settingsControllerProvider.notifier)
+              .setTextSize(NcTextSize.values.firstWhere((size) => size.name == name)),
+          choices: <NcChoice<String>>[
+            for (final size in NcTextSize.values) NcChoice<String>(value: size.name, label: _textSizeLabel(l10n, size)),
+          ],
+        ),
         const SizedBox(height: NcSpacing.lg),
-        SwitchListTile(
-          key: const ValueKey<String>('biometric-switch'),
-          contentPadding: EdgeInsets.zero,
-          value: settings.biometricEnabled,
-          onChanged: _toggleBiometric,
-          title: Text(l10n.biometricLabel, style: textTheme.titleMedium),
-          subtitle: Text(l10n.biometricSubtitle),
+        NcSurface(
+          padding: const EdgeInsetsDirectional.fromSTEB(NcSpacing.md, NcSpacing.xs, NcSpacing.sm, NcSpacing.xs),
+          child: SwitchListTile(
+            key: const ValueKey<String>('biometric-switch'),
+            contentPadding: EdgeInsets.zero,
+            secondary: const Icon(Icons.fingerprint),
+            value: settings.biometricEnabled,
+            onChanged: _toggleBiometric,
+            title: Text(l10n.biometricLabel, style: textTheme.titleMedium),
+            subtitle: Text(l10n.biometricSubtitle),
+          ),
         ),
         const SizedBox(height: NcSpacing.xl),
-        NcSecondaryButton(label: l10n.logout, onPressed: _confirmLogout),
+        NcSecondaryButton(label: l10n.logout, icon: Icons.logout, onPressed: _confirmLogout),
       ],
     );
   }

@@ -25,6 +25,9 @@ class _FileScreenState extends ConsumerState<FileScreen> {
   String? _error;
   DateTime? _insuranceExpiry;
 
+  /// Le renouvellement de l'assurance reste replié tant qu'on ne le demande pas.
+  bool _renewingInsurance = false;
+
   Future<void> _pickExpiry() async {
     final now = DateTime.now();
     final picked = await showDatePicker(
@@ -120,6 +123,7 @@ class _FileScreenState extends ConsumerState<FileScreen> {
         if (editable)
           NcPrimaryButton(
             label: l10n.proSubmit,
+            icon: Icons.send_outlined,
             isLoading: _submitting,
             onPressed: file.canSubmit && _uploading == null ? _submit : null,
           ),
@@ -139,8 +143,7 @@ class _FileScreenState extends ConsumerState<FileScreen> {
           NcNotice(message: l10n.proSubmitIncomplete),
           const SizedBox(height: NcSpacing.md),
         ],
-        Text(l10n.proDocumentsTitle, style: Theme.of(context).textTheme.titleLarge),
-        const SizedBox(height: NcSpacing.md),
+        NcSectionTitle(l10n.proDocumentsTitle),
         for (final type in file.requiredDocuments)
           _DocumentBlock(
             type: type,
@@ -151,6 +154,8 @@ class _FileScreenState extends ConsumerState<FileScreen> {
             canUpload: _uploading == null && (editable || type == _insurance),
             insuranceExpiry: type == _insurance ? _insuranceExpiry : null,
             onPickExpiry: type == _insurance ? _pickExpiry : null,
+            isRenewing: _renewingInsurance,
+            onRenew: () => setState(() => _renewingInsurance = true),
             onUpload: (fromCamera) => _upload(type, fromCamera: fromCamera),
           ),
       ],
@@ -166,6 +171,8 @@ class _DocumentBlock extends StatelessWidget {
     required this.isUploading,
     required this.canUpload,
     required this.onUpload,
+    required this.isRenewing,
+    required this.onRenew,
     this.insuranceExpiry,
     this.onPickExpiry,
   });
@@ -179,56 +186,70 @@ class _DocumentBlock extends StatelessWidget {
   final DateTime? insuranceExpiry;
   final VoidCallback? onPickExpiry;
 
+  /// Vrai quand le professionnel a demandé à remplacer un justificatif encore valable.
+  final bool isRenewing;
+  final VoidCallback onRenew;
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final scheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     final language = Localizations.localeOf(context).languageCode;
     final current = document;
     final status = current?.status;
 
-    final (String label, Color color, IconData icon) = switch (status) {
-      'approved' => (l10n.docStatusApproved, scheme.primary, Icons.check_circle_outline),
-      'pending' => (l10n.docStatusPending, scheme.tertiary, Icons.hourglass_empty),
-      'rejected' => (l10n.docStatusRejected(current?.rejectionReason ?? ''), scheme.error, Icons.error_outline),
-      'expired' => (l10n.docStatusExpired, scheme.error, Icons.event_busy_outlined),
-      _ => (l10n.docStatusMissing, scheme.outline, Icons.upload_file_outlined),
+    final (String label, NcBadgeTone tone, IconData icon) = switch (status) {
+      'approved' => (l10n.docStatusApproved, NcBadgeTone.success, Icons.check_circle_outline),
+      'pending' => (l10n.docStatusPending, NcBadgeTone.progress, Icons.hourglass_empty),
+      'rejected' => (
+          l10n.docStatusRejected(current?.rejectionReason ?? ''),
+          NcBadgeTone.danger,
+          Icons.error_outline,
+        ),
+      'expired' => (l10n.docStatusExpired, NcBadgeTone.danger, Icons.event_busy_outlined),
+      _ => (l10n.docStatusMissing, NcBadgeTone.neutral, Icons.upload_file_outlined),
     };
 
     final expiresAt = current?.expiresAt;
-    // On propose le dépôt quand il manque, quand il a été refusé ou a expiré, et pour l'assurance.
-    final showUpload = canUpload && (isMissing || status == 'rejected' || status == 'expired' || onPickExpiry != null);
+    // Le dépôt est nécessaire quand le justificatif manque, a été refusé ou a expiré.
+    final needsUpload = isMissing || status == 'rejected' || status == 'expired';
+    // L'assurance se renouvelle aussi quand elle est encore valable, mais seulement sur demande :
+    // trois boutons en permanence sous un justificatif approuvé laissaient croire qu'il manquait quelque chose.
+    final showUpload = canUpload && (needsUpload || (onPickExpiry != null && isRenewing));
+    final showRenew = canUpload && !needsUpload && onPickExpiry != null && !isRenewing;
 
-    return Padding(
+    return NcSurface(
       key: ValueKey<String>('document-$type'),
-      padding: const EdgeInsets.only(bottom: NcSpacing.lg),
+      margin: const EdgeInsets.only(bottom: NcSpacing.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
           Text(documentTypeLabel(l10n, type), style: textTheme.titleMedium),
-          const SizedBox(height: NcSpacing.xs),
-          Row(
-            children: <Widget>[
-              Icon(icon, color: color, size: 20),
-              const SizedBox(width: NcSpacing.sm),
-              Expanded(
-                child: Text(label, style: textTheme.bodyMedium?.copyWith(color: color, fontWeight: FontWeight.w600)),
-              ),
-            ],
-          ),
+          const SizedBox(height: NcSpacing.sm),
+          NcStatusBadge(label: label, icon: icon, tone: tone),
           if (expiresAt != null && status != 'rejected') ...<Widget>[
-            const SizedBox(height: NcSpacing.xs),
+            const SizedBox(height: NcSpacing.sm),
             Text(l10n.docValidUntil(longDate(expiresAt, language)), style: textTheme.bodyMedium),
           ],
           if (isUploading) ...<Widget>[
             const SizedBox(height: NcSpacing.sm),
             const Center(child: CircularProgressIndicator()),
-          ] else if (showUpload) ...<Widget>[
+          ] else if (showRenew)
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: TextButton.icon(
+                key: const ValueKey<String>('insurance-renew'),
+                onPressed: onRenew,
+                icon: const Icon(Icons.autorenew),
+                label: Text(l10n.docRenewInsurance),
+              ),
+            )
+          else if (showUpload) ...<Widget>[
             if (onPickExpiry != null) ...<Widget>[
-              const SizedBox(height: NcSpacing.sm),
+              const SizedBox(height: NcSpacing.md),
               NcSecondaryButton(
                 key: const ValueKey<String>('insurance-expiry'),
+                icon: Icons.event_outlined,
                 label: insuranceExpiry == null ? l10n.docExpiryChoose : longDate(insuranceExpiry!, language),
                 onPressed: onPickExpiry,
               ),
@@ -236,12 +257,14 @@ class _DocumentBlock extends StatelessWidget {
             const SizedBox(height: NcSpacing.sm),
             NcSecondaryButton(
               key: ValueKey<String>('camera-$type'),
+              icon: Icons.photo_camera_outlined,
               label: l10n.docTakePhoto,
               onPressed: () => onUpload(true),
             ),
             const SizedBox(height: NcSpacing.sm),
             NcSecondaryButton(
               key: ValueKey<String>('gallery-$type'),
+              icon: Icons.photo_library_outlined,
               label: l10n.docChoosePhoto,
               onPressed: () => onUpload(false),
             ),

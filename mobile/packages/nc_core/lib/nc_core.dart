@@ -13,3 +13,4 @@ export 'src/patient_address.dart';
 export 'src/patient_profile.dart';
 export 'src/professional.dart';
 export 'src/supported_locales.dart';
+export 'src/teleconsultation.dart';

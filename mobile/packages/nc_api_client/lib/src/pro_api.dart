@@ -55,6 +55,12 @@ abstract interface class ProApi {
   /// Pointage d'arrivée : la mission passe « en cours » et le compte rendu s'ouvre.
   Future<Intervention> arrive(String missionId, {double? latitude, double? longitude});
 
+  /// Démarre une téléconsultation : la mission passe « en cours », sans trajet.
+  Future<Intervention> startTeleconsultation(String missionId);
+
+  /// Accès du professionnel à la salle vidéo d'une téléconsultation.
+  Future<VideoAccess> teleconsultation(String missionId);
+
   /// Compte rendu en cours d'une mission. Le serveur journalise cette lecture.
   Future<Intervention> intervention(String missionId);
 
@@ -210,6 +216,17 @@ class HttpProApi implements ProApi {
         'longitude': ?longitude,
       }),
     );
+  }
+
+  @override
+  Future<Intervention> startTeleconsultation(String missionId) async {
+    return _intervention(await _client.post('/pro/missions/$missionId/start'));
+  }
+
+  @override
+  Future<VideoAccess> teleconsultation(String missionId) async {
+    final json = await _client.get('/pro/missions/$missionId/teleconsultation');
+    return VideoAccess.fromJson(json['data'] as Map<String, dynamic>);
   }
 
   @override

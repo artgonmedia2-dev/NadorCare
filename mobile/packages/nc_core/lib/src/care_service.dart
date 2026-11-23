@@ -32,6 +32,7 @@ class CareService {
     this.description,
     this.professionalCategory,
     this.currency = 'MAD',
+    this.isRemote = false,
   });
 
   factory CareService.fromJson(Map<String, dynamic> json) {
@@ -51,6 +52,7 @@ class CareService {
       categorySlug: (category['slug'] as String?) ?? '',
       categoryName: (category['name'] as String?) ?? '',
       professionalCategory: json['professional_category'] as String?,
+      isRemote: json['delivery_mode'] == 'remote',
     );
   }
 
@@ -67,6 +69,9 @@ class CareService {
   /// Une ordonnance devra être déposée pour réserver ce soin.
   final bool requiresPrescription;
   final bool allowsSeries;
+
+  /// Téléconsultation : le soin se fait par appel vidéo, sans déplacement.
+  final bool isRemote;
   final String categorySlug;
   final String categoryName;
 

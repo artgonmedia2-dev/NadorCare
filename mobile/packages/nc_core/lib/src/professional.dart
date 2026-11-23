@@ -240,6 +240,7 @@ class Mission {
     this.accessNotes,
     this.careNotes,
     this.patientNote,
+    this.isRemote = false,
   });
 
   factory Mission.fromJson(Map<String, dynamic> json) {
@@ -263,11 +264,15 @@ class Mission {
       amountToCollect: (json['amount_to_collect'] as num?)?.toInt() ?? 0,
       hasPrescription: (json['has_prescription'] as bool?) ?? false,
       patientNote: json['patient_note'] as String?,
+      isRemote: json['delivery_mode'] == 'remote',
     );
   }
 
   final String id;
   final String reference;
+
+  /// Téléconsultation : appel vidéo, sans trajet.
+  final bool isRemote;
 
   /// `assigned`, `en_route` ou `in_progress`.
   final String status;

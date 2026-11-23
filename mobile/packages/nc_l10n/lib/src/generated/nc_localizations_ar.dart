@@ -133,7 +133,7 @@ class NcLocalizationsAr extends NcLocalizations {
   String get homeGreetingAnonymous => 'مرحبا';
 
   @override
-  String get homePatientSoon => 'حجز العلاجات سيتوفر قريبا في هذا التطبيق.';
+  String get homePatientIntro => 'ما الرعاية التي تحتاجها اليوم؟';
 
   @override
   String get homeProSoon => 'مهامك ستصل قريبا إلى هذا التطبيق.';
@@ -1027,4 +1027,75 @@ class NcLocalizationsAr extends NcLocalizations {
   String reportAmended(String reason) {
     return 'تم تصحيح هذا التقرير. السبب: $reason';
   }
+
+  @override
+  String get proScheduleMissing =>
+      'لم تحدّد أي يوم عمل. املأ جدولك لتصلك العروض التي تناسبك.';
+
+  @override
+  String get proScheduleSetUp => 'تحديد جدولي';
+
+  @override
+  String get proZonesMissing =>
+      'لم تختر أي منطقة. حدّد الأماكن التي تقبل العمل فيها.';
+
+  @override
+  String get proZonesSetUp => 'اختيار مناطقي';
+
+  @override
+  String get proAccountSection => 'نشاطي';
+
+  @override
+  String get docRenewInsurance => 'تجديد التأمين';
+
+  @override
+  String stepProgress(int current, int total) {
+    return 'الخطوة $current من $total';
+  }
+
+  @override
+  String get teleconsultationLabel => 'استشارة عن بعد';
+
+  @override
+  String get teleconsultationServiceNote =>
+      'يتم هذا العلاج عبر مكالمة فيديو داخل التطبيق، دون تنقل.';
+
+  @override
+  String get teleconsultationJoin => 'الانضمام إلى الاستشارة عن بعد';
+
+  @override
+  String get teleconsultationStart => 'بدء الاستشارة عن بعد';
+
+  @override
+  String get teleconsultationRoomHelp => 'تفتح القاعة قبل الموعد بدقائق.';
+
+  @override
+  String get teleconsultationNoJourney => 'استشارة عن بعد: لا يوجد تنقل.';
+
+  @override
+  String get callConnecting => 'جار الاتصال بالقاعة…';
+
+  @override
+  String get callInProgress => 'المكالمة جارية';
+
+  @override
+  String get callSimulated => 'مكالمة تجريبية: خدمة الفيديو غير مفعلة بعد.';
+
+  @override
+  String get callHangUp => 'إنهاء المكالمة';
+
+  @override
+  String get callMute => 'كتم الميكروفون';
+
+  @override
+  String get callUnmute => 'تشغيل الميكروفون';
+
+  @override
+  String get callCameraOff => 'إيقاف الكاميرا';
+
+  @override
+  String get callCameraOn => 'تشغيل الكاميرا';
+
+  @override
+  String get paymentCard => 'بطاقة بنكية';
 }

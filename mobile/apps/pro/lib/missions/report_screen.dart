@@ -53,6 +53,8 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
     super.dispose();
   }
 
+  bool get _isRemote => _mission?.isRemote ?? false;
+
   Future<void> _load() async {
     setState(() => _loadError = null);
 
@@ -204,7 +206,10 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
     final missingObservations = (draft.observations ?? '').isEmpty;
     setState(() {
       _observationsError = missingObservations ? l10n.reportObservationsRequired : null;
-      _error = !missingObservations && !(_intervention?.isSigned ?? false) ? l10n.reportSignatureRequired : null;
+      // À distance, le patient ne peut pas signer sur ce téléphone : la signature n'est pas demandée.
+      _error = !missingObservations && !_isRemote && !(_intervention?.isSigned ?? false)
+          ? l10n.reportSignatureRequired
+          : null;
     });
     if (missingObservations || _error != null) {
       return;
@@ -271,6 +276,7 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
         NcPrimaryButton(
           key: const ValueKey<String>('report-complete'),
           label: l10n.reportComplete,
+          icon: Icons.check_circle_outline,
           isLoading: _busy,
           onPressed: _busy ? null : _complete,
         ),
@@ -289,8 +295,7 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
           NcNotice(message: _info!),
           const SizedBox(height: NcSpacing.md),
         ],
-        Text(l10n.reportVitalsTitle, style: textTheme.titleLarge),
-        const SizedBox(height: NcSpacing.sm),
+        NcSectionTitle(l10n.reportVitalsTitle),
         for (final vital in Vital.values)
           Padding(
             padding: const EdgeInsets.only(bottom: NcSpacing.sm),
@@ -330,36 +335,61 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
           onAdd: () => _addLine(act: false),
           onRemove: (line) => setState(() => _consumables = _consumables.where((item) => item != line).toList()),
         ),
-        Text(l10n.reportPhotosTitle, style: textTheme.titleLarge),
-        const SizedBox(height: NcSpacing.sm),
-        Text(l10n.reportPhotosCount(intervention.photosCount), key: const ValueKey<String>('report-photos-count')),
+        NcSectionTitle(l10n.reportPhotosTitle),
+        Text(
+          l10n.reportPhotosCount(intervention.photosCount),
+          key: const ValueKey<String>('report-photos-count'),
+          style: textTheme.bodyLarge,
+        ),
         const SizedBox(height: NcSpacing.sm),
         NcSecondaryButton(
           key: const ValueKey<String>('report-add-photo'),
           label: l10n.reportPhotoAdd,
+          icon: Icons.photo_camera_outlined,
           onPressed: _busy ? null : _addPhoto,
         ),
         const SizedBox(height: NcSpacing.lg),
-        Text(l10n.reportSignatureTitle, style: textTheme.titleLarge),
-        const SizedBox(height: NcSpacing.sm),
-        Text(
-          intervention.isSigned ? l10n.reportSignedBy(intervention.signedByName ?? '') : l10n.reportNotSigned,
-          key: const ValueKey<String>('report-signature-state'),
-        ),
-        const SizedBox(height: NcSpacing.sm),
-        NcSecondaryButton(
-          key: const ValueKey<String>('report-sign'),
-          label: intervention.isSigned ? l10n.reportSignAgain : l10n.reportSign,
-          onPressed: _busy ? null : _sign,
-        ),
+        if (!_isRemote) ...<Widget>[
+          NcSectionTitle(l10n.reportSignatureTitle),
+          Row(
+            children: <Widget>[
+              Icon(
+                intervention.isSigned ? Icons.check_circle_outline : Icons.radio_button_unchecked,
+                color: intervention.isSigned
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+              const SizedBox(width: NcSpacing.sm),
+              Expanded(
+                child: Text(
+                  intervention.isSigned ? l10n.reportSignedBy(intervention.signedByName ?? '') : l10n.reportNotSigned,
+                  key: const ValueKey<String>('report-signature-state'),
+                  style: textTheme.bodyLarge,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: NcSpacing.sm),
+          NcSecondaryButton(
+            key: const ValueKey<String>('report-sign'),
+            label: intervention.isSigned ? l10n.reportSignAgain : l10n.reportSign,
+            icon: Icons.draw_outlined,
+            onPressed: _busy ? null : _sign,
+          ),
+        ],
         if (amount > 0) ...<Widget>[
           const SizedBox(height: NcSpacing.lg),
-          SwitchListTile(
-            key: const ValueKey<String>('report-cash'),
-            contentPadding: EdgeInsets.zero,
-            title: Text(l10n.reportCashCollected(l10n.priceDirhams(formatDirhams(amount, language)))),
-            value: _cashCollected,
-            onChanged: _busy ? null : (value) => setState(() => _cashCollected = value),
+          NcSurface(
+            color: _cashCollected ? Theme.of(context).colorScheme.primaryContainer : null,
+            padding: const EdgeInsetsDirectional.fromSTEB(NcSpacing.md, NcSpacing.xs, NcSpacing.sm, NcSpacing.xs),
+            child: SwitchListTile(
+              key: const ValueKey<String>('report-cash'),
+              contentPadding: EdgeInsets.zero,
+              secondary: const Icon(Icons.payments_outlined),
+              title: Text(l10n.reportCashCollected(l10n.priceDirhams(formatDirhams(amount, language)))),
+              value: _cashCollected,
+              onChanged: _busy ? null : (value) => setState(() => _cashCollected = value),
+            ),
           ),
         ],
       ],
@@ -394,7 +424,7 @@ class _Lines extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
-          Text(title, style: Theme.of(context).textTheme.titleLarge),
+          NcSectionTitle(title),
           for (final line in lines)
             ListTile(
               contentPadding: EdgeInsets.zero,
@@ -408,7 +438,7 @@ class _Lines extends StatelessWidget {
               ),
             ),
           const SizedBox(height: NcSpacing.sm),
-          NcSecondaryButton(key: ValueKey<String>(addKey), label: addLabel, onPressed: onAdd),
+          NcSecondaryButton(key: ValueKey<String>(addKey), label: addLabel, icon: Icons.add, onPressed: onAdd),
         ],
       ),
     );

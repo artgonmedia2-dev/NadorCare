@@ -106,12 +106,14 @@ List<Widget> _async<T>(
   required Widget Function(T item) itemBuilder,
 }) {
   return switch (value) {
-    AsyncData<List<T>>(value: final items) when items.isEmpty => <Widget>[NcNotice(message: emptyMessage)],
+    AsyncData<List<T>>(value: final items) when items.isEmpty => <Widget>[
+        NcEmptyState(message: emptyMessage, icon: Icons.search_off),
+      ],
     AsyncData<List<T>>(value: final items) => <Widget>[for (final item in items) itemBuilder(item)],
     AsyncError<List<T>>(:final error) => <Widget>[
         NcNotice(message: failureMessage(context, error), kind: NcNoticeKind.error),
         const SizedBox(height: NcSpacing.md),
-        NcSecondaryButton(label: context.l10n.retry, onPressed: onRetry),
+        NcSecondaryButton(label: context.l10n.retry, icon: Icons.refresh, onPressed: onRetry),
       ],
     _ => const <Widget>[
         Padding(

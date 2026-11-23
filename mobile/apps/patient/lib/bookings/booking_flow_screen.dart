@@ -110,6 +110,10 @@ class _BookingFlowScreenState extends ConsumerState<BookingFlowScreen> {
 
   PreferredSizeWidget _appBar() => AppBar(leading: BackButton(onPressed: _back));
 
+  /// Les quatre écrans du parcours annoncent où l'on en est.
+  Widget _progress(int current) =>
+      NcStepIndicator(label: context.l10n.stepProgress(current, 4), current: current, total: 4);
+
   List<Widget> _errorNotice() => <Widget>[
         if (_error != null) ...<Widget>[
           NcNotice(message: _error!, kind: NcNoticeKind.error),
@@ -139,16 +143,28 @@ class _BookingFlowScreenState extends ConsumerState<BookingFlowScreen> {
               }
             },
           ),
-        NcSecondaryButton(label: l10n.profileAdd, onPressed: () => context.push(routeProfileNew)),
+        if (list.isEmpty)
+          NcPrimaryButton(
+            label: l10n.profileAdd,
+            icon: Icons.person_add_alt,
+            onPressed: () => context.push(routeProfileNew),
+          )
+        else
+          NcSecondaryButton(
+            label: l10n.profileAdd,
+            icon: Icons.person_add_alt,
+            onPressed: () => context.push(routeProfileNew),
+          ),
       ],
       children: <Widget>[
+        _progress(1),
         ..._errorNotice(),
         if (profiles.isLoading && list.isEmpty)
           const Center(child: CircularProgressIndicator())
         else if (profiles.hasError && list.isEmpty)
           NcNotice(message: failureMessage(context, profiles.error!), kind: NcNoticeKind.error)
         else if (list.isEmpty)
-          NcNotice(message: l10n.bookingNoProfile)
+          NcEmptyState(message: l10n.bookingNoProfile, icon: Icons.person_outline)
         else
           NcChoiceList<String>(
             keyPrefix: 'booking-profile',
@@ -190,16 +206,28 @@ class _BookingFlowScreenState extends ConsumerState<BookingFlowScreen> {
               }
             },
           ),
-        NcSecondaryButton(label: l10n.addressAdd, onPressed: () => context.push(routeAddressNew)),
+        if (list.isEmpty)
+          NcPrimaryButton(
+            label: l10n.addressAdd,
+            icon: Icons.add_location_alt_outlined,
+            onPressed: () => context.push(routeAddressNew),
+          )
+        else
+          NcSecondaryButton(
+            label: l10n.addressAdd,
+            icon: Icons.add_location_alt_outlined,
+            onPressed: () => context.push(routeAddressNew),
+          ),
       ],
       children: <Widget>[
+        _progress(2),
         ..._errorNotice(),
         if (addresses.isLoading && list.isEmpty)
           const Center(child: CircularProgressIndicator())
         else if (addresses.hasError && list.isEmpty)
           NcNotice(message: failureMessage(context, addresses.error!), kind: NcNoticeKind.error)
         else if (list.isEmpty)
-          NcNotice(message: l10n.bookingNoAddress)
+          NcEmptyState(message: l10n.bookingNoAddress, icon: Icons.home_outlined)
         else
           NcChoiceList<String>(
             keyPrefix: 'booking-address',
@@ -267,9 +295,11 @@ class _BookingFlowScreenState extends ConsumerState<BookingFlowScreen> {
         ),
       ],
       children: <Widget>[
+        _progress(3),
         ..._errorNotice(),
         NcSecondaryButton(
           key: const ValueKey<String>('booking-day-button'),
+          icon: Icons.event_outlined,
           label: longDate(_day, language),
           onPressed: _pickDay,
         ),
@@ -283,7 +313,7 @@ class _BookingFlowScreenState extends ConsumerState<BookingFlowScreen> {
         else if (loaded == null)
           const Center(child: CircularProgressIndicator())
         else if (loaded.slots.isEmpty && !(isToday && loaded.immediateAvailable))
-          NcNotice(message: l10n.slotNone)
+          NcEmptyState(message: l10n.slotNone, icon: Icons.event_busy_outlined)
         else
           NcChoiceList<String>(
             keyPrefix: 'booking-slot',
@@ -352,6 +382,8 @@ class _BookingFlowScreenState extends ConsumerState<BookingFlowScreen> {
               slot: _slot,
               patientNote: _note.text.trim(),
               prescriptionFileId: _prescriptionFileId,
+              // Personne n'est sur place pour encaisser une téléconsultation : elle se règle par carte.
+              paymentMethod: service.isRemote ? 'card' : 'cash',
             ),
           );
       ref.invalidate(bookingsListProvider);
@@ -375,7 +407,6 @@ class _BookingFlowScreenState extends ConsumerState<BookingFlowScreen> {
   Widget _summaryStep(BuildContext context, CareService service) {
     final l10n = context.l10n;
     final language = Localizations.localeOf(context).languageCode;
-    final textTheme = Theme.of(context).textTheme;
 
     final profile = (ref.watch(profilesControllerProvider).value ?? const <PatientProfile>[])
         .where((item) => item.id == _profileId)
@@ -399,17 +430,35 @@ class _BookingFlowScreenState extends ConsumerState<BookingFlowScreen> {
         ),
       ],
       children: <Widget>[
+        _progress(4),
         ..._errorNotice(),
-        SummaryRow(label: l10n.summaryService, value: service.name),
-        SummaryRow(label: l10n.summaryPatient, value: profile?.fullName ?? ''),
-        SummaryRow(label: l10n.summaryAddress, value: address == null ? '' : '${address.label}\n${address.line}'),
-        SummaryRow(
-          label: l10n.summarySlot,
-          value: slot == null ? l10n.slotAsap : l10n.dateAtTime(longDate(_day, language), slot.time),
+        NcSurface(
+          margin: const EdgeInsets.only(bottom: NcSpacing.md),
+          padding: const EdgeInsets.symmetric(horizontal: NcSpacing.md, vertical: NcSpacing.sm),
+          child: Column(
+            children: <Widget>[
+              SummaryRow(icon: Icons.medical_services_outlined, label: l10n.summaryService, value: service.name),
+              SummaryRow(icon: Icons.person_outline, label: l10n.summaryPatient, value: profile?.fullName ?? ''),
+              SummaryRow(
+                icon: Icons.place_outlined,
+                label: l10n.summaryAddress,
+                value: address == null ? '' : '${address.label}\n${address.line}',
+              ),
+              SummaryRow(
+                icon: Icons.event_outlined,
+                label: l10n.summarySlot,
+                value: slot == null ? l10n.slotAsap : l10n.dateAtTime(longDate(_day, language), slot.time),
+              ),
+              SummaryRow(
+                icon: Icons.payments_outlined,
+                label: l10n.summaryPayment,
+                value: service.isRemote ? l10n.paymentCard : l10n.paymentCash,
+              ),
+            ],
+          ),
         ),
-        SummaryRow(label: l10n.summaryPayment, value: l10n.paymentCash),
         switch (quote) {
-          AsyncData<PriceQuote>(:final value) => PriceBreakdown(price: value),
+          AsyncData<PriceQuote>(:final value) => NcSurface(child: PriceBreakdown(price: value)),
           AsyncError<PriceQuote>(:final error) => NcNotice(
               message: failureMessage(context, error),
               kind: NcNoticeKind.error,
@@ -418,8 +467,7 @@ class _BookingFlowScreenState extends ConsumerState<BookingFlowScreen> {
         },
         const SizedBox(height: NcSpacing.lg),
         if (service.requiresPrescription) ...<Widget>[
-          Text(l10n.servicePrescriptionRequired, style: textTheme.titleMedium),
-          const SizedBox(height: NcSpacing.sm),
+          NcSectionTitle(l10n.servicePrescriptionRequired),
           if (_prescriptionFileId != null)
             NcNotice(key: const ValueKey<String>('prescription-added'), message: l10n.prescriptionAdded)
           else if (_uploading)
@@ -428,19 +476,20 @@ class _BookingFlowScreenState extends ConsumerState<BookingFlowScreen> {
             NcSecondaryButton(
               key: const ValueKey<String>('prescription-camera'),
               label: l10n.prescriptionCamera,
+              icon: Icons.photo_camera_outlined,
               onPressed: () => _addPrescription(fromCamera: true),
             ),
             const SizedBox(height: NcSpacing.sm),
             NcSecondaryButton(
               key: const ValueKey<String>('prescription-gallery'),
               label: l10n.prescriptionGallery,
+              icon: Icons.photo_library_outlined,
               onPressed: () => _addPrescription(fromCamera: false),
             ),
           ],
           const SizedBox(height: NcSpacing.lg),
         ],
-        Text(l10n.noteLabel, style: textTheme.titleMedium),
-        const SizedBox(height: NcSpacing.sm),
+        NcSectionTitle(l10n.noteLabel),
         TextField(
           key: const ValueKey<String>('booking-note'),
           controller: _note,
@@ -468,7 +517,14 @@ class _BookingFlowScreenState extends ConsumerState<BookingFlowScreen> {
         NcPrimaryButton(label: l10n.bookingSeeMine, onPressed: () => context.go(routeBookings)),
       ],
       children: <Widget>[
-        Icon(Icons.check_circle_outline, size: 96, color: Theme.of(context).colorScheme.primary),
+        Center(
+          child: Container(
+            width: 144,
+            height: 144,
+            decoration: BoxDecoration(color: Theme.of(context).colorScheme.primaryContainer, shape: BoxShape.circle),
+            child: Icon(Icons.check_rounded, size: 80, color: Theme.of(context).colorScheme.onPrimaryContainer),
+          ),
+        ),
         const SizedBox(height: NcSpacing.lg),
         NcNotice(message: l10n.statusPending),
         const SizedBox(height: NcSpacing.md),

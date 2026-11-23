@@ -53,6 +53,17 @@ class _ProHomeScreenState extends ConsumerState<ProHomeScreen> {
       ..invalidate(missionsProvider);
   }
 
+  /// Rechargement demandé par un geste : on attend la réponse avant de retirer l'indicateur.
+  Future<void> _pullToRefresh() async {
+    await ref.read(professionalFileProvider.notifier).refreshQuietly();
+    if (!mounted) {
+      return;
+    }
+    ref
+      ..invalidate(missionOffersProvider)
+      ..invalidate(missionsProvider);
+  }
+
   Future<void> _setOnline(bool online) async {
     setState(() {
       _togglingOnline = true;
@@ -165,15 +176,37 @@ class _ProHomeScreenState extends ConsumerState<ProHomeScreen> {
           subtitle: current.status == VerificationStatus.rejected && (current.statusReason ?? '').isNotEmpty
               ? l10n.proReason(current.statusReason!)
               : l10n.proCreateFileIntro,
-          actions: <Widget>[NcPrimaryButton(label: l10n.proFileTitle, onPressed: () => context.push(routeFile))],
+          actions: <Widget>[
+            NcPrimaryButton(
+              label: l10n.proFileTitle,
+              icon: Icons.folder_outlined,
+              onPressed: () => context.push(routeFile),
+            ),
+          ],
           children: const <Widget>[],
         ),
       VerificationStatus.submitted || VerificationStatus.underReview => NcPage(
           appBar: appBar,
           title: l10n.proStatusSubmittedTitle,
           subtitle: l10n.proStatusSubmittedBody,
+          onRefresh: _pullToRefresh,
           children: <Widget>[
-            Icon(Icons.hourglass_top, size: 96, color: Theme.of(context).colorScheme.primary),
+            const SizedBox(height: NcSpacing.lg),
+            Center(
+              child: Container(
+                width: 144,
+                height: 144,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primaryContainer,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.hourglass_top,
+                  size: 72,
+                  color: Theme.of(context).colorScheme.onPrimaryContainer,
+                ),
+              ),
+            ),
           ],
         ),
       VerificationStatus.suspended => NcPage(
@@ -204,72 +237,101 @@ class _ProHomeScreenState extends ConsumerState<ProHomeScreen> {
     });
     final workingDays = file.availabilities.map((slot) => slot.weekday).toSet().length;
 
+    final scheme = Theme.of(context).colorScheme;
+    final offerList = offers.value;
+    final missionList = missions.value;
+
     return NcPage(
       appBar: appBar,
       title: greeting,
+      onRefresh: _pullToRefresh,
       children: <Widget>[
         if (_error != null) ...<Widget>[
           NcNotice(message: _error!, kind: NcNoticeKind.error),
           const SizedBox(height: NcSpacing.md),
         ],
-        SwitchListTile(
-          key: const ValueKey<String>('online-switch'),
-          contentPadding: EdgeInsets.zero,
-          value: file.isOnline,
-          onChanged: _togglingOnline ? null : _setOnline,
-          title: Text(file.isOnline ? l10n.proOnline : l10n.proOffline, style: textTheme.titleLarge),
-          subtitle: Text(l10n.proOnlineHelp),
+        // L'état en ligne est le réglage le plus important de l'écran : il a sa carte, qui change de couleur.
+        NcSurface(
+          color: file.isOnline ? scheme.primaryContainer : null,
+          padding: const EdgeInsetsDirectional.fromSTEB(NcSpacing.md, NcSpacing.xs, NcSpacing.sm, NcSpacing.xs),
+          margin: EdgeInsets.zero,
+          child: SwitchListTile(
+            key: const ValueKey<String>('online-switch'),
+            contentPadding: EdgeInsets.zero,
+            value: file.isOnline,
+            onChanged: _togglingOnline ? null : _setOnline,
+            title: Text(file.isOnline ? l10n.proOnline : l10n.proOffline, style: textTheme.titleLarge),
+            subtitle: Text(l10n.proOnlineHelp),
+          ),
         ),
+        // Sans zone ni jour de travail, les propositions ne peuvent pas tenir compte du professionnel.
+        if (file.zones.isEmpty) ...<Widget>[
+          const SizedBox(height: NcSpacing.md),
+          NcNotice(
+            key: const ValueKey<String>('home-zones-missing'),
+            message: l10n.proZonesMissing,
+            kind: NcNoticeKind.warning,
+          ),
+          const SizedBox(height: NcSpacing.sm),
+          NcSecondaryButton(
+            label: l10n.proZonesSetUp,
+            icon: Icons.map_outlined,
+            onPressed: () => context.push(routeZones),
+          ),
+        ],
+        if (workingDays == 0) ...<Widget>[
+          const SizedBox(height: NcSpacing.md),
+          NcNotice(
+            key: const ValueKey<String>('home-schedule-missing'),
+            message: l10n.proScheduleMissing,
+            kind: NcNoticeKind.warning,
+          ),
+          const SizedBox(height: NcSpacing.sm),
+          NcSecondaryButton(
+            label: l10n.proScheduleSetUp,
+            icon: Icons.calendar_month_outlined,
+            onPressed: () => context.push(routeSchedule),
+          ),
+        ],
         const SizedBox(height: NcSpacing.lg),
-        Text(l10n.proOffersTitle, style: textTheme.titleLarge),
-        const SizedBox(height: NcSpacing.sm),
-        ...switch (offers) {
-          AsyncData<List<MissionOffer>>(:final value) when value.isEmpty => <Widget>[
-              NcNotice(message: l10n.proOffersEmpty),
-            ],
-          AsyncData<List<MissionOffer>>(:final value) => <Widget>[
-              for (final offer in value)
-                _OfferCard(
-                  offer: offer,
-                  language: language,
-                  isBusy: _busyOffer == offer.id,
-                  onAccept: () => _answer(offer, accept: true),
-                  onDecline: () => _answer(offer, accept: false),
-                ),
-            ],
-          AsyncError<List<MissionOffer>>(:final error) => <Widget>[
-              NcNotice(message: failureMessage(context, error), kind: NcNoticeKind.error),
-            ],
-          _ => const <Widget>[Center(child: CircularProgressIndicator())],
-        },
-        const SizedBox(height: NcSpacing.lg),
-        Text(l10n.proMissionsTitle, style: textTheme.titleLarge),
-        const SizedBox(height: NcSpacing.sm),
-        ...switch (missions) {
-          AsyncData<List<Mission>>(:final value) when value.isEmpty => <Widget>[
-              NcNotice(message: l10n.proMissionsEmpty),
-            ],
-          AsyncData<List<Mission>>(:final value) => <Widget>[
-              for (final mission in value)
-                NcListCard(
-                  key: ValueKey<String>('mission-${mission.id}'),
-                  icon: Icons.medical_services_outlined,
-                  title: mission.serviceName,
-                  subtitle:
-                      '${mission.patientName}\n${l10n.dateAtTime(longDate(mission.scheduledDate, language), mission.scheduledTime)}',
-                  badge: Text(
-                    missionStatusLabel(l10n, mission.status),
-                    style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
-                  ),
-                  onTap: () => context.push(routeMission(mission.id)),
-                ),
-            ],
-          AsyncError<List<Mission>>(:final error) => <Widget>[
-              NcNotice(message: failureMessage(context, error), kind: NcNoticeKind.error),
-            ],
-          _ => const <Widget>[Center(child: CircularProgressIndicator())],
-        },
-        const SizedBox(height: NcSpacing.lg),
+        NcSectionTitle(l10n.proOffersTitle),
+        // Pendant un rechargement, la liste déjà affichée reste en place : pas de clignotement.
+        if (offerList != null && offerList.isEmpty)
+          NcEmptyState(message: l10n.proOffersEmpty, icon: Icons.notifications_none)
+        else if (offerList != null)
+          for (final offer in offerList)
+            _OfferCard(
+              offer: offer,
+              language: language,
+              isBusy: _busyOffer == offer.id,
+              onAccept: () => _answer(offer, accept: true),
+              onDecline: () => _answer(offer, accept: false),
+            )
+        else if (offers.hasError)
+          NcNotice(message: failureMessage(context, offers.error!), kind: NcNoticeKind.error)
+        else
+          const Center(child: CircularProgressIndicator()),
+        const SizedBox(height: NcSpacing.md),
+        NcSectionTitle(l10n.proMissionsTitle),
+        if (missionList != null && missionList.isEmpty)
+          NcEmptyState(message: l10n.proMissionsEmpty, icon: Icons.event_available_outlined)
+        else if (missionList != null)
+          for (final mission in missionList)
+            NcListCard(
+              key: ValueKey<String>('mission-${mission.id}'),
+              icon: Icons.medical_services_outlined,
+              title: mission.serviceName,
+              subtitle:
+                  '${mission.patientName}\n${l10n.dateAtTime(longDate(mission.scheduledDate, language), mission.scheduledTime)}',
+              badge: missionStatusBadge(l10n, mission.status),
+              onTap: () => context.push(routeMission(mission.id)),
+            )
+        else if (missions.hasError)
+          NcNotice(message: failureMessage(context, missions.error!), kind: NcNoticeKind.error)
+        else
+          const Center(child: CircularProgressIndicator()),
+        const SizedBox(height: NcSpacing.md),
+        NcSectionTitle(l10n.proAccountSection),
         NcListCard(
           key: const ValueKey<String>('home-zones'),
           icon: Icons.map_outlined,
@@ -341,17 +403,25 @@ class _OfferCard extends StatelessWidget {
           Text(details.join('\n'), style: textTheme.bodyLarge),
           if (expiresAt != null) ...<Widget>[
             const SizedBox(height: NcSpacing.sm),
-            Text(
+            NcStatusBadge(
+              icon: Icons.timer_outlined,
+              tone: NcBadgeTone.progress,
               // Heure du téléphone : c'est le délai pour répondre, pas l'heure du soin.
-              l10n.offerAnswerBefore(DateFormat.Hms(language == 'ar' ? 'ar_MA' : language).format(expiresAt.toLocal())),
-              style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+              label: l10n.offerAnswerBefore(
+                DateFormat.Hms(language == 'ar' ? 'ar_MA' : language).format(expiresAt.toLocal()),
+              ),
             ),
           ],
           const SizedBox(height: NcSpacing.md),
           if (isBusy)
             const Center(child: CircularProgressIndicator())
           else ...<Widget>[
-            NcPrimaryButton(key: ValueKey<String>('accept-${offer.id}'), label: l10n.offerAccept, onPressed: onAccept),
+            NcPrimaryButton(
+              key: ValueKey<String>('accept-${offer.id}'),
+              label: l10n.offerAccept,
+              icon: Icons.check,
+              onPressed: onAccept,
+            ),
             const SizedBox(height: NcSpacing.sm),
             NcSecondaryButton(
               key: ValueKey<String>('decline-${offer.id}'),

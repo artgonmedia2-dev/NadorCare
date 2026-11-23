@@ -18,7 +18,8 @@ class NcNotice extends StatelessWidget {
     final (Color background, Color foreground, IconData icon) = switch (kind) {
       NcNoticeKind.info => (scheme.secondaryContainer, scheme.onSecondaryContainer, Icons.info_outline),
       NcNoticeKind.error => (scheme.errorContainer, scheme.onErrorContainer, Icons.error_outline),
-      NcNoticeKind.warning => (scheme.tertiaryContainer, scheme.onTertiaryContainer, Icons.warning_amber_outlined),
+      // Ambre : la couleur tertiaire du thème tire vers le bleu et se lisait comme une simple information.
+      NcNoticeKind.warning => (const Color(0xFFFFF1CC), const Color(0xFF4A3600), Icons.warning_amber_outlined),
     };
 
     return Semantics(

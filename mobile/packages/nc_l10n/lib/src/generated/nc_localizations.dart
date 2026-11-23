@@ -328,11 +328,11 @@ abstract class NcLocalizations {
   /// **'Bonjour'**
   String get homeGreetingAnonymous;
 
-  /// No description provided for @homePatientSoon.
+  /// No description provided for @homePatientIntro.
   ///
   /// In fr, this message translates to:
-  /// **'La réservation de soins arrive bientôt dans cette application.'**
-  String get homePatientSoon;
+  /// **'De quel soin avez-vous besoin aujourd\'hui ?'**
+  String get homePatientIntro;
 
   /// No description provided for @homeProSoon.
   ///
@@ -1917,6 +1917,138 @@ abstract class NcLocalizations {
   /// In fr, this message translates to:
   /// **'Ce compte rendu a été corrigé. Motif : {reason}'**
   String reportAmended(String reason);
+
+  /// No description provided for @proScheduleMissing.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous n\'avez indiqué aucun jour de travail. Renseignez votre agenda pour recevoir les propositions qui vous conviennent.'**
+  String get proScheduleMissing;
+
+  /// No description provided for @proScheduleSetUp.
+  ///
+  /// In fr, this message translates to:
+  /// **'Renseigner mon agenda'**
+  String get proScheduleSetUp;
+
+  /// No description provided for @proZonesMissing.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous n\'avez choisi aucune zone. Indiquez où vous acceptez d\'intervenir.'**
+  String get proZonesMissing;
+
+  /// No description provided for @proZonesSetUp.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisir mes zones'**
+  String get proZonesSetUp;
+
+  /// No description provided for @proAccountSection.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mon activité'**
+  String get proAccountSection;
+
+  /// No description provided for @docRenewInsurance.
+  ///
+  /// In fr, this message translates to:
+  /// **'Renouveler l\'assurance'**
+  String get docRenewInsurance;
+
+  /// No description provided for @stepProgress.
+  ///
+  /// In fr, this message translates to:
+  /// **'Étape {current} sur {total}'**
+  String stepProgress(int current, int total);
+
+  /// No description provided for @teleconsultationLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Téléconsultation'**
+  String get teleconsultationLabel;
+
+  /// No description provided for @teleconsultationServiceNote.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce soin se fait par appel vidéo dans l\'application, sans déplacement.'**
+  String get teleconsultationServiceNote;
+
+  /// No description provided for @teleconsultationJoin.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rejoindre la téléconsultation'**
+  String get teleconsultationJoin;
+
+  /// No description provided for @teleconsultationStart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Démarrer la téléconsultation'**
+  String get teleconsultationStart;
+
+  /// No description provided for @teleconsultationRoomHelp.
+  ///
+  /// In fr, this message translates to:
+  /// **'La salle ouvre quelques minutes avant l\'heure prévue.'**
+  String get teleconsultationRoomHelp;
+
+  /// No description provided for @teleconsultationNoJourney.
+  ///
+  /// In fr, this message translates to:
+  /// **'Téléconsultation : aucun déplacement.'**
+  String get teleconsultationNoJourney;
+
+  /// No description provided for @callConnecting.
+  ///
+  /// In fr, this message translates to:
+  /// **'Connexion à la salle…'**
+  String get callConnecting;
+
+  /// No description provided for @callInProgress.
+  ///
+  /// In fr, this message translates to:
+  /// **'Appel en cours'**
+  String get callInProgress;
+
+  /// No description provided for @callSimulated.
+  ///
+  /// In fr, this message translates to:
+  /// **'Appel simulé : le service vidéo n\'est pas encore branché.'**
+  String get callSimulated;
+
+  /// No description provided for @callHangUp.
+  ///
+  /// In fr, this message translates to:
+  /// **'Raccrocher'**
+  String get callHangUp;
+
+  /// No description provided for @callMute.
+  ///
+  /// In fr, this message translates to:
+  /// **'Couper le micro'**
+  String get callMute;
+
+  /// No description provided for @callUnmute.
+  ///
+  /// In fr, this message translates to:
+  /// **'Réactiver le micro'**
+  String get callUnmute;
+
+  /// No description provided for @callCameraOff.
+  ///
+  /// In fr, this message translates to:
+  /// **'Couper la caméra'**
+  String get callCameraOff;
+
+  /// No description provided for @callCameraOn.
+  ///
+  /// In fr, this message translates to:
+  /// **'Réactiver la caméra'**
+  String get callCameraOn;
+
+  /// No description provided for @paymentCard.
+  ///
+  /// In fr, this message translates to:
+  /// **'Carte bancaire'**
+  String get paymentCard;
 }
 
 class _NcLocalizationsDelegate extends LocalizationsDelegate<NcLocalizations> {

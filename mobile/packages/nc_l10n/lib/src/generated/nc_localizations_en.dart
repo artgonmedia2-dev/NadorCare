@@ -134,7 +134,7 @@ class NcLocalizationsEn extends NcLocalizations {
   String get homeGreetingAnonymous => 'Hello';
 
   @override
-  String get homePatientSoon => 'Care booking is coming soon to this app.';
+  String get homePatientIntro => 'What care do you need today?';
 
   @override
   String get homeProSoon => 'Your assignments will arrive soon in this app.';
@@ -1025,4 +1025,77 @@ class NcLocalizationsEn extends NcLocalizations {
   String reportAmended(String reason) {
     return 'This report was corrected. Reason: $reason';
   }
+
+  @override
+  String get proScheduleMissing =>
+      'You have not set any working days. Fill in your schedule to receive offers that suit you.';
+
+  @override
+  String get proScheduleSetUp => 'Set my schedule';
+
+  @override
+  String get proZonesMissing =>
+      'You have not chosen any area. Tell us where you agree to work.';
+
+  @override
+  String get proZonesSetUp => 'Choose my areas';
+
+  @override
+  String get proAccountSection => 'My activity';
+
+  @override
+  String get docRenewInsurance => 'Renew insurance';
+
+  @override
+  String stepProgress(int current, int total) {
+    return 'Step $current of $total';
+  }
+
+  @override
+  String get teleconsultationLabel => 'Teleconsultation';
+
+  @override
+  String get teleconsultationServiceNote =>
+      'This care takes place by video call in the app, with no travel.';
+
+  @override
+  String get teleconsultationJoin => 'Join the teleconsultation';
+
+  @override
+  String get teleconsultationStart => 'Start the teleconsultation';
+
+  @override
+  String get teleconsultationRoomHelp =>
+      'The room opens a few minutes before the scheduled time.';
+
+  @override
+  String get teleconsultationNoJourney => 'Teleconsultation: no travel.';
+
+  @override
+  String get callConnecting => 'Connecting to the room…';
+
+  @override
+  String get callInProgress => 'Call in progress';
+
+  @override
+  String get callSimulated =>
+      'Simulated call: the video service is not connected yet.';
+
+  @override
+  String get callHangUp => 'Hang up';
+
+  @override
+  String get callMute => 'Mute the microphone';
+
+  @override
+  String get callUnmute => 'Unmute the microphone';
+
+  @override
+  String get callCameraOff => 'Turn the camera off';
+
+  @override
+  String get callCameraOn => 'Turn the camera on';
+
+  @override
+  String get paymentCard => 'Bank card';
 }

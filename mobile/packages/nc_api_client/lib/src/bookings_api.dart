@@ -26,6 +26,9 @@ abstract interface class BookingsApi {
 
   /// Compte rendu d'un soin terminé. Le serveur journalise cette lecture.
   Future<Intervention> report(String bookingId);
+
+  /// Accès à la salle vidéo d'une téléconsultation. Refusé tant que la salle n'est pas ouverte.
+  Future<VideoAccess> teleconsultation(String bookingId);
 }
 
 class HttpBookingsApi implements BookingsApi {
@@ -81,5 +84,10 @@ class HttpBookingsApi implements BookingsApi {
   @override
   Future<Intervention> report(String bookingId) async {
     return Intervention.fromJson(_data(await _client.get('/bookings/$bookingId/report')));
+  }
+
+  @override
+  Future<VideoAccess> teleconsultation(String bookingId) async {
+    return VideoAccess.fromJson(_data(await _client.get('/bookings/$bookingId/teleconsultation')));
   }
 }

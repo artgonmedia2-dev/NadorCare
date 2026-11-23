@@ -12,6 +12,7 @@ export 'src/failure_message.dart';
 export 'src/location_service.dart';
 export 'src/providers.dart';
 export 'src/report_texts.dart';
+export 'src/screens/teleconsultation_screen.dart';
 export 'src/settings/app_settings.dart';
 export 'src/settings/settings_controller.dart';
 export 'src/storage/preferences_store.dart';

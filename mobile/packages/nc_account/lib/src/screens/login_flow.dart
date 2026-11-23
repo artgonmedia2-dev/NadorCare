@@ -213,6 +213,8 @@ class _LoginFlowState extends ConsumerState<LoginFlow> {
       ],
       children: <Widget>[
         ..._messages(),
+        Text(l10n.phoneLabel, style: Theme.of(context).textTheme.titleMedium),
+        const SizedBox(height: NcSpacing.sm),
         // Un numéro se lit toujours de gauche à droite, même en arabe.
         Directionality(
           textDirection: TextDirection.ltr,
@@ -232,8 +234,6 @@ class _LoginFlowState extends ConsumerState<LoginFlow> {
           ),
         ),
         const SizedBox(height: NcSpacing.sm),
-        Text(l10n.phoneLabel, style: Theme.of(context).textTheme.labelLarge),
-        const SizedBox(height: NcSpacing.xs),
         Text(l10n.phoneHelper, style: Theme.of(context).textTheme.bodyMedium),
         const SizedBox(height: NcSpacing.lg),
         NcNotice(message: l10n.emergencyNotice, kind: NcNoticeKind.warning),
@@ -259,6 +259,8 @@ class _LoginFlowState extends ConsumerState<LoginFlow> {
       ],
       children: <Widget>[
         ..._messages(),
+        Text(l10n.otpLabel, style: Theme.of(context).textTheme.titleMedium),
+        const SizedBox(height: NcSpacing.sm),
         Directionality(
           textDirection: TextDirection.ltr,
           child: TextField(
@@ -278,8 +280,6 @@ class _LoginFlowState extends ConsumerState<LoginFlow> {
             onSubmitted: (_) => _verify(acceptTerms: false),
           ),
         ),
-        const SizedBox(height: NcSpacing.sm),
-        Text(l10n.otpLabel, style: Theme.of(context).textTheme.labelLarge, textAlign: TextAlign.center),
       ],
     );
   }

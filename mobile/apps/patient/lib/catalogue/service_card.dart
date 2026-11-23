@@ -34,20 +34,10 @@ class PrescriptionBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = Theme.of(context).colorScheme.tertiary;
-
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: <Widget>[
-        Icon(Icons.description_outlined, size: 18, color: color),
-        const SizedBox(width: NcSpacing.xs),
-        Flexible(
-          child: Text(
-            context.l10n.servicePrescriptionRequired,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: color, fontWeight: FontWeight.w600),
-          ),
-        ),
-      ],
+    return NcStatusBadge(
+      label: context.l10n.servicePrescriptionRequired,
+      icon: Icons.description_outlined,
+      tone: NcBadgeTone.progress,
     );
   }
 }

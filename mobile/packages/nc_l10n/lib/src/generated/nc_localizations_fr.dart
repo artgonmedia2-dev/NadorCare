@@ -140,8 +140,7 @@ class NcLocalizationsFr extends NcLocalizations {
   String get homeGreetingAnonymous => 'Bonjour';
 
   @override
-  String get homePatientSoon =>
-      'La réservation de soins arrive bientôt dans cette application.';
+  String get homePatientIntro => 'De quel soin avez-vous besoin aujourd\'hui ?';
 
   @override
   String get homeProSoon =>
@@ -1044,4 +1043,78 @@ class NcLocalizationsFr extends NcLocalizations {
   String reportAmended(String reason) {
     return 'Ce compte rendu a été corrigé. Motif : $reason';
   }
+
+  @override
+  String get proScheduleMissing =>
+      'Vous n\'avez indiqué aucun jour de travail. Renseignez votre agenda pour recevoir les propositions qui vous conviennent.';
+
+  @override
+  String get proScheduleSetUp => 'Renseigner mon agenda';
+
+  @override
+  String get proZonesMissing =>
+      'Vous n\'avez choisi aucune zone. Indiquez où vous acceptez d\'intervenir.';
+
+  @override
+  String get proZonesSetUp => 'Choisir mes zones';
+
+  @override
+  String get proAccountSection => 'Mon activité';
+
+  @override
+  String get docRenewInsurance => 'Renouveler l\'assurance';
+
+  @override
+  String stepProgress(int current, int total) {
+    return 'Étape $current sur $total';
+  }
+
+  @override
+  String get teleconsultationLabel => 'Téléconsultation';
+
+  @override
+  String get teleconsultationServiceNote =>
+      'Ce soin se fait par appel vidéo dans l\'application, sans déplacement.';
+
+  @override
+  String get teleconsultationJoin => 'Rejoindre la téléconsultation';
+
+  @override
+  String get teleconsultationStart => 'Démarrer la téléconsultation';
+
+  @override
+  String get teleconsultationRoomHelp =>
+      'La salle ouvre quelques minutes avant l\'heure prévue.';
+
+  @override
+  String get teleconsultationNoJourney =>
+      'Téléconsultation : aucun déplacement.';
+
+  @override
+  String get callConnecting => 'Connexion à la salle…';
+
+  @override
+  String get callInProgress => 'Appel en cours';
+
+  @override
+  String get callSimulated =>
+      'Appel simulé : le service vidéo n\'est pas encore branché.';
+
+  @override
+  String get callHangUp => 'Raccrocher';
+
+  @override
+  String get callMute => 'Couper le micro';
+
+  @override
+  String get callUnmute => 'Réactiver le micro';
+
+  @override
+  String get callCameraOff => 'Couper la caméra';
+
+  @override
+  String get callCameraOn => 'Réactiver la caméra';
+
+  @override
+  String get paymentCard => 'Carte bancaire';
 }

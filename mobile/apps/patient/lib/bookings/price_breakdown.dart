@@ -58,25 +58,12 @@ class _Line extends StatelessWidget {
 
 /// Une information du récapitulatif : libellé discret, valeur lisible.
 class SummaryRow extends StatelessWidget {
-  const SummaryRow({required this.label, required this.value, super.key});
+  const SummaryRow({required this.label, required this.value, this.icon = Icons.label_outline, super.key});
 
   final String label;
   final String value;
+  final IconData icon;
 
   @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: NcSpacing.md),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Text(label, style: textTheme.labelLarge?.copyWith(color: Theme.of(context).colorScheme.outline)),
-          const SizedBox(height: NcSpacing.xs),
-          Text(value, style: textTheme.titleMedium),
-        ],
-      ),
-    );
-  }
+  Widget build(BuildContext context) => NcInfoRow(icon: icon, label: label, value: value);
 }

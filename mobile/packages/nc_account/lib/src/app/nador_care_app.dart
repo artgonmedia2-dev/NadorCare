@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -141,11 +142,15 @@ class _NadorCareAppState extends ConsumerState<NadorCareApp> {
       builder: (context, child) {
         // La taille choisie dans les réglages s'ajoute à celle du système.
         final media = MediaQuery.of(context);
-        return MediaQuery(
-          data: media.copyWith(
-            textScaler: TextScaler.linear(media.textScaler.scale(1) * settings.textSize.factor),
+        // Barres du système claires dès le premier écran, y compris pendant le démarrage.
+        return AnnotatedRegion<SystemUiOverlayStyle>(
+          value: NcTheme.overlayStyle(Theme.of(context).colorScheme),
+          child: MediaQuery(
+            data: media.copyWith(
+              textScaler: TextScaler.linear(media.textScaler.scale(1) * settings.textSize.factor),
+            ),
+            child: child ?? const SizedBox.shrink(),
           ),
-          child: child ?? const SizedBox.shrink(),
         );
       },
     );

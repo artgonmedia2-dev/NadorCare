@@ -33,11 +33,14 @@ class AsyncListPage<T> extends StatelessWidget {
       appBar: AppBar(),
       title: title,
       actions: <Widget>[
-        if (items.hasValue) NcPrimaryButton(label: addLabel, onPressed: onAdd),
-        if (items.hasError && !items.isLoading) NcPrimaryButton(label: l10n.retry, onPressed: onRetry),
+        if (items.hasValue) NcPrimaryButton(label: addLabel, icon: Icons.add, onPressed: onAdd),
+        if (items.hasError && !items.isLoading)
+          NcPrimaryButton(label: l10n.retry, icon: Icons.refresh, onPressed: onRetry),
       ],
       children: switch (items) {
-        AsyncData<List<T>>(:final value) when value.isEmpty => <Widget>[NcNotice(message: emptyMessage)],
+        AsyncData<List<T>>(:final value) when value.isEmpty => <Widget>[
+            NcEmptyState(message: emptyMessage, icon: Icons.inbox_outlined),
+          ],
         AsyncData<List<T>>(:final value) => <Widget>[for (final item in value) itemBuilder(item)],
         AsyncError<List<T>>(:final error) => <Widget>[
             NcNotice(message: failureMessage(context, error), kind: NcNoticeKind.error),

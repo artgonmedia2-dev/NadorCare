@@ -81,12 +81,16 @@ class NcListCard extends StatelessWidget {
     this.subtitle,
     this.icon,
     this.badge,
+    this.highlighted = false,
     super.key,
   });
 
   final String title;
   final String? subtitle;
   final IconData? icon;
+
+  /// Met la carte en avant : pour l'action principale d'un écran d'accueil.
+  final bool highlighted;
 
   /// Petit élément affiché sous le texte (état, étiquette).
   final Widget? badge;
@@ -100,7 +104,7 @@ class NcListCard extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: NcSpacing.sm),
       child: Material(
-        color: scheme.surfaceContainerHighest.withValues(alpha: 0.5),
+        color: highlighted ? scheme.primaryContainer : scheme.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(14),
         child: InkWell(
           borderRadius: BorderRadius.circular(14),
@@ -129,7 +133,11 @@ class NcListCard extends StatelessWidget {
                     ),
                   ),
                   // Icône directionnelle : elle s'inverse en arabe.
-                  Icon(Icons.chevron_right, color: scheme.outline, textDirection: Directionality.of(context)),
+                  Icon(
+                    Icons.chevron_right,
+                    color: scheme.onSurfaceVariant,
+                    textDirection: Directionality.of(context),
+                  ),
                 ],
               ),
             ),

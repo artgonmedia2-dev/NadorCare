@@ -76,19 +76,23 @@ class _ZonesScreenState extends ConsumerState<ZonesScreen> {
           NcNotice(message: l10n.proZonesEmpty)
         else
           for (final zone in list)
-            CheckboxListTile(
-              key: ValueKey<String>('zone-${zone.id}'),
-              contentPadding: EdgeInsets.zero,
-              controlAffinity: ListTileControlAffinity.leading,
-              value: _selected.contains(zone.id),
-              title: Text(zone.name, style: Theme.of(context).textTheme.bodyLarge),
-              onChanged: (checked) => setState(() {
-                if (checked ?? false) {
-                  _selected.add(zone.id);
-                } else {
-                  _selected.remove(zone.id);
-                }
-              }),
+            NcSurface(
+              color: _selected.contains(zone.id) ? Theme.of(context).colorScheme.primaryContainer : null,
+              padding: const EdgeInsets.symmetric(horizontal: NcSpacing.xs, vertical: NcSpacing.xs),
+              child: CheckboxListTile(
+                key: ValueKey<String>('zone-${zone.id}'),
+                contentPadding: const EdgeInsetsDirectional.only(end: NcSpacing.sm),
+                controlAffinity: ListTileControlAffinity.leading,
+                value: _selected.contains(zone.id),
+                title: Text(zone.name, style: Theme.of(context).textTheme.bodyLarge),
+                onChanged: (checked) => setState(() {
+                  if (checked ?? false) {
+                    _selected.add(zone.id);
+                  } else {
+                    _selected.remove(zone.id);
+                  }
+                }),
+              ),
             ),
       ],
     );

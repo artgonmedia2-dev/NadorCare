@@ -32,11 +32,13 @@ class PatientHomeScreen extends ConsumerWidget {
         ],
       ),
       title: (name == null || name.isEmpty) ? l10n.homeGreetingAnonymous : l10n.homeGreeting(name),
-      subtitle: l10n.homePatientSoon,
+      subtitle: l10n.homePatientIntro,
       children: <Widget>[
         NcListCard(
           key: const ValueKey<String>('home-catalogue'),
           icon: Icons.medical_services_outlined,
+          // Réserver un soin est la raison d'être de l'application : cette carte se détache des autres.
+          highlighted: true,
           title: l10n.homeCatalogue,
           subtitle: l10n.homeCatalogueSubtitle,
           onTap: () => context.push(routeCatalogue),

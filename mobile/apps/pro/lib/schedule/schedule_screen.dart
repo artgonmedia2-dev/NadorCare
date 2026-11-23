@@ -121,7 +121,12 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
           NcNotice(message: _error!, kind: NcNoticeKind.error),
           const SizedBox(height: NcSpacing.md),
         ],
-        for (final weekday in _weekdays) ...<Widget>[
+        for (final weekday in _weekdays)
+          NcSurface(
+            color: _days.containsKey(weekday) ? Theme.of(context).colorScheme.primaryContainer : null,
+            padding: const EdgeInsetsDirectional.fromSTEB(NcSpacing.md, NcSpacing.xs, NcSpacing.sm, NcSpacing.xs),
+            child: Column(
+              children: <Widget>[
           SwitchListTile(
             key: ValueKey<String>('day-$weekday'),
             contentPadding: EdgeInsets.zero,
@@ -141,29 +146,56 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
           ),
           if (_days[weekday] case final day?)
             Padding(
-              padding: const EdgeInsets.only(bottom: NcSpacing.md),
+              padding: const EdgeInsetsDirectional.only(end: NcSpacing.sm, bottom: NcSpacing.sm),
               child: Row(
                 children: <Widget>[
                   Expanded(
-                    child: OutlinedButton(
+                    child: FilledButton.tonal(
                       key: ValueKey<String>('start-$weekday'),
                       onPressed: () => _pickTime(weekday, isStart: true),
-                      child: Text('${l10n.scheduleStart}  ${day.start}'),
+                      child: _TimeLabel(label: l10n.scheduleStart, time: day.start),
                     ),
                   ),
                   const SizedBox(width: NcSpacing.sm),
                   Expanded(
-                    child: OutlinedButton(
+                    child: FilledButton.tonal(
                       key: ValueKey<String>('end-$weekday'),
                       onPressed: () => _pickTime(weekday, isStart: false),
-                      child: Text('${l10n.scheduleEnd}  ${day.end}'),
+                      child: _TimeLabel(label: l10n.scheduleEnd, time: day.end),
                     ),
                   ),
                 ],
               ),
             ),
-        ],
+              ],
+            ),
+          ),
       ],
+    );
+  }
+}
+
+/// Contenu d'un bouton d'heure : le libellé, puis l'heure en plus grand.
+class _TimeLabel extends StatelessWidget {
+  const _TimeLabel({required this.label, required this.time});
+
+  final String label;
+  final String time;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: NcSpacing.sm),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Text(label, style: textTheme.bodyMedium?.copyWith(fontSize: 14)),
+          // Une heure se lit de gauche à droite, même en arabe.
+          Text(time, textDirection: TextDirection.ltr, style: textTheme.titleLarge),
+        ],
+      ),
     );
   }
 }

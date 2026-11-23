@@ -79,6 +79,26 @@ class _MissionDetailScreenState extends ConsumerState<MissionDetailScreen> {
     }
   }
 
+  /// Téléconsultation : le professionnel ouvre l'appel, la mission passe « en cours » sans trajet.
+  Future<void> _startTeleconsultation(String title) async {
+    final started = await _step(() => ref.read(proApiProvider).startTeleconsultation(widget.missionId));
+
+    if (started && mounted) {
+      await _openCall(title);
+    }
+  }
+
+  Future<void> _openCall(String title) {
+    return Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (context) => TeleconsultationScreen(
+          title: title,
+          loadAccess: () => ref.read(proApiProvider).teleconsultation(widget.missionId),
+        ),
+      ),
+    );
+  }
+
   /// Le partage de position démarre de lui-même : l'accueil l'aligne sur la liste des
   /// missions, que le départ vient de faire relire.
   Future<void> _depart() => _step(() => ref.read(proApiProvider).depart(widget.missionId));
@@ -118,10 +138,26 @@ class _MissionDetailScreenState extends ConsumerState<MissionDetailScreen> {
           title: mission.serviceName,
           subtitle: l10n.dateAtTime(longDate(mission.scheduledDate, language), mission.scheduledTime),
           actions: <Widget>[
-            if (mission.status == 'assigned')
+            if (mission.isRemote && mission.status == 'assigned')
+              NcPrimaryButton(
+                key: const ValueKey<String>('mission-start-call'),
+                label: l10n.teleconsultationStart,
+                icon: Icons.videocam_outlined,
+                isLoading: _busy,
+                onPressed: _busy ? null : () => _startTeleconsultation(mission.serviceName),
+              ),
+            if (mission.isRemote && mission.status == 'in_progress')
+              NcSecondaryButton(
+                key: const ValueKey<String>('mission-join-call'),
+                label: l10n.teleconsultationJoin,
+                icon: Icons.videocam_outlined,
+                onPressed: () => _openCall(mission.serviceName),
+              ),
+            if (!mission.isRemote && mission.status == 'assigned')
               NcPrimaryButton(
                 key: const ValueKey<String>('mission-depart'),
                 label: l10n.missionDepart,
+                icon: Icons.directions_car_outlined,
                 isLoading: _busy,
                 onPressed: _busy ? null : _depart,
               ),
@@ -129,6 +165,7 @@ class _MissionDetailScreenState extends ConsumerState<MissionDetailScreen> {
               NcPrimaryButton(
                 key: const ValueKey<String>('mission-arrive'),
                 label: l10n.missionArrive,
+                icon: Icons.place_outlined,
                 isLoading: _busy,
                 onPressed: _busy ? null : _arrive,
               ),
@@ -136,6 +173,7 @@ class _MissionDetailScreenState extends ConsumerState<MissionDetailScreen> {
               NcPrimaryButton(
                 key: const ValueKey<String>('mission-report'),
                 label: l10n.missionOpenReport,
+                icon: Icons.description_outlined,
                 onPressed: () => context.push(routeReport(widget.missionId)),
               ),
             if (mission.canWithdraw)
@@ -150,9 +188,16 @@ class _MissionDetailScreenState extends ConsumerState<MissionDetailScreen> {
               NcNotice(message: _error!, kind: NcNoticeKind.error),
               const SizedBox(height: NcSpacing.md),
             ],
-            NcNotice(message: missionStatusLabel(l10n, mission.status)),
+            missionStatusBadge(l10n, mission.status),
+            if (mission.isRemote) ...<Widget>[
+              const SizedBox(height: NcSpacing.md),
+              NcNotice(
+                key: const ValueKey<String>('mission-remote'),
+                message: '${l10n.teleconsultationNoJourney} ${l10n.teleconsultationRoomHelp}',
+              ),
+            ],
             if (mission.status == 'en_route') ...<Widget>[
-              const SizedBox(height: NcSpacing.sm),
+              const SizedBox(height: NcSpacing.md),
               if (journey.locationUnavailable)
                 NcNotice(
                   key: const ValueKey<String>('journey-location-off'),
@@ -167,21 +212,56 @@ class _MissionDetailScreenState extends ConsumerState<MissionDetailScreen> {
                       : '${l10n.journeySharing}\n${l10n.journeyEta((journey.etaSeconds! / 60).ceil())}',
                 ),
             ],
-            const SizedBox(height: NcSpacing.lg),
-            _Info(label: l10n.summaryPatient, value: mission.patientName),
-            _Info(
-              label: l10n.summaryAddress,
-              value: <String?>[mission.addressLine, mission.city].whereType<String>().join('\n'),
+            const SizedBox(height: NcSpacing.md),
+            // Où aller et chez qui : regroupé dans une carte, une icône par information.
+            NcSurface(
+              margin: const EdgeInsets.only(bottom: NcSpacing.md),
+              padding: const EdgeInsets.symmetric(horizontal: NcSpacing.md, vertical: NcSpacing.sm),
+              child: Column(
+                children: <Widget>[
+                  NcInfoRow(icon: Icons.person_outline, label: l10n.summaryPatient, value: mission.patientName),
+                  NcInfoRow(
+                    icon: Icons.place_outlined,
+                    label: l10n.summaryAddress,
+                    value: <String?>[mission.addressLine, mission.city].whereType<String>().join('\n'),
+                  ),
+                  if ((mission.accessNotes ?? '').isNotEmpty)
+                    NcInfoRow(
+                      icon: Icons.key_outlined,
+                      label: l10n.missionAccessNotes,
+                      value: mission.accessNotes!,
+                    ),
+                ],
+              ),
             ),
-            if ((mission.accessNotes ?? '').isNotEmpty)
-              _Info(label: l10n.missionAccessNotes, value: mission.accessNotes!),
-            if ((mission.careNotes ?? '').isNotEmpty) _Info(label: l10n.missionCareNotes, value: mission.careNotes!),
-            if ((mission.patientNote ?? '').isNotEmpty)
-              _Info(label: l10n.missionPatientNote, value: mission.patientNote!),
-            if (mission.amountToCollect > 0)
-              _Info(
-                label: l10n.missionAmount,
-                value: l10n.priceDirhams(formatDirhams(mission.amountToCollect, language)),
+            if ((mission.careNotes ?? '').isNotEmpty ||
+                (mission.patientNote ?? '').isNotEmpty ||
+                mission.amountToCollect > 0)
+              NcSurface(
+                margin: const EdgeInsets.only(bottom: NcSpacing.md),
+                padding: const EdgeInsets.symmetric(horizontal: NcSpacing.md, vertical: NcSpacing.sm),
+                child: Column(
+                  children: <Widget>[
+                    if ((mission.careNotes ?? '').isNotEmpty)
+                      NcInfoRow(
+                        icon: Icons.medical_information_outlined,
+                        label: l10n.missionCareNotes,
+                        value: mission.careNotes!,
+                      ),
+                    if ((mission.patientNote ?? '').isNotEmpty)
+                      NcInfoRow(
+                        icon: Icons.chat_bubble_outline,
+                        label: l10n.missionPatientNote,
+                        value: mission.patientNote!,
+                      ),
+                    if (mission.amountToCollect > 0)
+                      NcInfoRow(
+                        icon: Icons.payments_outlined,
+                        label: l10n.missionAmount,
+                        value: l10n.priceDirhams(formatDirhams(mission.amountToCollect, language)),
+                      ),
+                  ],
+                ),
               ),
             if (mission.hasPrescription) NcNotice(message: l10n.missionPrescription),
           ],
@@ -261,30 +341,6 @@ class _WithdrawDialogState extends State<_WithdrawDialog> {
         TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(l10n.cancel)),
         TextButton(onPressed: _confirm, child: Text(l10n.missionWithdraw)),
       ],
-    );
-  }
-}
-
-class _Info extends StatelessWidget {
-  const _Info({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: NcSpacing.md),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Text(label, style: textTheme.labelLarge?.copyWith(color: Theme.of(context).colorScheme.outline)),
-          const SizedBox(height: NcSpacing.xs),
-          Text(value, style: textTheme.titleMedium),
-        ],
-      ),
     );
   }
 }

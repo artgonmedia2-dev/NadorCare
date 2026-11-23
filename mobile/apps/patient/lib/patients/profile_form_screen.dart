@@ -227,15 +227,20 @@ class _ProfileFormScreenState extends ConsumerState<ProfileFormScreen> {
       title: title,
       actions: <Widget>[
         NcPrimaryButton(label: l10n.save, isLoading: _busy, onPressed: _save),
-        if (_isEdit) TextButton(onPressed: _busy ? null : _delete, child: Text(l10n.delete)),
+        if (_isEdit)
+          TextButton.icon(
+            onPressed: _busy ? null : _delete,
+            style: TextButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.error),
+            icon: const Icon(Icons.delete_outline),
+            label: Text(l10n.delete),
+          ),
       ],
       children: <Widget>[
         if (_error != null) ...<Widget>[
           NcNotice(message: _error!, kind: NcNoticeKind.error),
           const SizedBox(height: NcSpacing.md),
         ],
-        Text(l10n.relationshipLabel, style: textTheme.titleMedium),
-        const SizedBox(height: NcSpacing.sm),
+        NcSectionTitle(l10n.relationshipLabel),
         NcChoiceList<PatientRelationship>(
           keyPrefix: 'relationship',
           selected: _relationship,
@@ -267,10 +272,10 @@ class _ProfileFormScreenState extends ConsumerState<ProfileFormScreen> {
           decoration: InputDecoration(labelText: l10n.lastNameLabel, errorText: _fieldErrors['last_name']),
         ),
         const SizedBox(height: NcSpacing.lg),
-        Text(l10n.birthDateLabel, style: textTheme.titleMedium),
-        const SizedBox(height: NcSpacing.sm),
+        NcSectionTitle(l10n.birthDateLabel),
         NcSecondaryButton(
           key: const ValueKey<String>('birth-date-button'),
+          icon: Icons.event_outlined,
           label: birthDate == null
               ? l10n.birthDateChoose
               : DateFormat.yMMMMd(Localizations.localeOf(context).toLanguageTag()).format(birthDate),
@@ -282,8 +287,7 @@ class _ProfileFormScreenState extends ConsumerState<ProfileFormScreen> {
             style: textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.error),
           ),
         const SizedBox(height: NcSpacing.lg),
-        Text(l10n.sexLabel, style: textTheme.titleMedium),
-        const SizedBox(height: NcSpacing.sm),
+        NcSectionTitle(l10n.sexLabel),
         NcChoiceList<String>(
           keyPrefix: 'sex',
           selected: _sex,
@@ -294,6 +298,8 @@ class _ProfileFormScreenState extends ConsumerState<ProfileFormScreen> {
           ],
         ),
         const SizedBox(height: NcSpacing.md),
+        // Le libellé avant le champ, comme partout ailleurs.
+        NcSectionTitle(l10n.patientPhoneLabel),
         // Un numéro se saisit toujours de gauche à droite.
         Directionality(
           textDirection: TextDirection.ltr,
@@ -304,11 +310,8 @@ class _ProfileFormScreenState extends ConsumerState<ProfileFormScreen> {
             decoration: InputDecoration(errorText: _fieldErrors['phone'], hintText: l10n.phoneHint),
           ),
         ),
-        const SizedBox(height: NcSpacing.xs),
-        Text(l10n.patientPhoneLabel, style: textTheme.labelLarge),
         const SizedBox(height: NcSpacing.lg),
-        Text(l10n.careNotesLabel, style: textTheme.titleMedium),
-        const SizedBox(height: NcSpacing.sm),
+        NcSectionTitle(l10n.careNotesLabel),
         TextField(
           key: const ValueKey<String>('care-notes-field'),
           controller: _careNotes,

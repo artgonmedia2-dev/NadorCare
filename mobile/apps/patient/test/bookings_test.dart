@@ -125,7 +125,14 @@ class FakeBookingsApi implements BookingsApi {
     return PriceQuote(base: base, surcharges: surcharges, total: base + extra);
   }
 
-  Booking _booking(String id, BookingStatus status, {int? fee, bool withProfessional = false, int? etaMinutes}) {
+  Booking _booking(
+    String id,
+    BookingStatus status, {
+    int? fee,
+    bool withProfessional = false,
+    int? etaMinutes,
+    bool remote = false,
+  }) {
     return Booking(
       id: id,
       reference: 'NC-2026-000042',
@@ -147,7 +154,21 @@ class FakeBookingsApi implements BookingsApi {
           ? null
           : BookingTracking(latitude: 35.176, longitude: -2.92, etaMinutes: etaMinutes),
       hasReport: status == BookingStatus.completed,
+      isRemote: remote,
     );
+  }
+
+  /// Erreur renvoyée par la salle vidéo, quand elle n'est pas ouverte.
+  ApiFailure? callFailure;
+  final List<String> callJoins = <String>[];
+
+  @override
+  Future<VideoAccess> teleconsultation(String bookingId) async {
+    if (callFailure != null) {
+      throw callFailure!;
+    }
+    callJoins.add(bookingId);
+    return VideoAccess(provider: 'fake', room: 'nc-$bookingId', token: 'jeton', isHost: false, expiresAt: DateTime(2030));
   }
 
   @override
@@ -567,6 +588,57 @@ void main() {
     expect(find.text(fr.reportLineWithQuantity('Compresses stériles', '4')), findsOneWidget);
     expect(find.text(fr.reportSignedBy('Aïcha Benali')), findsOneWidget);
     expect(find.text(fr.reportAmended('Erreur de saisie sur la tension')), findsOneWidget);
+  });
+
+  testWidgets('une téléconsultation se rejoint depuis la réservation, par un appel simulé', (tester) async {
+    final env = Env();
+    env.bookings.bookings.add(env.bookings._booking('B8', BookingStatus.assigned, withProfessional: true, remote: true));
+    await env.pump(tester);
+
+    await tapAndSettle(tester, byName('home-bookings'));
+    await tapAndSettle(tester, byName('booking-B8'));
+    expect(byName('booking-remote'), findsOneWidget);
+    expect(find.text(fr.paymentCard), findsOneWidget);
+
+    await tapAndSettle(tester, byName('booking-join'));
+    expect(env.bookings.callJoins, <String>['B8']);
+    // Le prestataire vidéo n'est pas branché : l'écran le dit clairement.
+    expect(byName('call-simulated'), findsOneWidget);
+
+    await tapAndSettle(tester, byName('call-hang-up'));
+    expect(byName('booking-join'), findsOneWidget);
+  });
+
+  testWidgets('avant l ouverture de la salle, le patient est prévenu et peut réessayer', (tester) async {
+    final env = Env();
+    env.bookings
+      ..bookings.add(env.bookings._booking('B8', BookingStatus.assigned, withProfessional: true, remote: true))
+      ..callFailure = const ApiFailure(
+        code: 'teleconsultation_not_open',
+        message: 'La salle de téléconsultation n est pas ouverte pour le moment.',
+        status: 409,
+      );
+    await env.pump(tester);
+
+    await tapAndSettle(tester, byName('home-bookings'));
+    await tapAndSettle(tester, byName('booking-B8'));
+    await tapAndSettle(tester, byName('booking-join'));
+
+    expect(byName('call-error'), findsOneWidget);
+    expect(find.text(fr.teleconsultationRoomHelp), findsOneWidget);
+    expect(byName('call-simulated'), findsNothing);
+  });
+
+  testWidgets('un soin à domicile ne propose pas d appel vidéo', (tester) async {
+    final env = Env();
+    env.bookings.bookings.add(env.bookings._booking('B7', BookingStatus.assigned, withProfessional: true));
+    await env.pump(tester);
+
+    await tapAndSettle(tester, byName('home-bookings'));
+    await tapAndSettle(tester, byName('booking-B7'));
+
+    expect(byName('booking-join'), findsNothing);
+    expect(byName('booking-remote'), findsNothing);
   });
 
   testWidgets('en arabe, le parcours se lit de droite à gauche et l heure reste lisible', (tester) async {
