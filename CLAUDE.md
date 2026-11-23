@@ -10,18 +10,23 @@ Plateforme de coordination de soins à domicile à Nador (Maroc) : application p
 
 - Étape 1 (cadrage) : validée le 2026-11-21.
 - Étape 2 (socle technique, lot 3) : livrée le 2026-11-21 (avancement en tête de `docs/02-decoupage-lots.md`). Reste du lot 3 reporté au lot 6 : écrans Filament de gestion des utilisateurs, des rôles et des journaux.
-- Lot 4 : tâches 4.0 (socle Flutter), 4.1 (compte), 4.2 (profils de patients, adresses) 4.3 (catalogue, avec sa gestion dans le back-office) et 4.4 (réservation, dans un cadre provisoire : espèces, créneaux de journée) livrées le 2026-11-21. Jamais compilé ni lancé sur un appareil : à faire avant d'aller plus loin côté mobile.
+- Lot 4 : tâches 4.0 (socle Flutter), 4.1 (compte), 4.2 (profils de patients, adresses) 4.3 (catalogue, avec sa gestion dans le back-office) et 4.4 (réservation, dans un cadre provisoire : espèces, créneaux de journée) livrées le 2026-11-21. Première compilation Android le 2026-11-22 : l'application patient démarre sur un téléphone réel et joint l'API locale (demande de code vérifiée) ; l'application professionnel est compilée mais pas encore installée ni lancée. Le reste des parcours n'a pas encore été essayé sur appareil.
 - Affectation (6.2 et partie serveur de 5.3) livrée le 2026-11-22 : back-office et API, pas encore d'écran dans l'application professionnel.
 - Dossier des professionnels (parties serveur de 5.1 et 5.2, tâche 6.5) livré le 2026-11-22 : inscription, justificatifs, vérification, suspension, zones, agenda. Les écrans correspondants de l'application professionnel (5.1 à 5.3) sont livrés le même jour ; le déplacement, l'intervention et le compte rendu (5.4 à 5.6) aussi, avec le suivi et la lecture du compte rendu côté patient. Restent pour le professionnel : avenant dans l'application, suivi de position en arrière-plan, mode hors ligne (5.7), paiements (5.8).
+- Téléconsultation : première version le 2026-11-23, serveur et applications, avec un appel simulé. Fermée aux patients, en attente du paiement par carte (4.8). Jamais essayée sur un appareil. **Développement suspendu** à la demande du client : prestataire vidéo, tarifs, cadre légal et ordonnance électronique (questions 31 à 34 de `docs/03-questions-ouvertes.md`) doivent être validés avant d'aller plus loin.
+- Site public (lot 7) : première version le 2026-11-23 dans `/web` — accueil, liste et fiche des soins, réservation en ligne avec code par SMS, trois langues. Le reste du lot 7 n'est pas fait (voir `web/README.md`). Pas de tests automatisés ni d'intégration continue pour le site.
 - Suite des lots 4 à 7 : en attente des points à trancher (`docs/03-questions-ouvertes.md`, sections B et C).
 - Dépôt : `https://github.com/artgonmedia2-dev/NadorCare.git`, branche `main`.
 
 ## Décisions structurantes
 
 - Paiement carte : **Payzone** (le cahier des charges dit CMI, la décision du 2026-11-21 prime).
+- Grille tarifaire (2026-11-23) : tarif de jour de la grille de référence du client + 150 DH par service ; soir (19 h à 8 h) : 50 DH de plus, par la majoration de nuit. Aucun prix en dur hors de `NadorCatalogueSeeder` et du back-office ; le site lit les prix et la majoration dans l'API (`/catalogue/services`, `/catalogue/surcharges`). Exception provisoire : la garde-malade (`web/src/content/home-guard.ts`), voir la question 26.
 - Une réservation passe de `pending` à `confirmed` uniquement par un coordinateur ou un administrateur.
 - Filament vit dans l'application Laravel et appelle les mêmes classes d'action que l'API, sans passer par HTTP.
 - PHP 8.4 partout.
+- Téléconsultation (2026-11-23) : un soin a un mode de réalisation, `home` ou `remote` (`services.delivery_mode`). Une téléconsultation n'a pas de trajet (`affectée` → `en cours` directement), se rejoint par un appel vidéo dans l'application, et son compte rendu se valide sans signature. Elle ne se règle que par carte : tant que le paiement par carte n'existe pas, elle reste **fermée** (réglage `teleconsultation.enabled` à 0, soins `remote` absents du catalogue) et ne doit pas être ouverte à de vrais patients. Le prestataire vidéo n'est pas choisi : seul le pilote factice existe, l'appel est simulé. L'adresse reste demandée : elle dit où envoyer des secours si l'appel révèle une urgence. Tarification : un soin par type de consultation (généraliste, puis un par spécialité), jamais un tarif par médecin ; tarif fixe quelle que soit l'heure, aucune majoration (soir, nuit, jour férié) ne s'applique à un soin `remote`. Première phase : médecin généraliste seulement, 20 minutes, 150 DH, soin créé désactivé.
+- Médecine à domicile (2026-11-23) : consultation d'un médecin généraliste à 500 DH le jour, tarif fixé directement par le client (sans les 150 DH de la règle générale).
 
 ## Stack (section 8 du cahier des charges)
 
@@ -74,6 +79,8 @@ Points d'entrée obligatoires :
 - prévenir un professionnel : `Services\Notifications\MissionNotifier` (jamais de donnée du patient dans une notification) ;
 - lire un paramètre de gestion : `Services\Settings\Settings` (valeurs par défaut dans `Settings::DEFAULTS`) ;
 - déroulement d'une mission : `Actions\Interventions\RunIntervention` (départ, position, arrivée) ; compte rendu : `Actions\Interventions\WriteReport` (brouillon, photos, signature, clôture, avenant) ;
+- téléconsultation : `Actions\Teleconsultation\JoinTeleconsultation` (seule porte d'entrée de la salle vidéo : vérifie le compte, le statut et l'heure) ; démarrage par le professionnel : `RunIntervention::startRemote` ; prestataire vidéo : `Contracts\VideoGateway` (ne lui transmettre aucune donnée du patient) ; côté mobile, l'écran d'appel commun est `TeleconsultationScreen` (`nc_account`) ;
+- savoir quels soins montrer aux patients : `Service::offered()` (ou `Service::constrainToOffered()` dans une sous-requête), jamais un simple `is_active` ;
 - calculer un prix : `Services\Bookings\PriceCalculator` ; savoir si un créneau est réservable : `Services\Bookings\BookingSchedule` ;
 - renvoyer une erreur métier : `ApiException('code')`, avec le texte dans `lang/*/api.php`.
 
@@ -106,7 +113,7 @@ Règles mobiles :
 4. **Trois langues dès le départ** : français, arabe (RTL), anglais. Aucun texte en dur dans un écran, un e-mail, un SMS ou une réponse d'API.
 5. **Tests automatisés** sur les parcours critiques : authentification, réservation, affectation, paiement, compte rendu.
 6. **Commits petits et descriptifs**, une fonctionnalité à la fois.
-7. **Aucune fonctionnalité V2** : dossier de suivi, abonnements, téléconsultation, note de transmission, bouton d'alerte, codes promotionnels, comptes entreprises, mode sombre.
+7. **Aucune fonctionnalité V2** : dossier de suivi, abonnements, note de transmission, bouton d'alerte, codes promotionnels, comptes entreprises, mode sombre. La téléconsultation n'en fait plus partie : le client l'a fait entrer dans la première version le 2026-11-23.
 8. **Fin de tâche** : résumer ce qui a été fait, comment le tester, ce qui vient ensuite.
 
 ## Conventions
@@ -135,6 +142,7 @@ docker compose logs horizon --tail 20
 # API (dans /api) — le serveur HTTP tourne en natif sous Windows
 php artisan serve                      # http://localhost:8000
 php artisan migrate:fresh --seed
+php artisan db:seed --class=NadorCatalogueSeeder  # catalogue et grille du client (2026-11-23) ; retire les services de démonstration
 php artisan db:seed --class=DemoCatalogueSeeder   # catalogue de démonstration (prix inventés, jamais en production)
 php artisan db:seed --class=DemoProfessionalsSeeder   # cinq professionnels fictifs, pour essayer l'affectation
 php artisan nadorcare:expire-offers    # clôt les propositions sans réponse (lancée chaque minute par le planificateur)
@@ -153,10 +161,18 @@ cd packages\nc_account; flutter test          # idem dans packages\nc_api_client
 cd packages\nc_l10n; flutter gen-l10n         # après toute modification d'un fichier .arb
 cd apps\patient; flutter run                  # ou apps\pro ; API vue par l'émulateur sur 10.0.2.2:8000
 
-# Site (dans /web) : commandes cibles, le projet n'existe pas encore
+# Sur un téléphone branché en USB (adb dans %LOCALAPPDATA%\Android\Sdk\platform-tools)
+flutter build apk --debug --target-platform android-arm64 --dart-define=API_BASE_URL=http://127.0.0.1:8000/api/v1
+adb install -r build\app\outputs\flutter-apk\app-debug.apk
+adb reverse tcp:8000 tcp:8000                 # à refaire après chaque débranchement
+# Le code de connexion est dans api\storage\logs\laravel.log, ligne « [SMS factice] »
+
+# Site (dans /web) — l'API doit tourner ; règles du site dans web/README.md
 pnpm install
-pnpm dev
-pnpm build
+pnpm dev                                      # http://localhost:3000
+pnpm build; pnpm start
+pnpm typecheck
+pnpm texts                                    # après toute modification d'un texte du site ou d'un fichier .arb repris par le site
 ```
 
 ## Particularités de cette machine (Windows 11)
@@ -168,6 +184,7 @@ pnpm build
 - `Set-Content -Encoding utf8` de PowerShell 5.1 ajoute un BOM qui casse les fichiers PHP : utiliser l'outil d'édition.
 - Les tests ont besoin du conteneur PostgreSQL (déclencheurs et PostGIS) : pas de SQLite.
 - Pas de PostgreSQL natif ; le Redis installé est une version 3.0 pour Windows, trop ancienne : utiliser ceux de Docker.
-- Disque C: petit (environ 11 Go libres le 2026-11-21 après nettoyage des caches) : vérifier l'espace avant toute installation ou tout téléchargement d'image.
+- Disque C: petit (environ 11 Go libres le 2026-11-21 après nettoyage des caches) : vérifier l'espace avant toute installation ou tout téléchargement d'image. Une première compilation Android demande environ 4 Go libres (Gradle 9.3.1, caches, sortie de 200 Mo par application) ; le disque s'est rempli le 2026-11-22. Supprimés ce jour-là avec l'accord du propriétaire : NDK 29, émulateur Android, Gradle 8.14 et 9.0. Il n'y a donc plus d'émulateur : les essais se font sur téléphone.
+- Sur cette machine, une requête d'API prend 0,2 à 3 s (démarrage de Laravel environ 1 s, hachage 0,4 s), et plusieurs secondes après une longue inactivité : c'est le poste de développement, pas un défaut de l'application.
 - Flutter dans `C:\flutter` (3.47.2), FVM disponible, SDK Android et JDK 17 présents. Pas de compilation iOS possible sur cette machine.
 - Dans les heredocs Bash, les antislashs sont avalés : écrire les fichiers PHP avec l'outil d'écriture, pas par heredoc.
