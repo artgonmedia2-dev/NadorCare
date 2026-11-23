@@ -28,7 +28,14 @@ class TransitionBooking
             $booking = Booking::query()->lockForUpdate()->findOrFail($booking->getKey());
             $from = $booking->status;
 
-            if (! $from->canTransitionTo($target)) {
+            // Une téléconsultation n'a pas de trajet : elle passe d'« affectée » à « en cours ».
+            $remote = (bool) $booking->service()->first()?->isRemote();
+            $allowed = $remote
+                ? ($target !== BookingStatus::EnRoute
+                    && ($from->canTransitionTo($target) || ($from === BookingStatus::Assigned && $target === BookingStatus::InProgress)))
+                : $from->canTransitionTo($target);
+
+            if (! $allowed) {
                 throw new ApiException('transition_not_allowed', 409, ['from' => $from->value, 'to' => $target->value]);
             }
 

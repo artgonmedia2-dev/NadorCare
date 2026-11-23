@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Api\V1;
 
+use App\Actions\Teleconsultation\JoinTeleconsultation;
 use App\Models\Booking;
 use App\Support\Translated;
 use Illuminate\Http\Request;
@@ -66,6 +67,14 @@ class MissionResource extends JsonResource
             'amount_to_collect' => $this->payment_method === 'cash' ? $this->total_price : 0,
             'payment_method' => $this->payment_method,
             'has_prescription' => $this->prescription_file_id !== null,
+            /** `home` : à domicile ; `remote` : téléconsultation. */
+            'delivery_mode' => $this->service->delivery_mode->value,
+            /** Ouverture et fermeture de la salle vidéo. Absent pour un soin à domicile. */
+            'teleconsultation' => $this->when($this->service->isRemote(), function () {
+                [$opensAt, $closesAt] = app(JoinTeleconsultation::class)->window($this->resource);
+
+                return ['opens_at' => $opensAt->toIso8601String(), 'closes_at' => $closesAt->toIso8601String()];
+            }),
             'patient_note' => $this->when($this->detailed, fn () => $this->patient_note),
         ];
     }

@@ -6,11 +6,13 @@ use App\Contracts\MapsService;
 use App\Contracts\PaymentGateway;
 use App\Contracts\PushGateway;
 use App\Contracts\SmsGateway;
+use App\Contracts\VideoGateway;
 use App\Contracts\WhatsAppGateway;
 use App\Services\Maps\FakeMapsService;
 use App\Services\Payment\FakePaymentGateway;
 use App\Services\Push\FakePushGateway;
 use App\Services\Sms\FakeSmsGateway;
+use App\Services\Video\FakeVideoGateway;
 use App\Services\WhatsApp\FakeWhatsAppGateway;
 use Illuminate\Support\ServiceProvider;
 use RuntimeException;
@@ -30,6 +32,7 @@ class ExternalServicesProvider extends ServiceProvider
         'push' => ['contract' => PushGateway::class, 'drivers' => ['fake' => FakePushGateway::class]],
         'payment' => ['contract' => PaymentGateway::class, 'drivers' => ['fake' => FakePaymentGateway::class]],
         'maps' => ['contract' => MapsService::class, 'drivers' => ['fake' => FakeMapsService::class]],
+        'video' => ['contract' => VideoGateway::class, 'drivers' => ['fake' => FakeVideoGateway::class]],
     ];
 
     public function register(): void

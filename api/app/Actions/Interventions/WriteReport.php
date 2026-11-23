@@ -135,7 +135,10 @@ class WriteReport
             throw new ApiException('report_observations_required');
         }
 
-        if ($report->signature_file_id === null) {
+        // À distance, le patient ne peut pas signer sur le téléphone du professionnel.
+        $remote = (bool) $intervention->booking()->first()?->service()->first()?->isRemote();
+
+        if (! $remote && $report->signature_file_id === null) {
             throw new ApiException('report_signature_required');
         }
 

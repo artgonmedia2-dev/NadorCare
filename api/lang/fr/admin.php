@@ -55,6 +55,8 @@ return [
             'booking_max_days_ahead' => 'Réservation possible jusqu\'à (jours)',
             'booking_free_cancellation_minutes' => 'Annulation gratuite jusqu\'à (minutes avant le soin)',
             'booking_late_cancellation_fee_percent' => 'Frais d\'annulation tardive (% du prix)',
+            'teleconsultation_enabled' => 'Téléconsultation ouverte aux patients (0 = fermée, 1 = ouverte)',
+            'teleconsultation_join_before_minutes' => 'Ouverture de la salle vidéo avant le rendez-vous (minutes)',
             'booking_escalation_minutes' => 'Délai avant alerte de la coordination (minutes)',
             'offer_response_seconds' => 'Délai de réponse du professionnel (secondes)',
             'location_retention_days' => 'Conservation des positions de trajet (jours)',
@@ -165,5 +167,7 @@ return [
         'requires_prescription' => 'Ordonnance obligatoire',
         'requires_prescription_help' => 'La réservation ne peut être confirmée qu\'avec une ordonnance déposée.',
         'allows_series' => 'Peut être programmé en série',
+        'delivery_mode' => 'Mode de réalisation',
+        'delivery_modes' => ['home' => 'À domicile', 'remote' => 'Téléconsultation (appel vidéo)'],
     ],
 ];

@@ -3,6 +3,7 @@
 namespace App\Actions\Interventions;
 
 use App\Actions\Bookings\TransitionBooking;
+use App\Actions\Teleconsultation\JoinTeleconsultation;
 use App\Contracts\MapsService;
 use App\Enums\BookingStatus;
 use App\Events\ProfessionalLocationUpdated;
@@ -22,6 +23,7 @@ class RunIntervention
     public function __construct(
         private readonly TransitionBooking $transition,
         private readonly MapsService $maps,
+        private readonly JoinTeleconsultation $teleconsultation,
     ) {}
 
     /**
@@ -98,6 +100,39 @@ class RunIntervention
     /**
      * Durée estimée entre une position et le domicile du patient.
      */
+    /**
+     * Démarre une téléconsultation : le professionnel ouvre l'appel, la réservation passe « en
+     * cours » et le compte rendu s'ouvre, comme au pointage d'arrivée d'un soin à domicile.
+     */
+    public function startRemote(Booking $booking, User $actor): Intervention
+    {
+        if (! $booking->service()->first()?->isRemote()) {
+            throw new ApiException('not_a_teleconsultation', 409);
+        }
+
+        // On vérifie que la salle est ouverte avant de changer le statut.
+        $this->teleconsultation->handle($booking, $actor);
+
+        return DB::transaction(function () use ($booking, $actor) {
+            $booking = $this->transition->handle($booking, BookingStatus::InProgress, $actor);
+
+            $intervention = Intervention::create([
+                'booking_id' => $booking->getKey(),
+                'professional_id' => $booking->professional_id,
+                'arrived_at' => now(),
+                'status' => Intervention::STATUS_IN_PROGRESS,
+            ]);
+
+            InterventionReport::create([
+                'intervention_id' => $intervention->getKey(),
+                'version' => 1,
+                'author_id' => $actor->getKey(),
+            ]);
+
+            return $intervention;
+        });
+    }
+
     public function etaSeconds(Booking $booking, float $latitude, float $longitude): ?int
     {
         $address = $booking->address_snapshot ?? [];

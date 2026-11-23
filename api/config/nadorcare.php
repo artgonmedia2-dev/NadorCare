@@ -50,6 +50,7 @@ return [
         'push' => env('PUSH_DRIVER', 'fake'),
         'payment' => env('PAYMENT_DRIVER', 'fake'),
         'maps' => env('MAPS_DRIVER', 'fake'),
+        'video' => env('VIDEO_DRIVER', 'fake'),
     ],
 
     'payzone' => [

@@ -63,6 +63,15 @@ class ServiceForm
                         ->helperText(__('admin.services.requires_prescription_help')),
                     Toggle::make('allows_series')
                         ->label(__('admin.services.allows_series')),
+                    Select::make('delivery_mode')
+                        ->label(__('admin.services.delivery_mode'))
+                        ->options([
+                            'home' => __('admin.services.delivery_modes.home'),
+                            'remote' => __('admin.services.delivery_modes.remote'),
+                        ])
+                        ->default('home')
+                        ->selectablePlaceholder(false)
+                        ->required(),
                     TextInput::make('sort')
                         ->label(__('admin.common.sort'))
                         ->required()

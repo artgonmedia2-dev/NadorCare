@@ -970,6 +970,80 @@
                 "security": []
             }
         },
+        "/catalogue/surcharges": {
+            "get": {
+                "operationId": "v1.catalogue.surcharges",
+                "description": "Majorations actives que le calcul du prix applique : soir ou nuit, jour f\u00e9ri\u00e9. Le site et\nl'application les annoncent avant la r\u00e9servation ; le prix exact reste celui du devis.",
+                "summary": "Majorations",
+                "tags": [
+                    "Catalogue"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "type": {
+                                                        "type": "string",
+                                                        "description": "`night` ou `holiday`."
+                                                    },
+                                                    "name": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "mode": {
+                                                        "type": "string",
+                                                        "description": "`fixed` : montant en centimes ; `percent` : pourcentage du tarif."
+                                                    },
+                                                    "value": {
+                                                        "type": "integer"
+                                                    },
+                                                    "starts_at": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ],
+                                                        "description": "D\u00e9but de la plage, heure de Nador (`HH:MM`). Absent pour un jour f\u00e9ri\u00e9."
+                                                    },
+                                                    "ends_at": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    }
+                                                },
+                                                "required": [
+                                                    "type",
+                                                    "name",
+                                                    "mode",
+                                                    "value",
+                                                    "starts_at",
+                                                    "ends_at"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": []
+            }
+        },
         "/files/prescriptions": {
             "post": {
                 "operationId": "v1.prescriptions.store",
@@ -1459,6 +1533,68 @@
                                     },
                                     "required": [
                                         "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/bookings/{booking}/teleconsultation": {
+            "get": {
+                "operationId": "v1.bookings.teleconsultation",
+                "description": "Acc\u00e8s \u00e0 la salle vid\u00e9o, pour le compte qui a r\u00e9serv\u00e9. La salle s'ouvre quelques minutes\navant l'heure pr\u00e9vue. Erreur `teleconsultation_not_open` en dehors de cette p\u00e9riode.",
+                "summary": "Rejoindre la t\u00e9l\u00e9consultation",
+                "tags": [
+                    "R\u00e9servations"
+                ],
+                "parameters": [
+                    {
+                        "name": "booking",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`VideoAccessResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/VideoAccessResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Too many requests",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview."
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
                                     ]
                                 }
                             }
@@ -2382,6 +2518,111 @@
                     },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/pro/missions/{mission}/start": {
+            "post": {
+                "operationId": "v1.pro.missions.start",
+                "description": "Le professionnel ouvre l'appel : la mission passe \u00ab en cours \u00bb sans trajet et le compte\nrendu s'ouvre. Erreur `teleconsultation_not_open` si la salle n'est pas encore ouverte.",
+                "summary": "D\u00e9marrer la t\u00e9l\u00e9consultation",
+                "tags": [
+                    "Professionnel \u2014 intervention"
+                ],
+                "parameters": [
+                    {
+                        "name": "mission",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "`InterventionResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/InterventionResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/pro/missions/{mission}/teleconsultation": {
+            "get": {
+                "operationId": "v1.pro.missions.teleconsultation",
+                "description": "Acc\u00e8s \u00e0 la salle vid\u00e9o, pour le professionnel affect\u00e9.",
+                "summary": "Rejoindre la t\u00e9l\u00e9consultation",
+                "tags": [
+                    "Professionnel \u2014 intervention"
+                ],
+                "parameters": [
+                    {
+                        "name": "mission",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`VideoAccessResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/VideoAccessResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Too many requests",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview."
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -3331,6 +3572,30 @@
                     "has_prescription": {
                         "type": "boolean"
                     },
+                    "delivery_mode": {
+                        "type": "string",
+                        "description": "`home` : \u00e0 domicile ; `remote` : t\u00e9l\u00e9consultation.",
+                        "enum": [
+                            "home",
+                            "remote"
+                        ]
+                    },
+                    "teleconsultation": {
+                        "type": "object",
+                        "description": "Ouverture et fermeture de la salle vid\u00e9o. Absent pour un soin \u00e0 domicile.",
+                        "properties": {
+                            "opens_at": {
+                                "type": "string"
+                            },
+                            "closes_at": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "opens_at",
+                            "closes_at"
+                        ]
+                    },
                     "can_cancel": {
                         "type": "boolean"
                     },
@@ -3404,6 +3669,7 @@
                     "has_report",
                     "payment_method",
                     "has_prescription",
+                    "delivery_mode",
                     "can_cancel",
                     "free_cancellation_until",
                     "cancellation_fee_if_cancelled_now",
@@ -3785,6 +4051,30 @@
                     "has_prescription": {
                         "type": "boolean"
                     },
+                    "delivery_mode": {
+                        "type": "string",
+                        "description": "`home` : \u00e0 domicile ; `remote` : t\u00e9l\u00e9consultation.",
+                        "enum": [
+                            "home",
+                            "remote"
+                        ]
+                    },
+                    "teleconsultation": {
+                        "type": "object",
+                        "description": "Ouverture et fermeture de la salle vid\u00e9o. Absent pour un soin \u00e0 domicile.",
+                        "properties": {
+                            "opens_at": {
+                                "type": "string"
+                            },
+                            "closes_at": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "opens_at",
+                            "closes_at"
+                        ]
+                    },
                     "patient_note": {
                         "type": [
                             "string",
@@ -3804,7 +4094,8 @@
                     "address",
                     "amount_to_collect",
                     "payment_method",
-                    "has_prescription"
+                    "has_prescription",
+                    "delivery_mode"
                 ],
                 "title": "MissionResource"
             },
@@ -4210,6 +4501,14 @@
                         "type": "boolean",
                         "description": "Le soin peut \u00eatre programm\u00e9 en s\u00e9rie (plusieurs s\u00e9ances)."
                     },
+                    "delivery_mode": {
+                        "type": "string",
+                        "description": "`home` : \u00e0 domicile ; `remote` : t\u00e9l\u00e9consultation par appel vid\u00e9o.",
+                        "enum": [
+                            "home",
+                            "remote"
+                        ]
+                    },
                     "category": {
                         "type": "object",
                         "properties": {
@@ -4245,6 +4544,7 @@
                     "price",
                     "requires_prescription",
                     "allows_series",
+                    "delivery_mode",
                     "category",
                     "professional_category"
                 ],
@@ -4422,6 +4722,44 @@
                     "device_name"
                 ],
                 "title": "VerifyOtpRequest"
+            },
+            "VideoAccessResource": {
+                "type": "object",
+                "properties": {
+                    "provider": {
+                        "type": "string",
+                        "description": "Prestataire vid\u00e9o. `fake` : appel simul\u00e9, pour le d\u00e9veloppement."
+                    },
+                    "room": {
+                        "type": "string"
+                    },
+                    "token": {
+                        "type": "string",
+                        "description": "Jeton propre au participant, \u00e0 dur\u00e9e limit\u00e9e."
+                    },
+                    "server_url": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "is_host": {
+                        "type": "boolean",
+                        "description": "Vrai pour le professionnel, qui ouvre et ferme l'appel."
+                    },
+                    "expires_at": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "provider",
+                    "room",
+                    "token",
+                    "server_url",
+                    "is_host",
+                    "expires_at"
+                ],
+                "title": "VideoAccessResource"
             }
         },
         "responses": {

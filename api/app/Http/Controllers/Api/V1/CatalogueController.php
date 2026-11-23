@@ -7,7 +7,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\V1\ServiceCategoryResource;
 use App\Http\Resources\Api\V1\ServiceResource;
 use App\Models\ProfessionalCategory;
+use App\Models\Service;
 use App\Models\ServiceCategory;
+use App\Models\Surcharge;
 use App\Models\Zone;
 use App\Support\Translated;
 use Dedoc\Scramble\Attributes\Group;
@@ -32,7 +34,9 @@ class CatalogueController extends Controller
      */
     public function categories(): AnonymousResourceCollection
     {
-        $active = fn (Builder $services) => $services->where('is_active', true);
+        $active = function (Builder $services): void {
+            Service::constrainToOffered($services);
+        };
 
         return ServiceCategoryResource::collection(
             ServiceCategory::query()
@@ -84,6 +88,38 @@ class CatalogueController extends Controller
                     'id' => $zone->id,
                     'slug' => $zone->slug,
                     'name' => Translated::pick($zone->name),
+                ])->all(),
+        ]);
+    }
+
+    /**
+     * Majorations
+     *
+     * Majorations actives que le calcul du prix applique : soir ou nuit, jour férié. Le site et
+     * l'application les annoncent avant la réservation ; le prix exact reste celui du devis.
+     *
+     * @unauthenticated
+     */
+    public function surcharges(): JsonResponse
+    {
+        return response()->json([
+            'data' => Surcharge::query()
+                ->where('is_active', true)
+                // La majoration de distance existe mais n'est pas appliquée : elle n'est pas annoncée.
+                ->whereIn('type', [Surcharge::TYPE_NIGHT, Surcharge::TYPE_HOLIDAY])
+                ->orderBy('type')
+                ->orderBy('id')
+                ->get()
+                ->map(fn (Surcharge $surcharge) => [
+                    /** `night` ou `holiday`. */
+                    'type' => $surcharge->type,
+                    'name' => Translated::pick($surcharge->name),
+                    /** `fixed` : montant en centimes ; `percent` : pourcentage du tarif. */
+                    'mode' => $surcharge->mode,
+                    'value' => (int) $surcharge->value,
+                    /** Début de la plage, heure de Nador (`HH:MM`). Absent pour un jour férié. */
+                    'starts_at' => $surcharge->type === Surcharge::TYPE_NIGHT ? (string) ($surcharge->config['start'] ?? '21:00') : null,
+                    'ends_at' => $surcharge->type === Surcharge::TYPE_NIGHT ? (string) ($surcharge->config['end'] ?? '07:00') : null,
                 ])->all(),
         ]);
     }

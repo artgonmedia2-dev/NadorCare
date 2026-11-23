@@ -55,6 +55,8 @@ return [
             'booking_max_days_ahead' => 'الحجز ممكن إلى غاية (أيام)',
             'booking_free_cancellation_minutes' => 'الإلغاء المجاني إلى غاية (دقائق قبل العلاج)',
             'booking_late_cancellation_fee_percent' => 'رسوم الإلغاء المتأخر (% من السعر)',
+            'teleconsultation_enabled' => 'الاستشارة عن بعد مفتوحة للمرضى (0 = مغلقة، 1 = مفتوحة)',
+            'teleconsultation_join_before_minutes' => 'فتح قاعة الفيديو قبل الموعد (بالدقائق)',
             'booking_escalation_minutes' => 'المهلة قبل تنبيه التنسيق (بالدقائق)',
             'offer_response_seconds' => 'مهلة رد المهني (بالثواني)',
             'location_retention_days' => 'مدة حفظ مواقع التنقل (أيام)',
@@ -165,5 +167,7 @@ return [
         'requires_prescription' => 'الوصفة الطبية إجبارية',
         'requires_prescription_help' => 'لا يمكن تأكيد الحجز إلا بعد إيداع وصفة طبية.',
         'allows_series' => 'يمكن برمجته في سلسلة',
+        'delivery_mode' => 'طريقة الإنجاز',
+        'delivery_modes' => ['home' => 'في المنزل', 'remote' => 'استشارة عن بعد (مكالمة فيديو)'],
     ],
 ];

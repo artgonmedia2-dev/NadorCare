@@ -25,6 +25,12 @@ class PriceCalculator
         $base = $service->base_price;
         $lines = [];
 
+        // Décision du 2026-11-23 : une téléconsultation a un tarif fixe, quelle que soit l'heure.
+        // Aucune majoration ne s'y applique, ni le soir ou la nuit, ni un jour férié.
+        if ($service->isRemote()) {
+            return new PriceQuote($base, $lines);
+        }
+
         foreach (Surcharge::query()->where('is_active', true)->orderBy('type')->orderBy('id')->get() as $surcharge) {
             if (! $this->applies($surcharge, $local)) {
                 continue;

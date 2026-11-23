@@ -26,4 +26,10 @@ class ServiceFactory extends Factory
             'is_active' => true,
         ];
     }
+
+    /** Téléconsultation. */
+    public function remote(): static
+    {
+        return $this->state(['delivery_mode' => 'remote', 'allows_series' => false]);
+    }
 }

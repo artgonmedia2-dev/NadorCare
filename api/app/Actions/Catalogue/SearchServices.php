@@ -45,7 +45,7 @@ class SearchServices
     {
         return Service::query()
             ->with(['category:id,name,slug', 'professionalCategory:id,name,code'])
-            ->where('is_active', true)
+            ->offered()
             ->whereHas('category', fn (Builder $category) => $category->where('is_active', true));
     }
 

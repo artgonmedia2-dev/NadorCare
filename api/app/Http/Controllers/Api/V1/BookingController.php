@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Actions\Bookings\CancelBooking;
 use App\Actions\Bookings\CreateBooking;
+use App\Actions\Teleconsultation\JoinTeleconsultation;
 use App\Enums\AccessAction;
 use App\Enums\BookingStatus;
 use App\Exceptions\ApiException;
@@ -11,6 +12,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\StoreBookingRequest;
 use App\Http\Resources\Api\V1\BookingResource;
 use App\Http\Resources\Api\V1\InterventionResource;
+use App\Http\Resources\Api\V1\VideoAccessResource;
 use App\Models\Booking;
 use App\Models\Intervention;
 use App\Models\Service;
@@ -29,7 +31,7 @@ use Illuminate\Validation\Rule;
 class BookingController extends Controller
 {
     private const RELATIONS = [
-        'service:id,slug,name',
+        'service:id,slug,name,delivery_mode',
         'patientProfile:id,first_name,last_name',
         'professional.user:id,name',
         'professional.category:id,name',
@@ -187,6 +189,17 @@ class BookingController extends Controller
         $logger->record(AccessAction::View, $intervention, $found->patient_profile_id, $found->id, $request->user());
 
         return new InterventionResource($intervention);
+    }
+
+    /**
+     * Rejoindre la téléconsultation
+     *
+     * Accès à la salle vidéo, pour le compte qui a réservé. La salle s'ouvre quelques minutes
+     * avant l'heure prévue. Erreur `teleconsultation_not_open` en dehors de cette période.
+     */
+    public function teleconsultation(Request $request, string $booking, JoinTeleconsultation $join): VideoAccessResource
+    {
+        return new VideoAccessResource($join->handle($this->find($request, $booking), $request->user()));
     }
 
     private function find(Request $request, string $id): Booking

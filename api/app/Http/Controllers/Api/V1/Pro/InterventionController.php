@@ -4,12 +4,14 @@ namespace App\Http\Controllers\Api\V1\Pro;
 
 use App\Actions\Interventions\RunIntervention;
 use App\Actions\Interventions\WriteReport;
+use App\Actions\Teleconsultation\JoinTeleconsultation;
 use App\Enums\AccessAction;
 use App\Enums\BookingStatus;
 use App\Exceptions\ApiException;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\V1\InterventionResource;
 use App\Http\Resources\Api\V1\MissionResource;
+use App\Http\Resources\Api\V1\VideoAccessResource;
 use App\Models\Booking;
 use App\Models\Intervention;
 use App\Models\InterventionReport;
@@ -24,7 +26,7 @@ use Illuminate\Support\Facades\DB;
 #[Group('Professionnel — intervention', weight: 21)]
 class InterventionController extends Controller
 {
-    private const RELATIONS = ['service:id,name,duration_minutes', 'patientProfile'];
+    private const RELATIONS = ['service:id,name,duration_minutes,delivery_mode', 'patientProfile'];
 
     /**
      * Partir vers le domicile
@@ -117,6 +119,29 @@ class InterventionController extends Controller
                 'unit' => $item->unit,
             ])->all(),
         ]]);
+    }
+
+    /**
+     * Démarrer la téléconsultation
+     *
+     * Le professionnel ouvre l'appel : la mission passe « en cours » sans trajet et le compte
+     * rendu s'ouvre. Erreur `teleconsultation_not_open` si la salle n'est pas encore ouverte.
+     */
+    public function start(Request $request, string $mission, RunIntervention $run): JsonResponse
+    {
+        $intervention = $run->startRemote($this->findMission($request, $mission), $request->user());
+
+        return (new InterventionResource($intervention->load('reports')))->response()->setStatusCode(201);
+    }
+
+    /**
+     * Rejoindre la téléconsultation
+     *
+     * Accès à la salle vidéo, pour le professionnel affecté.
+     */
+    public function teleconsultation(Request $request, string $mission, JoinTeleconsultation $join): VideoAccessResource
+    {
+        return new VideoAccessResource($join->handle($this->findMission($request, $mission), $request->user()));
     }
 
     /**

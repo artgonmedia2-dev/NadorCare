@@ -4,6 +4,7 @@ namespace Tests\Feature\Catalogue;
 
 use App\Models\Service;
 use App\Models\ServiceCategory;
+use App\Models\Surcharge;
 use Tests\TestCase;
 
 class CatalogueApiTest extends TestCase
@@ -157,6 +158,43 @@ class CatalogueApiTest extends TestCase
         $this->getJson('/api/v1/catalogue/categories')
             ->assertJsonCount(1, 'data')
             ->assertJsonPath('data.0.services_count', 1);
+    }
+
+    public function test_active_surcharges_are_announced_publicly(): void
+    {
+        Surcharge::create([
+            'type' => Surcharge::TYPE_NIGHT,
+            'name' => ['fr' => 'Majoration du soir', 'ar' => 'زيادة المساء', 'en' => 'Evening surcharge'],
+            'mode' => Surcharge::MODE_FIXED,
+            'value' => 5000,
+            'config' => ['start' => '19:00', 'end' => '08:00'],
+            'is_active' => true,
+        ]);
+        Surcharge::create([
+            'type' => Surcharge::TYPE_HOLIDAY,
+            'name' => ['fr' => 'Jour férié'],
+            'mode' => Surcharge::MODE_PERCENT,
+            'value' => 25,
+            'is_active' => false,
+        ]);
+        // La majoration de distance n'est pas appliquée par le calcul du prix : elle n'est pas annoncée.
+        Surcharge::create([
+            'type' => Surcharge::TYPE_DISTANCE,
+            'name' => ['fr' => 'Distance'],
+            'mode' => Surcharge::MODE_FIXED,
+            'value' => 5000,
+            'is_active' => true,
+        ]);
+
+        $this->getJson('/api/v1/catalogue/surcharges')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.type', 'night')
+            ->assertJsonPath('data.0.name', 'Majoration du soir')
+            ->assertJsonPath('data.0.mode', 'fixed')
+            ->assertJsonPath('data.0.value', 5000)
+            ->assertJsonPath('data.0.starts_at', '19:00')
+            ->assertJsonPath('data.0.ends_at', '08:00');
     }
 
     public function test_a_category_without_active_service_is_not_listed(): void

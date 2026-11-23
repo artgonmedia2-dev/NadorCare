@@ -25,7 +25,7 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 #[Group('Professionnel — missions', weight: 20)]
 class MissionController extends Controller
 {
-    private const RELATIONS = ['service:id,name,duration_minutes', 'patientProfile'];
+    private const RELATIONS = ['service:id,name,duration_minutes,delivery_mode', 'patientProfile'];
 
     /**
      * Propositions de mission en attente

@@ -12,6 +12,7 @@ use App\Models\Service;
 use App\Models\User;
 use App\Services\Bookings\BookingSchedule;
 use App\Services\Bookings\PriceCalculator;
+use App\Services\Settings\Settings;
 use App\Support\Translated;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
@@ -28,6 +29,7 @@ class CreateBooking
     public function __construct(
         private readonly BookingSchedule $schedule,
         private readonly PriceCalculator $prices,
+        private readonly Settings $settings,
     ) {}
 
     /**
@@ -39,6 +41,17 @@ class CreateBooking
 
         if (! $service || ! $service->is_active || ! $service->category->is_active) {
             throw new ApiException('service_unavailable');
+        }
+
+        if ($service->isRemote()) {
+            if (! $this->settings->bool(Settings::TELECONSULTATION_ENABLED)) {
+                throw new ApiException('teleconsultation_unavailable');
+            }
+
+            // Personne n'est sur place pour encaisser : une téléconsultation se règle par carte.
+            if ($data['payment_method'] === 'cash') {
+                throw new ApiException('teleconsultation_requires_card');
+            }
         }
 
         // Seul le paiement en espèces est ouvert tant que le contrat de paiement en ligne n'est pas signé.

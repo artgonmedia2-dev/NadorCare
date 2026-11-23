@@ -25,6 +25,15 @@ class Settings
     public const LATE_CANCELLATION_FEE_PERCENT = 'booking.late_cancellation_fee_percent';
 
     /**
+     * Téléconsultation ouverte aux patients. Fermée par défaut : elle ne peut pas se payer en
+     * espèces, et attend le paiement par carte (décision du 2026-11-23).
+     */
+    public const TELECONSULTATION_ENABLED = 'teleconsultation.enabled';
+
+    /** Minutes avant l'heure prévue à partir desquelles la salle vidéo s'ouvre. */
+    public const TELECONSULTATION_JOIN_BEFORE_MINUTES = 'teleconsultation.join_before_minutes';
+
+    /**
      * Valeurs de départ. Les horaires et les frais d'annulation sont provisoires :
      * ils attendent la décision du client (points à trancher n° 5 et question 15).
      */
@@ -36,6 +45,9 @@ class Settings
         self::MAX_DAYS_AHEAD => 30,
         self::FREE_CANCELLATION_MINUTES => 120,
         self::LATE_CANCELLATION_FEE_PERCENT => 0,
+        // 0 ou 1 : les réglages se saisissent en nombres au back-office.
+        self::TELECONSULTATION_ENABLED => 0,
+        self::TELECONSULTATION_JOIN_BEFORE_MINUTES => 10,
         'booking.escalation_minutes' => 10,
         'offer.response_seconds' => 120,
         'location.retention_days' => 30,
@@ -46,6 +58,11 @@ class Settings
         $raw = DB::table('settings')->where('key', $key)->value('value');
 
         return $raw === null ? (self::DEFAULTS[$key] ?? null) : json_decode($raw, true);
+    }
+
+    public function bool(string $key): bool
+    {
+        return (bool) $this->get($key);
     }
 
     public function int(string $key): int

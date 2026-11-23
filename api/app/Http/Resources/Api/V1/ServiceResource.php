@@ -33,6 +33,8 @@ class ServiceResource extends JsonResource
             'requires_prescription' => $this->requires_prescription,
             /** Le soin peut être programmé en série (plusieurs séances). */
             'allows_series' => $this->allows_series,
+            /** `home` : à domicile ; `remote` : téléconsultation par appel vidéo. */
+            'delivery_mode' => $this->delivery_mode->value,
             'category' => [
                 'slug' => $this->category->slug,
                 'name' => Translated::pick($this->category->name),

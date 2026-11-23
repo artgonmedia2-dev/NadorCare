@@ -27,6 +27,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::get('/services/{slug}', [CatalogueController::class, 'service'])->name('service');
         Route::get('/professional-categories', [CatalogueController::class, 'professionalCategories'])->name('professional-categories');
         Route::get('/zones', [CatalogueController::class, 'zones'])->name('zones');
+        Route::get('/surcharges', [CatalogueController::class, 'surcharges'])->name('surcharges');
     });
 
     Route::prefix('auth')->name('auth.')->group(function () {
@@ -61,6 +62,8 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::post('/missions/{mission}/depart', [InterventionController::class, 'depart'])->name('missions.depart');
         Route::post('/missions/{mission}/location', [InterventionController::class, 'location'])->middleware('throttle:120,1')->name('missions.location');
         Route::post('/missions/{mission}/arrive', [InterventionController::class, 'arrive'])->name('missions.arrive');
+        Route::post('/missions/{mission}/start', [InterventionController::class, 'start'])->name('missions.start');
+        Route::get('/missions/{mission}/teleconsultation', [InterventionController::class, 'teleconsultation'])->middleware('throttle:60,1')->name('missions.teleconsultation');
         Route::get('/missions/{mission}/reference', [InterventionController::class, 'reference'])->name('missions.reference');
         Route::get('/missions/{mission}/intervention', [InterventionController::class, 'show'])->name('missions.intervention');
         Route::put('/missions/{mission}/report', [InterventionController::class, 'saveReport'])->name('missions.report');
@@ -85,5 +88,6 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::get('/bookings/{booking}', [BookingController::class, 'show'])->name('bookings.show');
         Route::post('/bookings/{booking}/cancel', [BookingController::class, 'cancel'])->name('bookings.cancel');
         Route::get('/bookings/{booking}/report', [BookingController::class, 'report'])->name('bookings.report');
+        Route::get('/bookings/{booking}/teleconsultation', [BookingController::class, 'teleconsultation'])->middleware('throttle:60,1')->name('bookings.teleconsultation');
     });
 });

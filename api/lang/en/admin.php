@@ -55,6 +55,8 @@ return [
             'booking_max_days_ahead' => 'Booking possible up to (days)',
             'booking_free_cancellation_minutes' => 'Free cancellation until (minutes before care)',
             'booking_late_cancellation_fee_percent' => 'Late cancellation fee (% of the price)',
+            'teleconsultation_enabled' => 'Teleconsultation open to patients (0 = closed, 1 = open)',
+            'teleconsultation_join_before_minutes' => 'Video room opens before the appointment (minutes)',
             'booking_escalation_minutes' => 'Delay before alerting coordination (minutes)',
             'offer_response_seconds' => 'Professional response time (seconds)',
             'location_retention_days' => 'Travel positions kept for (days)',
@@ -165,5 +167,7 @@ return [
         'requires_prescription' => 'Prescription required',
         'requires_prescription_help' => 'The booking can only be confirmed once a prescription is uploaded.',
         'allows_series' => 'Can be scheduled as a series',
+        'delivery_mode' => 'Delivery mode',
+        'delivery_modes' => ['home' => 'At home', 'remote' => 'Teleconsultation (video call)'],
     ],
 ];

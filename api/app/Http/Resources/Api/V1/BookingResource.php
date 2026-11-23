@@ -4,6 +4,7 @@ namespace App\Http\Resources\Api\V1;
 
 use App\Actions\Bookings\CancelBooking;
 use App\Actions\Interventions\RunIntervention;
+use App\Actions\Teleconsultation\JoinTeleconsultation;
 use App\Enums\BookingStatus;
 use App\Models\Booking;
 use App\Models\BookingStatusHistory;
@@ -123,6 +124,14 @@ class BookingResource extends JsonResource
             'has_report' => $this->status === BookingStatus::Completed,
             'payment_method' => $this->payment_method,
             'has_prescription' => $this->prescription_file_id !== null,
+            /** `home` : à domicile ; `remote` : téléconsultation. */
+            'delivery_mode' => $this->service->delivery_mode->value,
+            /** Ouverture et fermeture de la salle vidéo. Absent pour un soin à domicile. */
+            'teleconsultation' => $this->when($this->service->isRemote(), function () {
+                [$opensAt, $closesAt] = app(JoinTeleconsultation::class)->window($this->resource);
+
+                return ['opens_at' => $opensAt->toIso8601String(), 'closes_at' => $closesAt->toIso8601String()];
+            }),
             'can_cancel' => $cancellable,
             /** Dernier moment pour annuler sans frais. */
             'free_cancellation_until' => $cancellable ? $cancellation->freeUntil($this->resource)->toIso8601String() : null,
