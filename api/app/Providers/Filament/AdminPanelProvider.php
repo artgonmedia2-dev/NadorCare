@@ -36,6 +36,7 @@ class AdminPanelProvider extends PanelProvider
             // Refonte du 2026-11-24 : même identité que le site (teal, Figtree, Noto Sans).
             ->brandLogo(fn () => view('filament.brand'))
             ->brandLogoHeight('2.5rem')
+            ->favicon(asset('favicon.svg'))
             ->font('Noto Sans')
             ->renderHook(PanelsRenderHook::HEAD_END, fn () => view('filament.head'))
             ->login()

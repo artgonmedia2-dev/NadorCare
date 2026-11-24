@@ -4,6 +4,7 @@ import 'package:nc_core/nc_core.dart';
 import 'package:nc_design_system/nc_design_system.dart';
 import 'package:nc_l10n/nc_l10n.dart';
 
+import '../providers.dart';
 import '../settings/settings_controller.dart';
 import 'language_choice.dart';
 
@@ -30,7 +31,11 @@ class _LanguageScreenState extends ConsumerState<LanguageScreen> {
             ? Localizations.localeOf(context).languageCode
             : defaultLanguageCode);
 
+    final isPatientApp = ref.watch(appConfigProvider).clientApp == ClientApp.patient;
+
     return NcPage(
+      // Tout premier écran : la marque, aux couleurs de l'application.
+      leading: NcLogo(name: isPatientApp ? l10n.appNamePatient : l10n.appNamePro, pro: !isPatientApp),
       title: l10n.languageTitle,
       subtitle: l10n.languageSubtitle,
       actions: <Widget>[

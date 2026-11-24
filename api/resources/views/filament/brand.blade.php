@@ -1,5 +1,6 @@
 <span class="nc-brand">
-    <span class="nc-brand-mark"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></span>
+    {{-- Symbole Nador Care (piste C « Maison-pouls ») : un toit au-dessus d'un tracé de pouls. Source : docs/marque. --}}
+    <span class="nc-brand-mark"><svg viewBox="6 6 52 52" aria-hidden="true"><path d="M9 30 L32 11 L55 30"/><path d="M9 44 H21 L25.5 36 L31 53 L36.5 27 L41 44 H55"/></svg></span>
     <span>
         <span class="nc-brand-name">Nador Care</span>
         <span class="nc-brand-sub">{{ __('admin.brand.tagline') }}</span>

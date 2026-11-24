@@ -206,6 +206,8 @@ class _LoginFlowState extends ConsumerState<LoginFlow> {
     final l10n = context.l10n;
 
     return NcPage(
+      // Premier écran du compte : la marque, aux couleurs de l'application.
+      leading: NcLogo(name: _isPatientApp ? l10n.appNamePatient : l10n.appNamePro, pro: !_isPatientApp),
       title: l10n.phoneTitle,
       subtitle: l10n.phoneSubtitle,
       actions: <Widget>[

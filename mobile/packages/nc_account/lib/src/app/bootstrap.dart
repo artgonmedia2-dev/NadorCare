@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nc_core/nc_core.dart';
+import 'package:nc_design_system/nc_design_system.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../providers.dart';
@@ -15,6 +16,7 @@ Future<void> runNadorCareApp({
   List<RouteBase> extraRoutes = const <RouteBase>[],
 }) async {
   WidgetsFlutterBinding.ensureInitialized();
+  registerNcFontLicenses();
   final preferences = await SharedPreferences.getInstance();
 
   runApp(

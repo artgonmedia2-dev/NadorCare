@@ -13,6 +13,9 @@ abstract final class NcColors {
   static const Color accent = Color(0xFFC2410C);
   static const Color accentSoft = Color(0xFFFDEBDD);
 
+  /// Pouls du logo de l'application soignant, sur fond teal profond.
+  static const Color accentLight = Color(0xFFFDBA8C);
+
   /// Fond chaleureux des écrans d'accueil.
   static const Color sand = Color(0xFFFBF6EE);
 

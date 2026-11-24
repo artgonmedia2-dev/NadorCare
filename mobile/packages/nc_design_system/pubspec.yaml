@@ -21,6 +21,11 @@ dev_dependencies:
 # le 2026-11-24, licence SIL Open Font License. Figtree pour les titres, Noto Sans pour le texte,
 # Noto Sans Arabic pour l'arabe (Figtree et Noto Sans n'ont pas de lettres arabes).
 flutter:
+  # Licences des polices (SIL OFL 1.1) : elles accompagnent chaque copie de l'application.
+  assets:
+    - fonts/OFL-Figtree.txt
+    - fonts/OFL-NotoSans.txt
+    - fonts/OFL-NotoSansArabic.txt
   fonts:
     - family: Figtree
       fonts:

@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Nador Care">
+  <!-- Symbole Nador Care (piste C « Maison-pouls », 2026-11-24) : un toit au-dessus d'un tracé de pouls. -->
+  <path d="M9 30 L32 11 L55 30" fill="none" stroke="#083F3B" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M9 44 H21 L25.5 36 L31 53 L36.5 27 L41 44 H55" fill="none" stroke="#0F766E" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

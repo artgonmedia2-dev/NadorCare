@@ -17,8 +17,12 @@ class NcPage extends StatelessWidget {
     this.appBar,
     this.onRefresh,
     this.header,
+    this.leading,
     super.key,
   });
+
+  /// Élément placé au-dessus du titre : le logo, sur les écrans d'entrée.
+  final Widget? leading;
 
   /// En-tête qui remplace le titre et le texte d'aide (accueil : salutation et actions rondes).
   /// [title] reste obligatoire : il nomme l'écran.
@@ -49,6 +53,7 @@ class NcPage extends StatelessWidget {
         if (header != null)
           header!
         else ...<Widget>[
+          if (leading != null) ...<Widget>[leading!, const SizedBox(height: NcSpacing.lg)],
           Semantics(header: true, child: Text(title, style: textTheme.headlineMedium)),
           if (subtitle != null) ...<Widget>[
             const SizedBox(height: NcSpacing.sm),
