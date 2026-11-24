@@ -1098,4 +1098,303 @@ class NcLocalizationsAr extends NcLocalizations {
 
   @override
   String get paymentCard => 'بطاقة بنكية';
+
+  @override
+  String get unsavedTitle => 'المغادرة دون حفظ؟';
+
+  @override
+  String get unsavedBody => 'ستضيع تعديلاتك.';
+
+  @override
+  String get unsavedLeave => 'مغادرة';
+
+  @override
+  String get unsavedStay => 'البقاء';
+
+  @override
+  String get changesSaved => 'تم حفظ التعديلات.';
+
+  @override
+  String get proNoTeamTitle => 'الحساب غير مسجل ضمن الفريق';
+
+  @override
+  String get proNoTeamBody =>
+      'هذا الحساب ليس ضمن فريق Nador Care. اتصل بالوكالة.';
+
+  @override
+  String get proPlanningTitle => 'جدولي';
+
+  @override
+  String get proPlanningHelp =>
+      'جدولك تحدده الوكالة. لتغييره، أرسل طلبا: يتغير عندما يقبله التنسيق.';
+
+  @override
+  String get planningZones => 'مناطق التدخل';
+
+  @override
+  String get planningZone => 'المنطقة';
+
+  @override
+  String get planningWeek => 'الأسبوع النموذجي';
+
+  @override
+  String get planningNotSet => 'لم تحدده الوكالة بعد.';
+
+  @override
+  String get planningMissing =>
+      'جدولك غير مكتمل بعد. الوكالة هي التي تحدده، ويمكنك اقتراح أوقات توفرك.';
+
+  @override
+  String get planningProposeWeek => 'اقتراح أسبوع آخر';
+
+  @override
+  String get planningProposeTitle => 'اقتراح أسبوع نموذجي';
+
+  @override
+  String get planningProposeHelp =>
+      'حدد الأيام والساعات التي تناسبك. الأوقات بتوقيت الناظور.';
+
+  @override
+  String get planningReportUnavailability => 'الإبلاغ عن عدم التوفر';
+
+  @override
+  String get planningUnavailabilityTitle => 'الإبلاغ عن عدم التوفر';
+
+  @override
+  String get planningUnavailabilityHelp => 'عطلة أو مانع: حدد الأيام المعنية.';
+
+  @override
+  String get planningFirstDay => 'اليوم الأول';
+
+  @override
+  String get planningLastDay => 'اليوم الأخير';
+
+  @override
+  String get planningChooseDate => 'اختر تاريخا';
+
+  @override
+  String get planningNoteLabel => 'توضيح (اختياري)';
+
+  @override
+  String get planningNoteHint => 'مثلا: عطلة، موعد';
+
+  @override
+  String get planningSend => 'إرسال الطلب';
+
+  @override
+  String get planningSent => 'تم إرسال الطلب إلى التنسيق.';
+
+  @override
+  String get planningRequests => 'طلباتي';
+
+  @override
+  String get planningRequestsEmpty => 'لا يوجد أي طلب حاليا.';
+
+  @override
+  String get planningKindWeekly => 'أسبوع نموذجي جديد';
+
+  @override
+  String get planningKindUnavailability => 'عدم التوفر';
+
+  @override
+  String planningFromTo(String from, String to) {
+    return 'من $from إلى $to';
+  }
+
+  @override
+  String get planningStatusPending => 'قيد الانتظار';
+
+  @override
+  String get planningStatusAccepted => 'مقبول';
+
+  @override
+  String get planningStatusRefused => 'مرفوض';
+
+  @override
+  String get planningStatusCancelled => 'مسحوب';
+
+  @override
+  String get planningWithdraw => 'سحب الطلب';
+
+  @override
+  String planningDecisionNote(String note) {
+    return 'رد التنسيق: $note';
+  }
+
+  @override
+  String get proToConfirmTitle => 'للتأكيد';
+
+  @override
+  String get missionToConfirm => 'للتأكيد';
+
+  @override
+  String missionConfirmBefore(String time) {
+    return 'أكد قبل $time';
+  }
+
+  @override
+  String get missionConfirmHelp =>
+      'أسند إليك التنسيق هذه المهمة. أكد أنك ستتكفل بها، أو أبلغ عن عدم توفرك.';
+
+  @override
+  String get missionConfirm => 'تأكيد التكفل';
+
+  @override
+  String get missionConfirmed => 'تم تأكيد التكفل.';
+
+  @override
+  String get missionDecline => 'لست متوفرا';
+
+  @override
+  String get missionDeclineTitle => 'الإبلاغ عن عدم توفرك؟';
+
+  @override
+  String get missionDeclineBody => 'سيسند التنسيق هذه المهمة إلى معالج آخر.';
+
+  @override
+  String get missionDeclineSend => 'إرسال';
+
+  @override
+  String get declineReasonBusy => 'في تدخل آخر';
+
+  @override
+  String get declineReasonSick => 'مرض';
+
+  @override
+  String get declineReasonPersonal => 'مانع شخصي';
+
+  @override
+  String get declineReasonOther => 'سبب آخر';
+
+  @override
+  String get declineReasonRequired => 'اختر سببا.';
+
+  @override
+  String get declineNoteLabel => 'توضيح';
+
+  @override
+  String get declineNoteRequired => 'يرجى توضيح السبب.';
+
+  @override
+  String get docOptional => 'اختياري';
+
+  @override
+  String get homeHeroEyebrow => 'العلاج في المنزل · الناظور ونواحيها';
+
+  @override
+  String get homeHeroTitle => 'علاج في منزلكم، على يد فريقنا الخاص';
+
+  @override
+  String get homeHeroBody =>
+      'اختاروا العلاج والعنوان والموعد: يظهر السعر قبل الإرسال.';
+
+  @override
+  String get homeHeroAction => 'حجز علاج';
+
+  @override
+  String get homeProofTeam => 'فريقنا الخاص';
+
+  @override
+  String get homeProofPrice => 'سعر معروف مسبقا';
+
+  @override
+  String get homeProofCash => 'الأداء للمعالج';
+
+  @override
+  String get navHome => 'الرئيسية';
+
+  @override
+  String get navCare => 'العلاجات';
+
+  @override
+  String get navBookings => 'المواعيد';
+
+  @override
+  String get navAccount => 'الحساب';
+
+  @override
+  String get navMissions => 'المهام';
+
+  @override
+  String get navPlanning => 'الجدول';
+
+  @override
+  String get navFile => 'الملف';
+
+  @override
+  String get seeAll => 'عرض الكل';
+
+  @override
+  String get homeQuickActions => 'وصول سريع';
+
+  @override
+  String get homeUpcomingTitle => 'علاجاتكم القادمة';
+
+  @override
+  String get homeUpcomingEmpty => 'لا يوجد علاج مبرمج حاليا.';
+
+  @override
+  String get accountTitle => 'حسابي';
+
+  @override
+  String get proStatToday => 'اليوم';
+
+  @override
+  String get proStatToConfirm => 'بانتظار ردكم';
+
+  @override
+  String get proStatUpcoming => 'القادمة';
+
+  @override
+  String get slotMorning => 'الصباح';
+
+  @override
+  String get slotAfternoon => 'بعد الظهر';
+
+  @override
+  String get slotEvening => 'المساء';
+
+  @override
+  String get slotOtherDay => 'يوم آخر';
+
+  @override
+  String get bookingProgressTitle => 'تتبع الطلب';
+
+  @override
+  String get timelineSent => 'تم إرسال الطلب';
+
+  @override
+  String get timelineConfirmed => 'تمت المصادقة من الوكالة';
+
+  @override
+  String get timelineAssigned => 'تم تعيين المعالج';
+
+  @override
+  String get timelineOnTheWay => 'في الطريق إليكم';
+
+  @override
+  String get timelineCare => 'التدخل جارٍ';
+
+  @override
+  String get timelineDone => 'انتهى العلاج';
+
+  @override
+  String get serviceAboutTitle => 'حول هذا العلاج';
+
+  @override
+  String get missionWhereTitle => 'مكان العلاج';
+
+  @override
+  String get missionNotesTitle => 'معلومات مهمة';
+
+  @override
+  String get bookingDetailsTitle => 'التفاصيل';
+
+  @override
+  String get planningDayOff => 'راحة';
+
+  @override
+  String docProgress(int done, int total) {
+    return '$done من $total مقبولة';
+  }
 }

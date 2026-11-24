@@ -1,9 +1,25 @@
 import 'package:flutter/material.dart';
 
+import 'nc_colors.dart';
 import 'nc_spacing.dart';
 
-/// Rayon commun des cartes, boutons et champs.
-const double ncRadius = 14;
+/// Rayon commun des cartes et des champs.
+const double ncRadius = 18;
+
+/// Ombre des cartes blanches : elle les détache du fond gris, à la place d'une bordure.
+const List<BoxShadow> ncCardShadow = <BoxShadow>[
+  BoxShadow(color: NcColors.shadow, blurRadius: 16, offset: Offset(0, 3)),
+];
+
+/// Couleurs d'un ton (fond clair, premier plan), partagées par les étiquettes et les pastilles.
+(Color, Color) ncToneColors(NcBadgeTone tone) => switch (tone) {
+  NcBadgeTone.neutral => (NcColors.muted, NcColors.textMuted),
+  NcBadgeTone.success => (NcColors.successSoft, NcColors.success),
+  NcBadgeTone.progress => (NcColors.warningSoft, NcColors.warning),
+  NcBadgeTone.danger => (NcColors.dangerSoft, NcColors.danger),
+  NcBadgeTone.info => (NcColors.infoSoft, NcColors.info),
+  NcBadgeTone.brand => (NcColors.primarySoft, NcColors.primaryStrong),
+};
 
 /// Carte : regroupe ce qui va ensemble (un justificatif, un jour de l'agenda, un réglage).
 ///
@@ -20,57 +36,72 @@ class NcSurface extends StatelessWidget {
 
   final Widget child;
 
-  /// Couleur de fond ; par défaut, le gris clair des cartes.
+  /// Couleur de fond ; par défaut, une carte blanche ombrée.
   final Color? color;
   final EdgeInsetsGeometry padding;
   final EdgeInsetsGeometry margin;
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
     return Padding(
       padding: margin,
-      child: Material(
-        color: color ?? scheme.surfaceContainerHighest.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(ncRadius),
-        clipBehavior: Clip.antiAlias,
-        child: Padding(padding: padding, child: child),
+      child: DecoratedBox(
+        // Une carte colorée (choix sélectionné) n'a pas besoin d'ombre : sa couleur la distingue.
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(ncRadius),
+          boxShadow: color == null ? ncCardShadow : null,
+        ),
+        child: Material(
+          color: color ?? NcColors.card,
+          borderRadius: BorderRadius.circular(ncRadius),
+          clipBehavior: Clip.antiAlias,
+          child: Padding(padding: padding, child: child),
+        ),
       ),
     );
   }
 }
 
-/// Titre d'une partie d'écran. Annoncé comme un titre par les lecteurs d'écran.
+/// Titre d'une partie d'écran, avec un lien « Tout voir » facultatif.
+/// Annoncé comme un titre par les lecteurs d'écran.
 class NcSectionTitle extends StatelessWidget {
-  const NcSectionTitle(this.title, {this.trailing, super.key});
+  const NcSectionTitle(this.title, {this.trailing, this.actionLabel, this.onAction, this.actionKey, super.key});
 
   final String title;
 
   /// Élément placé en fin de ligne (un compteur, par exemple).
   final Widget? trailing;
 
+  /// Lien en fin de ligne (« Tout voir ») ; affiché si [onAction] est renseigné.
+  final String? actionLabel;
+  final VoidCallback? onAction;
+  final Key? actionKey;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: NcSpacing.sm),
+      padding: const EdgeInsets.only(top: NcSpacing.xs, bottom: NcSpacing.sm),
       child: Row(
         children: <Widget>[
           Expanded(
             child: Semantics(
               header: true,
-              child: Text(
-                title,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
+              child: Text(title, style: theme.textTheme.titleLarge?.copyWith(fontSize: 18, color: NcColors.text)),
             ),
           ),
           ?trailing,
+          if (onAction != null && actionLabel != null)
+            TextButton(
+              key: actionKey,
+              onPressed: onAction,
+              style: TextButton.styleFrom(
+                minimumSize: const Size(48, 48),
+                padding: const EdgeInsets.symmetric(horizontal: NcSpacing.sm),
+              ),
+              child: Text(actionLabel!),
+            ),
         ],
       ),
     );
@@ -93,12 +124,18 @@ class NcEmptyState extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: NcSpacing.sm),
       padding: const EdgeInsets.all(NcSpacing.md),
       decoration: BoxDecoration(
-        border: Border.all(color: theme.colorScheme.outlineVariant),
+        color: NcColors.card.withValues(alpha: 0.6),
+        border: Border.all(color: NcColors.cardEdge),
         borderRadius: BorderRadius.circular(ncRadius),
       ),
       child: Row(
         children: <Widget>[
-          Icon(icon, color: color),
+          Container(
+            width: 40,
+            height: 40,
+            decoration: const BoxDecoration(color: NcColors.muted, shape: BoxShape.circle),
+            child: Icon(icon, color: color, size: 22),
+          ),
           const SizedBox(width: NcSpacing.md),
           Expanded(
             child: Text(message, style: theme.textTheme.bodyMedium?.copyWith(color: color)),
@@ -109,7 +146,9 @@ class NcEmptyState extends StatelessWidget {
   }
 }
 
-enum NcBadgeTone { neutral, success, progress, danger }
+/// Tons des étiquettes, les mêmes que le back-office : neutre, succès, en attente (ambre),
+/// danger, information (en route), marque (affectée, confirmée par l'agence).
+enum NcBadgeTone { neutral, success, progress, danger, info, brand }
 
 /// Étiquette d'état : une icône et un texte, jamais la couleur seule.
 class NcStatusBadge extends StatelessWidget {
@@ -122,21 +161,16 @@ class NcStatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
 
-    final (Color background, Color foreground) = switch (tone) {
-      NcBadgeTone.neutral => (scheme.surfaceContainerHighest, scheme.onSurfaceVariant),
-      NcBadgeTone.success => (scheme.primaryContainer, scheme.onPrimaryContainer),
-      // Ambre, comme les avertissements : la couleur tertiaire du thème tire vers le bleu.
-      NcBadgeTone.progress => (const Color(0xFFFFF1CC), const Color(0xFF4A3600)),
-      NcBadgeTone.danger => (scheme.errorContainer, scheme.onErrorContainer),
-    };
+    final (Color background, Color foreground) = ncToneColors(tone);
 
     return Align(
       alignment: AlignmentDirectional.centerStart,
+      // Largeur de son contenu : plusieurs étiquettes tiennent sur une ligne dans un `Wrap`.
+      widthFactor: 1,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: NcSpacing.sm + 2, vertical: NcSpacing.xs + 2),
-        decoration: BoxDecoration(color: background, borderRadius: BorderRadius.circular(10)),
+        decoration: BoxDecoration(color: background, borderRadius: BorderRadius.circular(999)),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
@@ -176,7 +210,12 @@ class NcInfoRow extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Icon(icon, color: theme.colorScheme.primary),
+          Container(
+            width: 40,
+            height: 40,
+            decoration: const BoxDecoration(color: NcColors.primarySoft, shape: BoxShape.circle),
+            child: Icon(icon, color: NcColors.primaryStrong, size: 22),
+          ),
           const SizedBox(width: NcSpacing.md),
           Expanded(
             child: Column(
@@ -220,14 +259,23 @@ class NcStepIndicator extends StatelessWidget {
             ),
           ),
           const SizedBox(height: NcSpacing.sm),
+          // Un segment par étape : les étapes faites et l'étape en cours en teal.
           ExcludeSemantics(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(999),
-              child: LinearProgressIndicator(
-                value: current / total,
-                minHeight: 8,
-                backgroundColor: theme.colorScheme.surfaceContainerHighest,
-              ),
+            child: Row(
+              children: <Widget>[
+                for (var step = 1; step <= total; step++) ...<Widget>[
+                  if (step > 1) const SizedBox(width: 6),
+                  Expanded(
+                    child: Container(
+                      height: 6,
+                      decoration: BoxDecoration(
+                        color: step <= current ? NcColors.primary : NcColors.cardEdge,
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
         ],

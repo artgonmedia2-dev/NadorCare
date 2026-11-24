@@ -1,14 +1,20 @@
 /// Thème et composants visuels communs.
 ///
-/// Provisoire : l'identité visuelle et les maquettes (lot 2) ne sont pas encore livrées.
-/// Les écrans n'utilisent que ces composants et le thème, pour que le remplacement
-/// se fasse ici sans toucher aux écrans.
+/// Identité de la refonte du 2026-11-24 (maquettes Figma « Nador Care — Refonte UX/UI »), la même
+/// que le site et le back-office. Les écrans n'utilisent que ces composants et le thème.
 library;
+
+export 'src/nc_colors.dart';
 
 export 'src/nc_buttons.dart';
 export 'src/nc_choice_list.dart';
+export 'src/nc_detail.dart';
+export 'src/nc_hero_card.dart';
+export 'src/nc_home.dart';
+export 'src/nc_labeled_field.dart';
 export 'src/nc_notice.dart';
 export 'src/nc_page.dart';
 export 'src/nc_spacing.dart';
 export 'src/nc_surface.dart';
+export 'src/nc_tab_scaffold.dart';
 export 'src/nc_theme.dart';

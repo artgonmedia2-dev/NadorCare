@@ -117,13 +117,13 @@ class ProfessionalFile {
     required this.status,
     required this.categoryId,
     required this.categoryName,
-    required this.isOnline,
     required this.requiredDocuments,
     required this.missingDocuments,
     required this.documents,
     required this.canSubmit,
     required this.zones,
     required this.availabilities,
+    this.optionalDocuments = const <String>[],
     this.statusReason,
     this.licenseNumber,
     this.orderNumber,
@@ -139,9 +139,9 @@ class ProfessionalFile {
       categoryName: (category['name'] as String?) ?? '',
       licenseNumber: json['license_number'] as String?,
       orderNumber: json['order_number'] as String?,
-      isOnline: (json['is_online'] as bool?) ?? false,
       requiredDocuments: _strings(json['required_documents']),
       missingDocuments: _strings(json['missing_documents']),
+      optionalDocuments: _strings(json['optional_documents']),
       documents: _maps(json['documents']).map(ProfessionalDocument.fromJson).toList(growable: false),
       canSubmit: (json['can_submit'] as bool?) ?? false,
       zones: _maps(json['zones']).map(ServiceZone.fromJson).toList(growable: false),
@@ -157,9 +157,11 @@ class ProfessionalFile {
   final String categoryName;
   final String? licenseNumber;
   final String? orderNumber;
-  final bool isOnline;
   final List<String> requiredDocuments;
   final List<String> missingDocuments;
+
+  /// Justificatifs facultatifs (assurance personnelle) : ils peuvent être déposés, sans être exigés.
+  final List<String> optionalDocuments;
 
   /// Dépôt le plus récent de chaque type.
   final List<ProfessionalDocument> documents;
@@ -175,50 +177,6 @@ class ProfessionalFile {
     }
     return null;
   }
-}
-
-/// Proposition de mission. Avant d'accepter, le professionnel ne voit que le soin,
-/// le créneau, la zone et la distance.
-class MissionOffer {
-  const MissionOffer({
-    required this.id,
-    required this.serviceName,
-    required this.durationMinutes,
-    required this.scheduledDate,
-    required this.scheduledTime,
-    this.expiresAt,
-    this.zone,
-    this.distanceMeters,
-  });
-
-  factory MissionOffer.fromJson(Map<String, dynamic> json) {
-    final service = (json['service'] as Map<String, dynamic>?) ?? const <String, dynamic>{};
-    final expires = json['expires_at'] as String?;
-
-    return MissionOffer(
-      id: json['id'] as String,
-      serviceName: (service['name'] as String?) ?? '',
-      durationMinutes: (service['duration_minutes'] as num?)?.toInt() ?? 0,
-      scheduledDate: DateTime.parse(json['scheduled_date'] as String),
-      scheduledTime: (json['scheduled_time'] as String?) ?? '',
-      expiresAt: expires == null ? null : DateTime.tryParse(expires),
-      zone: json['zone'] as String?,
-      distanceMeters: (json['distance_meters'] as num?)?.toInt(),
-    );
-  }
-
-  final String id;
-  final String serviceName;
-  final int durationMinutes;
-
-  /// Jour et heure du soin à Nador.
-  final DateTime scheduledDate;
-  final String scheduledTime;
-
-  /// Moment après lequel la proposition n'est plus valable.
-  final DateTime? expiresAt;
-  final String? zone;
-  final int? distanceMeters;
 }
 
 /// Mission affectée au professionnel. Les données de santé ([careNotes], [patientNote])
@@ -241,6 +199,8 @@ class Mission {
     this.careNotes,
     this.patientNote,
     this.isRemote = false,
+    this.needsConfirmation = false,
+    this.confirmBy,
   });
 
   factory Mission.fromJson(Map<String, dynamic> json) {
@@ -265,6 +225,8 @@ class Mission {
       hasPrescription: (json['has_prescription'] as bool?) ?? false,
       patientNote: json['patient_note'] as String?,
       isRemote: json['delivery_mode'] == 'remote',
+      needsConfirmation: (json['needs_confirmation'] as bool?) ?? false,
+      confirmBy: DateTime.tryParse((json['confirm_by'] as String?) ?? ''),
     );
   }
 
@@ -293,8 +255,14 @@ class Mission {
   final int amountToCollect;
   final bool hasPrescription;
 
-  /// Le professionnel peut encore se désister : il n'est pas parti.
-  bool get canWithdraw => status == 'assigned';
+  /// La mission vient d'être affectée : le soignant doit confirmer qu'il la prend en charge.
+  final bool needsConfirmation;
+
+  /// Heure limite de la confirmation ; passé ce délai, la coordination est alertée.
+  final DateTime? confirmBy;
+
+  /// Le soignant peut encore signaler son indisponibilité : il n'est pas parti.
+  bool get canDecline => status == 'assigned';
 }
 
 List<String> _strings(Object? value) {

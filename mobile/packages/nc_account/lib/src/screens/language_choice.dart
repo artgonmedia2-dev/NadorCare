@@ -28,8 +28,14 @@ class LanguageChoice extends StatelessWidget {
               selected: code == selected,
               button: true,
               child: Material(
-                color: code == selected ? scheme.primaryContainer : scheme.surfaceContainerHighest.withValues(alpha: 0.5),
-                borderRadius: BorderRadius.circular(14),
+                color: code == selected ? scheme.primaryContainer : NcColors.card,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  side: BorderSide(
+                    color: code == selected ? scheme.primary : scheme.outlineVariant,
+                    width: code == selected ? 2 : 1,
+                  ),
+                ),
                 child: InkWell(
                   key: ValueKey<String>('language-$code'),
                   borderRadius: BorderRadius.circular(14),

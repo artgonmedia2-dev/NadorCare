@@ -2049,6 +2049,576 @@ abstract class NcLocalizations {
   /// In fr, this message translates to:
   /// **'Carte bancaire'**
   String get paymentCard;
+
+  /// No description provided for @unsavedTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Quitter sans enregistrer ?'**
+  String get unsavedTitle;
+
+  /// No description provided for @unsavedBody.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vos modifications seront perdues.'**
+  String get unsavedBody;
+
+  /// No description provided for @unsavedLeave.
+  ///
+  /// In fr, this message translates to:
+  /// **'Quitter'**
+  String get unsavedLeave;
+
+  /// No description provided for @unsavedStay.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rester'**
+  String get unsavedStay;
+
+  /// No description provided for @changesSaved.
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifications enregistrées.'**
+  String get changesSaved;
+
+  /// No description provided for @proNoTeamTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Compte non rattaché à l\'équipe'**
+  String get proNoTeamTitle;
+
+  /// No description provided for @proNoTeamBody.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce compte ne fait pas partie de l\'équipe Nador Care. Contactez l\'agence.'**
+  String get proNoTeamBody;
+
+  /// No description provided for @proPlanningTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mon planning'**
+  String get proPlanningTitle;
+
+  /// No description provided for @proPlanningHelp.
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre planning est fixé par l\'agence. Pour le modifier, envoyez une demande : il change quand la coordination l\'accepte.'**
+  String get proPlanningHelp;
+
+  /// No description provided for @planningZones.
+  ///
+  /// In fr, this message translates to:
+  /// **'Zones d\'intervention'**
+  String get planningZones;
+
+  /// No description provided for @planningZone.
+  ///
+  /// In fr, this message translates to:
+  /// **'Zone'**
+  String get planningZone;
+
+  /// No description provided for @planningWeek.
+  ///
+  /// In fr, this message translates to:
+  /// **'Semaine type'**
+  String get planningWeek;
+
+  /// No description provided for @planningNotSet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pas encore fixé par l\'agence.'**
+  String get planningNotSet;
+
+  /// No description provided for @planningMissing.
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre planning n\'est pas encore complet. L\'agence le fixe ; vous pouvez lui proposer vos disponibilités.'**
+  String get planningMissing;
+
+  /// No description provided for @planningProposeWeek.
+  ///
+  /// In fr, this message translates to:
+  /// **'Proposer une autre semaine'**
+  String get planningProposeWeek;
+
+  /// No description provided for @planningProposeTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Proposer une semaine type'**
+  String get planningProposeTitle;
+
+  /// No description provided for @planningProposeHelp.
+  ///
+  /// In fr, this message translates to:
+  /// **'Indiquez les jours et les heures qui vous conviennent. Les heures sont celles de Nador.'**
+  String get planningProposeHelp;
+
+  /// No description provided for @planningReportUnavailability.
+  ///
+  /// In fr, this message translates to:
+  /// **'Signaler une indisponibilité'**
+  String get planningReportUnavailability;
+
+  /// No description provided for @planningUnavailabilityTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Signaler une indisponibilité'**
+  String get planningUnavailabilityTitle;
+
+  /// No description provided for @planningUnavailabilityHelp.
+  ///
+  /// In fr, this message translates to:
+  /// **'Congé ou empêchement : indiquez les jours concernés.'**
+  String get planningUnavailabilityHelp;
+
+  /// No description provided for @planningFirstDay.
+  ///
+  /// In fr, this message translates to:
+  /// **'Premier jour'**
+  String get planningFirstDay;
+
+  /// No description provided for @planningLastDay.
+  ///
+  /// In fr, this message translates to:
+  /// **'Dernier jour'**
+  String get planningLastDay;
+
+  /// No description provided for @planningChooseDate.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisir une date'**
+  String get planningChooseDate;
+
+  /// No description provided for @planningNoteLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Précision (facultatif)'**
+  String get planningNoteLabel;
+
+  /// No description provided for @planningNoteHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Par exemple : congé, rendez-vous'**
+  String get planningNoteHint;
+
+  /// No description provided for @planningSend.
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyer la demande'**
+  String get planningSend;
+
+  /// No description provided for @planningSent.
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande envoyée à la coordination.'**
+  String get planningSent;
+
+  /// No description provided for @planningRequests.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mes demandes'**
+  String get planningRequests;
+
+  /// No description provided for @planningRequestsEmpty.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune demande pour l\'instant.'**
+  String get planningRequestsEmpty;
+
+  /// No description provided for @planningKindWeekly.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nouvelle semaine type'**
+  String get planningKindWeekly;
+
+  /// No description provided for @planningKindUnavailability.
+  ///
+  /// In fr, this message translates to:
+  /// **'Indisponibilité'**
+  String get planningKindUnavailability;
+
+  /// No description provided for @planningFromTo.
+  ///
+  /// In fr, this message translates to:
+  /// **'Du {from} au {to}'**
+  String planningFromTo(String from, String to);
+
+  /// No description provided for @planningStatusPending.
+  ///
+  /// In fr, this message translates to:
+  /// **'En attente'**
+  String get planningStatusPending;
+
+  /// No description provided for @planningStatusAccepted.
+  ///
+  /// In fr, this message translates to:
+  /// **'Acceptée'**
+  String get planningStatusAccepted;
+
+  /// No description provided for @planningStatusRefused.
+  ///
+  /// In fr, this message translates to:
+  /// **'Refusée'**
+  String get planningStatusRefused;
+
+  /// No description provided for @planningStatusCancelled.
+  ///
+  /// In fr, this message translates to:
+  /// **'Retirée'**
+  String get planningStatusCancelled;
+
+  /// No description provided for @planningWithdraw.
+  ///
+  /// In fr, this message translates to:
+  /// **'Retirer la demande'**
+  String get planningWithdraw;
+
+  /// No description provided for @planningDecisionNote.
+  ///
+  /// In fr, this message translates to:
+  /// **'Réponse de la coordination : {note}'**
+  String planningDecisionNote(String note);
+
+  /// No description provided for @proToConfirmTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'À confirmer'**
+  String get proToConfirmTitle;
+
+  /// No description provided for @missionToConfirm.
+  ///
+  /// In fr, this message translates to:
+  /// **'À confirmer'**
+  String get missionToConfirm;
+
+  /// No description provided for @missionConfirmBefore.
+  ///
+  /// In fr, this message translates to:
+  /// **'À confirmer avant {time}'**
+  String missionConfirmBefore(String time);
+
+  /// No description provided for @missionConfirmHelp.
+  ///
+  /// In fr, this message translates to:
+  /// **'La coordination vous a confié cette mission. Confirmez que vous la prenez en charge, ou signalez votre indisponibilité.'**
+  String get missionConfirmHelp;
+
+  /// No description provided for @missionConfirm.
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmer la prise en charge'**
+  String get missionConfirm;
+
+  /// No description provided for @missionConfirmed.
+  ///
+  /// In fr, this message translates to:
+  /// **'Prise en charge confirmée.'**
+  String get missionConfirmed;
+
+  /// No description provided for @missionDecline.
+  ///
+  /// In fr, this message translates to:
+  /// **'Je ne suis pas disponible'**
+  String get missionDecline;
+
+  /// No description provided for @missionDeclineTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Signaler votre indisponibilité ?'**
+  String get missionDeclineTitle;
+
+  /// No description provided for @missionDeclineBody.
+  ///
+  /// In fr, this message translates to:
+  /// **'La coordination confiera cette mission à un autre soignant.'**
+  String get missionDeclineBody;
+
+  /// No description provided for @missionDeclineSend.
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoyer'**
+  String get missionDeclineSend;
+
+  /// No description provided for @declineReasonBusy.
+  ///
+  /// In fr, this message translates to:
+  /// **'Déjà en intervention'**
+  String get declineReasonBusy;
+
+  /// No description provided for @declineReasonSick.
+  ///
+  /// In fr, this message translates to:
+  /// **'Maladie'**
+  String get declineReasonSick;
+
+  /// No description provided for @declineReasonPersonal.
+  ///
+  /// In fr, this message translates to:
+  /// **'Empêchement personnel'**
+  String get declineReasonPersonal;
+
+  /// No description provided for @declineReasonOther.
+  ///
+  /// In fr, this message translates to:
+  /// **'Autre'**
+  String get declineReasonOther;
+
+  /// No description provided for @declineReasonRequired.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisissez un motif.'**
+  String get declineReasonRequired;
+
+  /// No description provided for @declineNoteLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Précision'**
+  String get declineNoteLabel;
+
+  /// No description provided for @declineNoteRequired.
+  ///
+  /// In fr, this message translates to:
+  /// **'Précisez le motif.'**
+  String get declineNoteRequired;
+
+  /// No description provided for @docOptional.
+  ///
+  /// In fr, this message translates to:
+  /// **'Facultatif'**
+  String get docOptional;
+
+  /// No description provided for @homeHeroEyebrow.
+  ///
+  /// In fr, this message translates to:
+  /// **'Soins à domicile · Nador et sa région'**
+  String get homeHeroEyebrow;
+
+  /// No description provided for @homeHeroTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Des soins chez vous, par notre propre équipe'**
+  String get homeHeroTitle;
+
+  /// No description provided for @homeHeroBody.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisissez un soin, l\'adresse et le créneau : le prix s\'affiche avant d\'envoyer.'**
+  String get homeHeroBody;
+
+  /// No description provided for @homeHeroAction.
+  ///
+  /// In fr, this message translates to:
+  /// **'Réserver un soin'**
+  String get homeHeroAction;
+
+  /// No description provided for @homeProofTeam.
+  ///
+  /// In fr, this message translates to:
+  /// **'Notre propre équipe'**
+  String get homeProofTeam;
+
+  /// No description provided for @homeProofPrice.
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix connu à l\'avance'**
+  String get homeProofPrice;
+
+  /// No description provided for @homeProofCash.
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement au soignant'**
+  String get homeProofCash;
+
+  /// No description provided for @navHome.
+  ///
+  /// In fr, this message translates to:
+  /// **'Accueil'**
+  String get navHome;
+
+  /// No description provided for @navCare.
+  ///
+  /// In fr, this message translates to:
+  /// **'Soins'**
+  String get navCare;
+
+  /// No description provided for @navBookings.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rendez-vous'**
+  String get navBookings;
+
+  /// No description provided for @navAccount.
+  ///
+  /// In fr, this message translates to:
+  /// **'Compte'**
+  String get navAccount;
+
+  /// No description provided for @navMissions.
+  ///
+  /// In fr, this message translates to:
+  /// **'Missions'**
+  String get navMissions;
+
+  /// No description provided for @navPlanning.
+  ///
+  /// In fr, this message translates to:
+  /// **'Planning'**
+  String get navPlanning;
+
+  /// No description provided for @navFile.
+  ///
+  /// In fr, this message translates to:
+  /// **'Dossier'**
+  String get navFile;
+
+  /// No description provided for @seeAll.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tout voir'**
+  String get seeAll;
+
+  /// No description provided for @homeQuickActions.
+  ///
+  /// In fr, this message translates to:
+  /// **'Accès rapide'**
+  String get homeQuickActions;
+
+  /// No description provided for @homeUpcomingTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vos prochains soins'**
+  String get homeUpcomingTitle;
+
+  /// No description provided for @homeUpcomingEmpty.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun soin prévu pour le moment.'**
+  String get homeUpcomingEmpty;
+
+  /// No description provided for @accountTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mon compte'**
+  String get accountTitle;
+
+  /// No description provided for @proStatToday.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aujourd\'hui'**
+  String get proStatToday;
+
+  /// No description provided for @proStatToConfirm.
+  ///
+  /// In fr, this message translates to:
+  /// **'À répondre'**
+  String get proStatToConfirm;
+
+  /// No description provided for @proStatUpcoming.
+  ///
+  /// In fr, this message translates to:
+  /// **'À venir'**
+  String get proStatUpcoming;
+
+  /// No description provided for @slotMorning.
+  ///
+  /// In fr, this message translates to:
+  /// **'Matin'**
+  String get slotMorning;
+
+  /// No description provided for @slotAfternoon.
+  ///
+  /// In fr, this message translates to:
+  /// **'Après-midi'**
+  String get slotAfternoon;
+
+  /// No description provided for @slotEvening.
+  ///
+  /// In fr, this message translates to:
+  /// **'Soir'**
+  String get slotEvening;
+
+  /// No description provided for @slotOtherDay.
+  ///
+  /// In fr, this message translates to:
+  /// **'Autre jour'**
+  String get slotOtherDay;
+
+  /// No description provided for @bookingProgressTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Suivi de la demande'**
+  String get bookingProgressTitle;
+
+  /// No description provided for @timelineSent.
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande envoyée'**
+  String get timelineSent;
+
+  /// No description provided for @timelineConfirmed.
+  ///
+  /// In fr, this message translates to:
+  /// **'Validée par l\'agence'**
+  String get timelineConfirmed;
+
+  /// No description provided for @timelineAssigned.
+  ///
+  /// In fr, this message translates to:
+  /// **'Soignant désigné'**
+  String get timelineAssigned;
+
+  /// No description provided for @timelineOnTheWay.
+  ///
+  /// In fr, this message translates to:
+  /// **'En route vers vous'**
+  String get timelineOnTheWay;
+
+  /// No description provided for @timelineCare.
+  ///
+  /// In fr, this message translates to:
+  /// **'Intervention en cours'**
+  String get timelineCare;
+
+  /// No description provided for @timelineDone.
+  ///
+  /// In fr, this message translates to:
+  /// **'Soin terminé'**
+  String get timelineDone;
+
+  /// No description provided for @serviceAboutTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'À propos de ce soin'**
+  String get serviceAboutTitle;
+
+  /// No description provided for @missionWhereTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Lieu du soin'**
+  String get missionWhereTitle;
+
+  /// No description provided for @missionNotesTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'À savoir'**
+  String get missionNotesTitle;
+
+  /// No description provided for @bookingDetailsTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Détails'**
+  String get bookingDetailsTitle;
+
+  /// No description provided for @planningDayOff.
+  ///
+  /// In fr, this message translates to:
+  /// **'Repos'**
+  String get planningDayOff;
+
+  /// No description provided for @docProgress.
+  ///
+  /// In fr, this message translates to:
+  /// **'{done} sur {total} validés'**
+  String docProgress(int done, int total);
 }
 
 class _NcLocalizationsDelegate extends LocalizationsDelegate<NcLocalizations> {

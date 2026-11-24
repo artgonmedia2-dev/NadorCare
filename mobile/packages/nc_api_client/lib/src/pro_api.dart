@@ -8,12 +8,8 @@ import 'api_client.dart';
 abstract interface class ProApi {
   Future<List<ProfessionCategory>> categories();
 
-  Future<List<ServiceZone>> zones();
-
-  /// Dossier du professionnel, ou `null` s'il ne l'a pas encore créé.
+  /// Dossier du soignant. Il est créé par l'agence ; `null` si le compte n'est pas rattaché à l'équipe.
   Future<ProfessionalFile?> file();
-
-  Future<ProfessionalFile> saveFile({required String categoryId, String? licenseNumber, String? orderNumber});
 
   /// Dépose un justificatif. [expiresAt] (`AAAA-MM-JJ`) est obligatoire pour l'assurance.
   Future<ProfessionalFile> uploadDocument({
@@ -25,26 +21,29 @@ abstract interface class ProApi {
 
   Future<ProfessionalFile> submit();
 
-  Future<ProfessionalFile> setZones(List<String> zoneIds);
+  /// Mes demandes de planning, de la plus récente à la plus ancienne.
+  Future<List<ScheduleRequest>> scheduleRequests();
 
-  Future<ProfessionalFile> setAvailabilities(List<AvailabilitySlot> slots);
+  /// Propose une nouvelle semaine type : elle ne s'applique que si la coordination l'accepte.
+  Future<ScheduleRequest> proposeWeek(List<AvailabilitySlot> slots, {String? note});
 
-  Future<ProfessionalFile> setOnline({required bool online});
+  /// Signale une indisponibilité, du premier au dernier jour compris.
+  Future<ScheduleRequest> reportUnavailability({required DateTime startsOn, required DateTime endsOn, String? note});
 
-  Future<List<MissionOffer>> offers();
-
-  /// Accepte une proposition : la mission est alors affectée.
-  Future<Mission> acceptOffer(String offerId);
-
-  Future<void> declineOffer(String offerId, {String? reason});
+  /// Retire une demande qui n'a pas encore reçu de réponse.
+  Future<void> cancelScheduleRequest(String id);
 
   Future<List<Mission>> missions();
 
   /// Fiche détaillée, avec les données de santé utiles. Le serveur journalise cette lecture.
   Future<Mission> mission(String id);
 
-  /// Se désister d'une mission, tant que le professionnel n'est pas parti.
-  Future<void> withdraw(String missionId, {required String reason});
+  /// Confirme la prise en charge d'une mission que la coordination vient d'affecter.
+  Future<Mission> confirmMission(String missionId);
+
+  /// Signale une indisponibilité, tant que le soignant n'est pas parti. [reason] : `busy`,
+  /// `sick`, `personal` ou `other` (une précision est alors obligatoire).
+  Future<void> declineMission(String missionId, {required String reason, String? note});
 
   /// Départ vers le domicile : la mission passe « en route ».
   Future<Mission> depart(String missionId);
@@ -90,14 +89,16 @@ class HttpProApi implements ProApi {
 
   static ProfessionalFile _file(Map<String, dynamic> json) => ProfessionalFile.fromJson(_data(json));
 
-  @override
-  Future<List<ProfessionCategory>> categories() async {
-    return _list(await _client.get('/catalogue/professional-categories')).map(ProfessionCategory.fromJson).toList();
+  static ScheduleRequest _scheduleRequest(Map<String, dynamic> json) => ScheduleRequest.fromJson(_data(json));
+
+  /// Jour au format de l'API : `AAAA-MM-JJ`.
+  static String _day(DateTime day) {
+    return '${day.year.toString().padLeft(4, '0')}-${day.month.toString().padLeft(2, '0')}-${day.day.toString().padLeft(2, '0')}';
   }
 
   @override
-  Future<List<ServiceZone>> zones() async {
-    return _list(await _client.get('/catalogue/zones')).map(ServiceZone.fromJson).toList();
+  Future<List<ProfessionCategory>> categories() async {
+    return _list(await _client.get('/catalogue/professional-categories')).map(ProfessionCategory.fromJson).toList();
   }
 
   @override
@@ -111,17 +112,6 @@ class HttpProApi implements ProApi {
       }
       rethrow;
     }
-  }
-
-  @override
-  Future<ProfessionalFile> saveFile({required String categoryId, String? licenseNumber, String? orderNumber}) async {
-    return _file(
-      await _client.put('/pro/profile', <String, dynamic>{
-        'professional_category_id': categoryId,
-        'license_number': (licenseNumber == null || licenseNumber.isEmpty) ? null : licenseNumber,
-        'order_number': (orderNumber == null || orderNumber.isEmpty) ? null : orderNumber,
-      }),
-    );
   }
 
   @override
@@ -146,38 +136,39 @@ class HttpProApi implements ProApi {
   Future<ProfessionalFile> submit() async => _file(await _client.post('/pro/profile/submit'));
 
   @override
-  Future<ProfessionalFile> setZones(List<String> zoneIds) async {
-    return _file(await _client.put('/pro/profile/zones', <String, dynamic>{'zone_ids': zoneIds}));
+  Future<List<ScheduleRequest>> scheduleRequests() async {
+    return _list(await _client.get('/pro/schedule-requests')).map(ScheduleRequest.fromJson).toList();
   }
 
   @override
-  Future<ProfessionalFile> setAvailabilities(List<AvailabilitySlot> slots) async {
-    return _file(
-      await _client.put('/pro/profile/availabilities', <String, dynamic>{
-        'availabilities': <Map<String, dynamic>>[for (final slot in slots) slot.toJson()],
+  Future<ScheduleRequest> proposeWeek(List<AvailabilitySlot> slots, {String? note}) async {
+    return _scheduleRequest(
+      await _client.post('/pro/schedule-requests', <String, dynamic>{
+        'kind': ScheduleRequest.kindWeekly,
+        'slots': <Map<String, dynamic>>[for (final slot in slots) slot.toJson()],
+        'note': (note == null || note.isEmpty) ? null : note,
       }),
     );
   }
 
   @override
-  Future<ProfessionalFile> setOnline({required bool online}) async {
-    return _file(await _client.put('/pro/profile/online', <String, dynamic>{'is_online': online}));
+  Future<ScheduleRequest> reportUnavailability({
+    required DateTime startsOn,
+    required DateTime endsOn,
+    String? note,
+  }) async {
+    return _scheduleRequest(
+      await _client.post('/pro/schedule-requests', <String, dynamic>{
+        'kind': ScheduleRequest.kindUnavailability,
+        'starts_on': _day(startsOn),
+        'ends_on': _day(endsOn),
+        'note': (note == null || note.isEmpty) ? null : note,
+      }),
+    );
   }
 
   @override
-  Future<List<MissionOffer>> offers() async {
-    return _list(await _client.get('/pro/offers')).map(MissionOffer.fromJson).toList();
-  }
-
-  @override
-  Future<Mission> acceptOffer(String offerId) async {
-    return Mission.fromJson(_data(await _client.post('/pro/offers/$offerId/accept')));
-  }
-
-  @override
-  Future<void> declineOffer(String offerId, {String? reason}) async {
-    await _client.post('/pro/offers/$offerId/decline', <String, dynamic>{'reason': ?reason});
-  }
+  Future<void> cancelScheduleRequest(String id) => _client.delete('/pro/schedule-requests/$id');
 
   @override
   Future<List<Mission>> missions() async {
@@ -188,8 +179,16 @@ class HttpProApi implements ProApi {
   Future<Mission> mission(String id) async => Mission.fromJson(_data(await _client.get('/pro/missions/$id')));
 
   @override
-  Future<void> withdraw(String missionId, {required String reason}) async {
-    await _client.post('/pro/missions/$missionId/withdraw', <String, dynamic>{'reason': reason});
+  Future<Mission> confirmMission(String missionId) async {
+    return Mission.fromJson(_data(await _client.post('/pro/missions/$missionId/confirm')));
+  }
+
+  @override
+  Future<void> declineMission(String missionId, {required String reason, String? note}) async {
+    await _client.post('/pro/missions/$missionId/decline', <String, dynamic>{
+      'reason': reason,
+      'note': (note == null || note.isEmpty) ? null : note,
+    });
   }
 
   static Intervention _intervention(Map<String, dynamic> json) => Intervention.fromJson(_data(json));

@@ -16,8 +16,13 @@ class NcPage extends StatelessWidget {
     this.actions = const <Widget>[],
     this.appBar,
     this.onRefresh,
+    this.header,
     super.key,
   });
+
+  /// En-tête qui remplace le titre et le texte d'aide (accueil : salutation et actions rondes).
+  /// [title] reste obligatoire : il nomme l'écran.
+  final Widget? header;
 
   final String title;
   final String? subtitle;
@@ -41,12 +46,16 @@ class NcPage extends StatelessWidget {
       physics: onRefresh == null ? null : const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsetsDirectional.fromSTEB(NcSpacing.lg, NcSpacing.lg, NcSpacing.lg, NcSpacing.lg),
       children: <Widget>[
-        Semantics(header: true, child: Text(title, style: textTheme.headlineMedium)),
-        if (subtitle != null) ...<Widget>[
-          const SizedBox(height: NcSpacing.sm),
-          Text(subtitle!, style: textTheme.bodyLarge?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+        if (header != null)
+          header!
+        else ...<Widget>[
+          Semantics(header: true, child: Text(title, style: textTheme.headlineMedium)),
+          if (subtitle != null) ...<Widget>[
+            const SizedBox(height: NcSpacing.sm),
+            Text(subtitle!, style: textTheme.bodyLarge?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+          ],
+          const SizedBox(height: NcSpacing.lg),
         ],
-        const SizedBox(height: NcSpacing.lg),
         ...children,
       ],
     );

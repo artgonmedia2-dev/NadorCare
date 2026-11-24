@@ -1117,4 +1117,305 @@ class NcLocalizationsFr extends NcLocalizations {
 
   @override
   String get paymentCard => 'Carte bancaire';
+
+  @override
+  String get unsavedTitle => 'Quitter sans enregistrer ?';
+
+  @override
+  String get unsavedBody => 'Vos modifications seront perdues.';
+
+  @override
+  String get unsavedLeave => 'Quitter';
+
+  @override
+  String get unsavedStay => 'Rester';
+
+  @override
+  String get changesSaved => 'Modifications enregistrées.';
+
+  @override
+  String get proNoTeamTitle => 'Compte non rattaché à l\'équipe';
+
+  @override
+  String get proNoTeamBody =>
+      'Ce compte ne fait pas partie de l\'équipe Nador Care. Contactez l\'agence.';
+
+  @override
+  String get proPlanningTitle => 'Mon planning';
+
+  @override
+  String get proPlanningHelp =>
+      'Votre planning est fixé par l\'agence. Pour le modifier, envoyez une demande : il change quand la coordination l\'accepte.';
+
+  @override
+  String get planningZones => 'Zones d\'intervention';
+
+  @override
+  String get planningZone => 'Zone';
+
+  @override
+  String get planningWeek => 'Semaine type';
+
+  @override
+  String get planningNotSet => 'Pas encore fixé par l\'agence.';
+
+  @override
+  String get planningMissing =>
+      'Votre planning n\'est pas encore complet. L\'agence le fixe ; vous pouvez lui proposer vos disponibilités.';
+
+  @override
+  String get planningProposeWeek => 'Proposer une autre semaine';
+
+  @override
+  String get planningProposeTitle => 'Proposer une semaine type';
+
+  @override
+  String get planningProposeHelp =>
+      'Indiquez les jours et les heures qui vous conviennent. Les heures sont celles de Nador.';
+
+  @override
+  String get planningReportUnavailability => 'Signaler une indisponibilité';
+
+  @override
+  String get planningUnavailabilityTitle => 'Signaler une indisponibilité';
+
+  @override
+  String get planningUnavailabilityHelp =>
+      'Congé ou empêchement : indiquez les jours concernés.';
+
+  @override
+  String get planningFirstDay => 'Premier jour';
+
+  @override
+  String get planningLastDay => 'Dernier jour';
+
+  @override
+  String get planningChooseDate => 'Choisir une date';
+
+  @override
+  String get planningNoteLabel => 'Précision (facultatif)';
+
+  @override
+  String get planningNoteHint => 'Par exemple : congé, rendez-vous';
+
+  @override
+  String get planningSend => 'Envoyer la demande';
+
+  @override
+  String get planningSent => 'Demande envoyée à la coordination.';
+
+  @override
+  String get planningRequests => 'Mes demandes';
+
+  @override
+  String get planningRequestsEmpty => 'Aucune demande pour l\'instant.';
+
+  @override
+  String get planningKindWeekly => 'Nouvelle semaine type';
+
+  @override
+  String get planningKindUnavailability => 'Indisponibilité';
+
+  @override
+  String planningFromTo(String from, String to) {
+    return 'Du $from au $to';
+  }
+
+  @override
+  String get planningStatusPending => 'En attente';
+
+  @override
+  String get planningStatusAccepted => 'Acceptée';
+
+  @override
+  String get planningStatusRefused => 'Refusée';
+
+  @override
+  String get planningStatusCancelled => 'Retirée';
+
+  @override
+  String get planningWithdraw => 'Retirer la demande';
+
+  @override
+  String planningDecisionNote(String note) {
+    return 'Réponse de la coordination : $note';
+  }
+
+  @override
+  String get proToConfirmTitle => 'À confirmer';
+
+  @override
+  String get missionToConfirm => 'À confirmer';
+
+  @override
+  String missionConfirmBefore(String time) {
+    return 'À confirmer avant $time';
+  }
+
+  @override
+  String get missionConfirmHelp =>
+      'La coordination vous a confié cette mission. Confirmez que vous la prenez en charge, ou signalez votre indisponibilité.';
+
+  @override
+  String get missionConfirm => 'Confirmer la prise en charge';
+
+  @override
+  String get missionConfirmed => 'Prise en charge confirmée.';
+
+  @override
+  String get missionDecline => 'Je ne suis pas disponible';
+
+  @override
+  String get missionDeclineTitle => 'Signaler votre indisponibilité ?';
+
+  @override
+  String get missionDeclineBody =>
+      'La coordination confiera cette mission à un autre soignant.';
+
+  @override
+  String get missionDeclineSend => 'Envoyer';
+
+  @override
+  String get declineReasonBusy => 'Déjà en intervention';
+
+  @override
+  String get declineReasonSick => 'Maladie';
+
+  @override
+  String get declineReasonPersonal => 'Empêchement personnel';
+
+  @override
+  String get declineReasonOther => 'Autre';
+
+  @override
+  String get declineReasonRequired => 'Choisissez un motif.';
+
+  @override
+  String get declineNoteLabel => 'Précision';
+
+  @override
+  String get declineNoteRequired => 'Précisez le motif.';
+
+  @override
+  String get docOptional => 'Facultatif';
+
+  @override
+  String get homeHeroEyebrow => 'Soins à domicile · Nador et sa région';
+
+  @override
+  String get homeHeroTitle => 'Des soins chez vous, par notre propre équipe';
+
+  @override
+  String get homeHeroBody =>
+      'Choisissez un soin, l\'adresse et le créneau : le prix s\'affiche avant d\'envoyer.';
+
+  @override
+  String get homeHeroAction => 'Réserver un soin';
+
+  @override
+  String get homeProofTeam => 'Notre propre équipe';
+
+  @override
+  String get homeProofPrice => 'Prix connu à l\'avance';
+
+  @override
+  String get homeProofCash => 'Paiement au soignant';
+
+  @override
+  String get navHome => 'Accueil';
+
+  @override
+  String get navCare => 'Soins';
+
+  @override
+  String get navBookings => 'Rendez-vous';
+
+  @override
+  String get navAccount => 'Compte';
+
+  @override
+  String get navMissions => 'Missions';
+
+  @override
+  String get navPlanning => 'Planning';
+
+  @override
+  String get navFile => 'Dossier';
+
+  @override
+  String get seeAll => 'Tout voir';
+
+  @override
+  String get homeQuickActions => 'Accès rapide';
+
+  @override
+  String get homeUpcomingTitle => 'Vos prochains soins';
+
+  @override
+  String get homeUpcomingEmpty => 'Aucun soin prévu pour le moment.';
+
+  @override
+  String get accountTitle => 'Mon compte';
+
+  @override
+  String get proStatToday => 'Aujourd\'hui';
+
+  @override
+  String get proStatToConfirm => 'À répondre';
+
+  @override
+  String get proStatUpcoming => 'À venir';
+
+  @override
+  String get slotMorning => 'Matin';
+
+  @override
+  String get slotAfternoon => 'Après-midi';
+
+  @override
+  String get slotEvening => 'Soir';
+
+  @override
+  String get slotOtherDay => 'Autre jour';
+
+  @override
+  String get bookingProgressTitle => 'Suivi de la demande';
+
+  @override
+  String get timelineSent => 'Demande envoyée';
+
+  @override
+  String get timelineConfirmed => 'Validée par l\'agence';
+
+  @override
+  String get timelineAssigned => 'Soignant désigné';
+
+  @override
+  String get timelineOnTheWay => 'En route vers vous';
+
+  @override
+  String get timelineCare => 'Intervention en cours';
+
+  @override
+  String get timelineDone => 'Soin terminé';
+
+  @override
+  String get serviceAboutTitle => 'À propos de ce soin';
+
+  @override
+  String get missionWhereTitle => 'Lieu du soin';
+
+  @override
+  String get missionNotesTitle => 'À savoir';
+
+  @override
+  String get bookingDetailsTitle => 'Détails';
+
+  @override
+  String get planningDayOff => 'Repos';
+
+  @override
+  String docProgress(int done, int total) {
+    return '$done sur $total validés';
+  }
 }

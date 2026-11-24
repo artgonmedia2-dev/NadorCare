@@ -1,5 +1,17 @@
+import 'package:flutter/material.dart';
 import 'package:nc_core/nc_core.dart';
 import 'package:nc_l10n/nc_l10n.dart';
+
+/// Icône d'une constante, pour les tuiles du compte rendu.
+IconData vitalIcon(Vital vital) {
+  return switch (vital) {
+    Vital.systolic || Vital.diastolic => Icons.favorite_border,
+    Vital.pulse => Icons.monitor_heart_outlined,
+    Vital.temperature => Icons.device_thermostat,
+    Vital.glucose => Icons.bloodtype_outlined,
+    Vital.spo2 => Icons.air,
+  };
+}
 
 /// Libellé traduit d'une constante, avec son unité.
 String vitalLabel(NcLocalizations l10n, Vital vital) {
