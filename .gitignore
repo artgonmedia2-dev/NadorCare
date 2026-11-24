@@ -17,3 +17,20 @@ Thumbs.db
 # Dépendances et artefacts (complétés par le .gitignore de chaque sous-projet)
 node_modules/
 vendor/
+
+# Module tiers d'aide au design « ui-ux-pro-max », copié pour chaque outil d'assistance.
+# Il ne fait pas partie de Nador Care ; seul le module est ignoré, pas les dossiers entiers.
+.agent/skills/ui-ux-pro-max/
+.claude/skills/ui-ux-pro-max/
+.codebuddy/skills/ui-ux-pro-max/
+.codex/skills/ui-ux-pro-max/
+.continue/skills/ui-ux-pro-max/
+.cursor/skills/ui-ux-pro-max/
+.gemini/skills/ui-ux-pro-max/
+.github/prompts/ui-ux-pro-max/
+.kiro/steering/ui-ux-pro-max/
+.opencode/skills/ui-ux-pro-max/
+.qoder/skills/ui-ux-pro-max/
+.roo/skills/ui-ux-pro-max/
+.trae/skills/ui-ux-pro-max/
+.windsurf/skills/ui-ux-pro-max/
