@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\BookingStatus;
 use Database\Factories\BookingFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -34,6 +35,12 @@ use Illuminate\Support\Carbon;
  * @property string|null $prescription_file_id
  * @property array<string, mixed>|null $address_snapshot
  * @property array<string, mixed>|null $price_snapshot
+ * @property Carbon|null $assignment_confirm_by
+ * @property Carbon|null $assignment_confirmed_at
+ * @property Carbon|null $assignment_declined_at
+ * @property string|null $assignment_decline_reason
+ * @property string|null $assignment_decline_note
+ * @property string|null $assignment_declined_by
  * @property-read Professional|null $professional
  * @property-read Service $service
  * @property-read PatientProfile $patientProfile
@@ -66,6 +73,11 @@ class Booking extends Model
             'scheduled_at' => 'datetime',
             'scheduled_end_at' => 'datetime',
             'escalated_at' => 'datetime',
+            'assignment_confirm_by' => 'datetime',
+            'assignment_confirmed_at' => 'datetime',
+            'assignment_declined_at' => 'datetime',
+            // Précision du soignant sur son indisponibilité : peut évoquer sa santé.
+            'assignment_decline_note' => 'encrypted',
             'address_snapshot' => 'array',
             'price_snapshot' => 'array',
             // Donnée de santé : chiffrée au repos.
@@ -103,6 +115,60 @@ class Booking extends Model
     public function professional(): BelongsTo
     {
         return $this->belongsTo(Professional::class);
+    }
+
+    /**
+     * Mission affectée dont le soignant n'a pas encore confirmé la prise en charge.
+     */
+    public function awaitsConfirmation(): bool
+    {
+        return $this->status === BookingStatus::Assigned && $this->assignment_confirmed_at === null;
+    }
+
+    /**
+     * Le délai de confirmation est dépassé : la coordination doit relancer ou réaffecter.
+     */
+    public function confirmationOverdue(): bool
+    {
+        return $this->awaitsConfirmation()
+            && $this->assignment_confirm_by !== null
+            && $this->assignment_confirm_by->isPast();
+    }
+
+    /**
+     * Demande rendue par un soignant indisponible, pas encore réaffectée.
+     */
+    public function wasDeclined(): bool
+    {
+        return $this->status === BookingStatus::Confirmed && $this->assignment_declined_at !== null;
+    }
+
+    /**
+     * Réservations qui demandent une action de la coordination sur l'affectation : rendues par
+     * un soignant indisponible, ou restées sans confirmation après le délai.
+     *
+     * @param  Builder<Booking>  $query
+     */
+    public function scopeNeedsReassignment(Builder $query): void
+    {
+        self::constrainToNeedsReassignment($query);
+    }
+
+    /**
+     * Même condition, pour une requête reçue telle quelle (filtre du back-office).
+     *
+     * @param  Builder<Booking>  $query
+     */
+    public static function constrainToNeedsReassignment(Builder $query): void
+    {
+        $query->where(fn (Builder $either) => $either
+            ->where(fn (Builder $declined) => $declined
+                ->where('status', BookingStatus::Confirmed)
+                ->whereNotNull('assignment_declined_at'))
+            ->orWhere(fn (Builder $overdue) => $overdue
+                ->where('status', BookingStatus::Assigned)
+                ->whereNull('assignment_confirmed_at')
+                ->where('assignment_confirm_by', '<', now())));
     }
 
     /**

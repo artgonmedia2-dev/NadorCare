@@ -5,6 +5,7 @@ namespace Tests\Feature\Auth;
 use App\Enums\Role;
 use App\Models\Consent;
 use App\Models\OtpCode;
+use App\Models\Professional;
 use App\Models\User;
 use Tests\TestCase;
 
@@ -141,13 +142,31 @@ class OtpLoginTest extends TestCase
         $this->assertNotNull($user->fresh()->last_login_at);
     }
 
-    public function test_the_professional_app_grants_the_professional_role(): void
+    public function test_the_professional_app_opens_only_for_a_member_of_the_team(): void
     {
+        // Numéro inconnu : personne ne s'inscrit seul dans l'application professionnel.
         $this->requestOtp();
-
         $this->verify(['code' => $this->otpSentTo(self::PHONE), 'app' => 'pro', 'accept_terms' => true])
+            ->assertForbidden()
+            ->assertJsonPath('code', 'pro_account_unknown');
+        $this->assertSame(0, User::query()->where('phone', self::PHONE)->count());
+
+        // Un patient connu n'est pas pour autant un soignant de l'équipe.
+        $patient = User::factory()->withRole(Role::Patient)->create(['phone' => self::PHONE]);
+        $this->travel(2)->minutes();
+        $this->requestOtp();
+        $this->verify(['code' => $this->otpSentTo(self::PHONE), 'app' => 'pro'])
+            ->assertForbidden()
+            ->assertJsonPath('code', 'pro_account_unknown');
+
+        // Une fois rattaché à l'équipe par l'agence, le même numéro ouvre l'application.
+        Professional::factory()->create(['user_id' => $patient->id]);
+        $this->travel(2)->minutes();
+        $this->requestOtp();
+        $this->verify(['code' => $this->otpSentTo(self::PHONE), 'app' => 'pro'])
             ->assertOk()
-            ->assertJsonPath('user.roles', [Role::Professionnel->value]);
+            ->assertJsonPath('user.id', $patient->id);
+        $this->assertTrue($patient->fresh()->hasRole(Role::Professionnel->value));
     }
 
     public function test_otp_login_never_grants_a_back_office_role(): void

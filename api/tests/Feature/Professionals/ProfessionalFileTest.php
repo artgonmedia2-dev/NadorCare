@@ -2,6 +2,8 @@
 
 namespace Tests\Feature\Professionals;
 
+use App\Actions\Professionals\ManagePlanning;
+use App\Actions\Professionals\ManageProfessionalFile;
 use App\Actions\Professionals\ReviewProfessional;
 use App\Enums\BookingStatus;
 use App\Enums\Role;
@@ -60,9 +62,19 @@ class ProfessionalFileTest extends TestCase
     /**
      * Dossier complet : profession choisie et tous les justificatifs déposés.
      */
+    /**
+     * L'agence fait entrer l'infirmière dans son équipe : sa fiche naît en brouillon.
+     *
+     * @param  array<string, mixed>  $extra
+     */
+    private function hire(array $extra = []): Professional
+    {
+        return app(ManageProfessionalFile::class)->save($this->nurse, ['professional_category_id' => $this->nurses->id, ...$extra]);
+    }
+
     private function completeFile(): Professional
     {
-        $this->putJson('/api/v1/pro/profile', ['professional_category_id' => $this->nurses->id, 'license_number' => 'AE-2020-114'])->assertOk();
+        $this->hire(['license_number' => 'AE-2020-114']);
         foreach (['identity', 'diploma', 'practice_authorization'] as $type) {
             $this->upload($type)->assertCreated();
         }
@@ -103,11 +115,19 @@ class ProfessionalFileTest extends TestCase
         $this->getJson('/api/v1/catalogue/zones')->assertOk()->assertJsonPath('data.0.name', 'Nador centre');
     }
 
-    public function test_a_professional_starts_with_no_file_then_creates_a_draft(): void
+    public function test_a_caregiver_cannot_register_alone(): void
     {
+        // Sans fiche créée par l'agence, il n'y a pas de dossier, et aucun moyen d'en créer un par l'API.
         $this->getJson('/api/v1/pro/profile')->assertForbidden()->assertJsonPath('code', 'professional_profile_required');
+        $this->putJson('/api/v1/pro/profile', ['professional_category_id' => $this->nurses->id])->assertStatus(405);
+        $this->assertSame(0, Professional::query()->count());
+    }
 
-        $this->putJson('/api/v1/pro/profile', ['professional_category_id' => $this->nurses->id, 'license_number' => 'AE-2020-114'])
+    public function test_a_file_created_by_the_agency_starts_as_a_draft(): void
+    {
+        $this->hire(['license_number' => 'AE-2020-114']);
+
+        $this->getJson('/api/v1/pro/profile')
             ->assertOk()
             ->assertJsonPath('data.verification_status', 'draft')
             ->assertJsonPath('data.category.name', 'Infirmier')
@@ -115,26 +135,17 @@ class ProfessionalFileTest extends TestCase
             ->assertJsonPath('data.required_documents', self::NURSE_DOCUMENTS)
             ->assertJsonPath('data.missing_documents', self::NURSE_DOCUMENTS)
             ->assertJsonPath('data.can_submit', false)
-            ->assertJsonPath('data.is_online', false);
+            ->assertJsonMissingPath('data.is_online');
 
         // Un brouillon ne reçoit aucune mission.
         $this->assertCount(0, app(ProfessionalMatcher::class)->candidatesFor($this->createBooking()));
-    }
-
-    public function test_an_unknown_or_closed_profession_is_refused(): void
-    {
-        $closed = ProfessionalCategory::factory()->create(['is_active' => false]);
-
-        $this->putJson('/api/v1/pro/profile', ['professional_category_id' => $closed->id])
-            ->assertStatus(422)->assertJsonPath('code', 'professional_category_unavailable');
-        $this->assertSame(0, Professional::query()->count());
     }
 
     // --- Justificatifs ---
 
     public function test_documents_are_stored_encrypted_and_tracked_one_by_one(): void
     {
-        $this->putJson('/api/v1/pro/profile', ['professional_category_id' => $this->nurses->id]);
+        $this->hire();
 
         $this->upload('diploma', content: '%PDF-1.4 Diplôme d\'État d\'infirmier')
             ->assertCreated()
@@ -148,7 +159,7 @@ class ProfessionalFileTest extends TestCase
 
     public function test_the_insurance_requires_a_future_expiry_date(): void
     {
-        $this->putJson('/api/v1/pro/profile', ['professional_category_id' => $this->nurses->id]);
+        $this->hire();
 
         $this->upload('rc_insurance')->assertStatus(422)->assertJsonPath('code', 'document_expiry_required');
         $this->upload('rc_insurance', ['expires_at' => '2026-12-01'])->assertStatus(422)->assertJsonValidationErrors('expires_at');
@@ -159,7 +170,7 @@ class ProfessionalFileTest extends TestCase
 
     public function test_only_documents_required_for_the_profession_are_accepted(): void
     {
-        $this->putJson('/api/v1/pro/profile', ['professional_category_id' => $this->nurses->id]);
+        $this->hire();
 
         // Les infirmiers n'ont pas d'Ordre.
         $this->upload('order_registration')->assertStatus(422)->assertJsonPath('code', 'document_type_not_expected');
@@ -170,7 +181,7 @@ class ProfessionalFileTest extends TestCase
 
     public function test_a_new_upload_replaces_the_one_not_yet_checked(): void
     {
-        $this->putJson('/api/v1/pro/profile', ['professional_category_id' => $this->nurses->id]);
+        $this->hire();
         $this->upload('diploma', content: 'première version');
         $this->upload('diploma', content: 'version lisible')->assertCreated()->assertJsonCount(1, 'data.documents');
 
@@ -182,7 +193,7 @@ class ProfessionalFileTest extends TestCase
 
     public function test_an_incomplete_file_cannot_be_submitted(): void
     {
-        $this->putJson('/api/v1/pro/profile', ['professional_category_id' => $this->nurses->id]);
+        $this->hire();
         $this->upload('identity');
 
         $this->postJson('/api/v1/pro/profile/submit')
@@ -198,8 +209,6 @@ class ProfessionalFileTest extends TestCase
         $this->getJson('/api/v1/pro/profile')->assertJsonPath('data.can_submit', true)->assertJsonPath('data.missing_documents', []);
         $this->postJson('/api/v1/pro/profile/submit')->assertOk()->assertJsonPath('data.verification_status', 'submitted');
 
-        $this->putJson('/api/v1/pro/profile', ['professional_category_id' => $this->nurses->id])
-            ->assertStatus(409)->assertJsonPath('code', 'professional_file_locked');
         $this->postJson('/api/v1/pro/profile/submit')->assertStatus(409);
 
         // Soumis, mais pas vérifié : toujours aucune mission.
@@ -246,13 +255,14 @@ class ProfessionalFileTest extends TestCase
         $this->approveAll($professional);
         app(ReviewProfessional::class)->verify($professional->fresh(), $this->admin);
 
-        $this->putJson('/api/v1/pro/profile/zones', ['zone_ids' => [$this->zoneId]])
-            ->assertOk()->assertJsonPath('data.zones.0.name', 'Nador centre');
-        $this->putJson('/api/v1/pro/profile/availabilities', ['availabilities' => [
+        // C'est la coordination qui fixe les zones et la semaine type ; le soignant les lit.
+        app(ManagePlanning::class)->set($professional->fresh(), $this->admin, [$this->zoneId], [
             ['weekday' => 2, 'start_time' => '08:00', 'end_time' => '12:00'],
             ['weekday' => 2, 'start_time' => '14:00', 'end_time' => '18:00'],
-        ]])->assertOk()->assertJsonCount(2, 'data.availabilities')->assertJsonPath('data.availabilities.0.start_time', '08:00');
-        $this->putJson('/api/v1/pro/profile/online', ['is_online' => true])->assertOk()->assertJsonPath('data.is_online', true);
+        ]);
+        $this->getJson('/api/v1/pro/profile')->assertOk()
+            ->assertJsonPath('data.zones.0.name', 'Nador centre')
+            ->assertJsonCount(2, 'data.availabilities')->assertJsonPath('data.availabilities.0.start_time', '08:00');
 
         // Mardi 8 décembre à 10 h : dans la plage du matin.
         $candidate = app(ProfessionalMatcher::class)->candidatesFor($this->createBooking())->sole();
@@ -347,7 +357,6 @@ class ProfessionalFileTest extends TestCase
         $this->assertCount(0, app(ProfessionalMatcher::class)->candidatesFor($this->createBooking()));
 
         Sanctum::actingAs($professional->user, ['app:pro']);
-        $this->putJson('/api/v1/pro/profile/online', ['is_online' => true])->assertStatus(409)->assertJsonPath('code', 'professional_not_verified');
         $this->getJson('/api/v1/pro/profile')->assertJsonPath('data.status_reason', 'Plainte en cours d\'examen');
 
         $review->reinstate($professional->fresh(), $this->admin);
@@ -357,28 +366,15 @@ class ProfessionalFileTest extends TestCase
 
     // --- Zones et agenda ---
 
-    public function test_zones_and_schedule_are_validated(): void
+    public function test_the_caregiver_no_longer_sets_zones_or_schedule_alone(): void
     {
-        $this->putJson('/api/v1/pro/profile', ['professional_category_id' => $this->nurses->id]);
-        $closedZone = $this->createZone();
-        DB::table('zones')->where('id', $closedZone)->update(['is_active' => false]);
+        $this->hire();
 
-        $this->putJson('/api/v1/pro/profile/zones', ['zone_ids' => [$this->zoneId, $closedZone]])
-            ->assertStatus(422)->assertJsonPath('code', 'zone_unavailable');
-
-        $overlap = [['weekday' => 1, 'start_time' => '08:00', 'end_time' => '12:00'], ['weekday' => 1, 'start_time' => '11:00', 'end_time' => '15:00']];
-        $this->putJson('/api/v1/pro/profile/availabilities', ['availabilities' => $overlap])
-            ->assertStatus(422)->assertJsonPath('code', 'availability_invalid');
-        $this->putJson('/api/v1/pro/profile/availabilities', ['availabilities' => [['weekday' => 1, 'start_time' => '18:00', 'end_time' => '09:00']]])
-            ->assertStatus(422)->assertJsonPath('code', 'availability_invalid');
-        $this->putJson('/api/v1/pro/profile/availabilities', ['availabilities' => [['weekday' => 9, 'start_time' => '8h', 'end_time' => '12:00']]])
-            ->assertStatus(422)->assertJsonValidationErrors(['availabilities.0.weekday', 'availabilities.0.start_time']);
-
-        // Un dossier non vérifié ne peut pas se mettre en ligne.
-        $this->putJson('/api/v1/pro/profile/online', ['is_online' => true])->assertStatus(409);
-
-        // Vider l'agenda est permis.
-        $this->putJson('/api/v1/pro/profile/availabilities', ['availabilities' => []])->assertOk()->assertJsonCount(0, 'data.availabilities');
+        // Le planning est tenu par la coordination : ces routes n'existent plus.
+        $this->putJson('/api/v1/pro/profile/zones', ['zone_ids' => [$this->zoneId]])->assertNotFound();
+        $this->putJson('/api/v1/pro/profile/availabilities', ['availabilities' => []])->assertNotFound();
+        // Plus d'interrupteur « en ligne » non plus : c'est le planning qui dit si le soignant travaille.
+        $this->putJson('/api/v1/pro/profile/online', ['is_online' => true])->assertNotFound();
     }
 
     public function test_the_patient_app_has_no_access_to_the_professional_file(): void
@@ -386,7 +382,6 @@ class ProfessionalFileTest extends TestCase
         Sanctum::actingAs($this->nurse, ['app:patient']);
 
         $this->getJson('/api/v1/pro/profile')->assertForbidden();
-        $this->putJson('/api/v1/pro/profile', ['professional_category_id' => $this->nurses->id])->assertForbidden();
     }
 
     // --- Back-office ---
@@ -441,16 +436,21 @@ class ProfessionalFileTest extends TestCase
         $this->actingAsStaff(Role::Administrateur);
         $identity = $professional->documents()->where('type', 'identity')->sole();
 
-        $documents = Livewire::test(DocumentsRelationManager::class, ['ownerRecord' => $professional, 'pageClass' => ViewProfessional::class]);
-        $documents->callTableAction('reject', $identity, data: ['reason' => ''])->assertHasTableActionErrors(['reason' => 'required']);
-        $documents->callTableAction('reject', $identity, data: ['reason' => 'Pièce expirée'])->assertNotified(__('admin.professionals.document_rejected'));
+        // Un composant neuf à chaque appel : après un refus de validation, la fenêtre de l'action
+        // reste ouverte sur le composant, et un second appel n'y retrouve plus l'action.
+        $documents = fn () => Livewire::test(DocumentsRelationManager::class, ['ownerRecord' => $professional, 'pageClass' => ViewProfessional::class]);
+
+        $documents()->callTableAction('reject', $identity, data: ['reason' => ''])->assertHasTableActionErrors(['reason' => 'required']);
+        $this->assertSame('pending', $identity->fresh()->status);
+
+        $documents()->callTableAction('reject', $identity, data: ['reason' => 'Pièce expirée'])->assertNotified(__('admin.professionals.document_rejected'));
 
         $this->assertSame('rejected', $identity->fresh()->status);
         $this->assertSame('Pièce expirée', $identity->fresh()->rejection_reason);
-        $documents->assertTableActionHidden('approve', $identity);
+        $documents()->assertTableActionHidden('approve', $identity);
     }
 
-    public function test_the_coordinator_consults_files_but_cannot_decide(): void
+    public function test_the_coordinator_manages_the_team_but_cannot_decide_on_a_file(): void
     {
         $professional = $this->completeFile();
         $this->postJson('/api/v1/pro/profile/submit');
@@ -462,22 +462,10 @@ class ProfessionalFileTest extends TestCase
             ->assertActionHidden('reject');
         Livewire::test(DocumentsRelationManager::class, ['ownerRecord' => $professional, 'pageClass' => ViewProfessional::class])
             ->assertTableActionHidden('approve', $professional->documents()->first())
-            ->assertTableActionHidden('download', $professional->documents()->first());
+            // Il dépose des justificatifs pour l'équipe : il peut aussi les ouvrir.
+            ->assertTableActionVisible('download', $professional->documents()->first());
 
         $this->actingAsStaff(Role::Comptable);
         $this->get('/admin/professionals')->assertForbidden();
-    }
-
-    public function test_files_with_expiring_insurance_are_listed_as_alerts(): void
-    {
-        $soon = $this->createProfessional(['name' => 'Expire bientôt', 'insurance_expires' => '2026-12-20']);
-        $later = $this->createProfessional(['name' => 'Expire plus tard', 'insurance_expires' => '2027-06-30']);
-        $this->actingAsStaff(Role::Coordinateur);
-
-        Livewire::test(ListProfessionals::class)
-            ->filterTable('insurance_expiring')
-            ->assertCanSeeTableRecords([$soon])
-            ->assertCanNotSeeTableRecords([$later])
-            ->assertSee('20/12/2026');
     }
 }

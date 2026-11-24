@@ -45,9 +45,10 @@ class ProfessionalFileResource extends JsonResource
             ],
             'license_number' => $this->license_number,
             'order_number' => $this->order_number,
-            'is_online' => $this->is_online,
             /** Justificatifs exigés pour cette profession. */
             'required_documents' => $file->requiredTypes($this->resource),
+            /** Justificatifs facultatifs (assurance personnelle) : ils peuvent être déposés, sans être exigés. */
+            'optional_documents' => $file->optionalTypes($this->resource),
             /** Justificatifs exigés qui restent à déposer. */
             'missing_documents' => $missing,
             /** @var list<array{id: string, type: string, status: string, expires_at: string|null, rejection_reason: string|null}> */

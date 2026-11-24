@@ -3,18 +3,20 @@
 namespace Tests\Feature\Assignment;
 
 use App\Actions\Assignment\AssignProfessional;
-use App\Actions\Assignment\OfferMission;
+use App\Actions\Assignment\RespondToAssignment;
 use App\Contracts\PushGateway;
 use App\Enums\AccessAction;
 use App\Enums\BookingStatus;
+use App\Enums\DeclineReason;
 use App\Enums\Role;
 use App\Exceptions\ApiException;
 use App\Filament\Resources\Bookings\Pages\ListBookings;
 use App\Models\AccessLog;
-use App\Models\BookingOffer;
+use App\Models\Booking;
 use App\Models\Professional;
 use App\Models\User;
 use App\Services\Push\FakePushGateway;
+use App\Services\Settings\Settings;
 use Filament\Auth\MultiFactor\App\AppAuthentication;
 use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\Sanctum;
@@ -89,9 +91,9 @@ class AssignmentFlowTest extends TestCase
     public function test_even_forced_an_assignment_never_goes_to_an_ineligible_professional(): void
     {
         $booking = $this->createBooking();
-        $uninsured = $this->createProfessional(['insurance_expires' => '2026-11-01']);
+        $suspended = $this->createProfessional(['status' => 'suspended']);
 
-        $this->assertRefused('professional_not_eligible', fn () => app(AssignProfessional::class)->handle($booking, $uninsured, $this->coordinator));
+        $this->assertRefused('professional_not_eligible', fn () => app(AssignProfessional::class)->handle($booking, $suspended, $this->coordinator));
 
         $this->assertSame(BookingStatus::Confirmed, $booking->fresh()->status);
         $this->assertNull($booking->fresh()->professional_id);
@@ -102,7 +104,6 @@ class AssignmentFlowTest extends TestCase
         $pending = $this->createBooking(BookingStatus::Pending);
 
         $this->assertRefused('transition_not_allowed', fn () => app(AssignProfessional::class)->handle($pending, $this->samira, $this->coordinator));
-        $this->assertRefused('transition_not_allowed', fn () => app(OfferMission::class)->handle($pending, $this->samira, $this->coordinator));
     }
 
     public function test_only_the_coordination_assigns(): void
@@ -114,68 +115,56 @@ class AssignmentFlowTest extends TestCase
         }
     }
 
-    // --- Proposition de mission ---
+    // --- Confirmation par le soignant ---
 
-    public function test_an_offer_gives_the_professional_a_limited_time_and_hides_the_patient(): void
+    public function test_the_caregiver_has_a_delay_to_confirm_shorter_for_a_same_day_care(): void
     {
-        $this->registerDevice($this->samira);
-        $booking = $this->createBooking();
+        // Lundi 7 décembre, 10 h. Soin du lendemain : deux heures pour confirmer.
+        $tomorrow = app(AssignProfessional::class)->handle($this->createBooking(), $this->samira, $this->coordinator);
+        $this->assertEquals(now()->addMinutes(120), $tomorrow->assignment_confirm_by);
+        $this->assertNull($tomorrow->assignment_confirmed_at);
 
-        $offer = app(OfferMission::class)->handle($booking, $this->samira, $this->coordinator);
+        // Soin du jour même : un quart d'heure.
+        $other = $this->createProfessional();
+        $today = app(AssignProfessional::class)->handle(
+            $this->createBooking(BookingStatus::Confirmed, '2026-12-07 16:00'), $other, $this->coordinator,
+        );
+        $this->assertEquals(now()->addMinutes(15), $today->assignment_confirm_by);
 
-        $this->assertSame(BookingOffer::STATUS_PENDING, $offer->status);
-        $this->assertEquals(now()->addSeconds(120), $offer->expires_at);
-        $this->assertSame(BookingStatus::Confirmed, $booking->fresh()->status);
-        $this->assertSame('mission_offer', $this->push()->sent[0]['data']['type']);
+        // Les deux délais se règlent au back-office.
+        app(Settings::class)->set(Settings::ASSIGNMENT_CONFIRM_MINUTES_LATER, 45);
+        $later = app(AssignProfessional::class)->handle(
+            $this->createBooking(BookingStatus::Confirmed, '2026-12-09 10:00'), $other, $this->coordinator,
+        );
+        $this->assertEquals(now()->addMinutes(45), $later->assignment_confirm_by);
+    }
 
+    public function test_the_caregiver_confirms_the_mission_and_reads_the_patient_record(): void
+    {
+        $booking = app(AssignProfessional::class)->handle($this->createBooking(), $this->samira, $this->coordinator);
         Sanctum::actingAs($this->samira->user, ['app:pro']);
-        $response = $this->getJson('/api/v1/pro/offers')
+
+        $this->getJson('/api/v1/pro/missions')
             ->assertOk()
             ->assertJsonCount(1, 'data')
-            ->assertJsonPath('data.0.id', $offer->id)
-            ->assertJsonPath('data.0.service.name', 'Pansement')
-            ->assertJsonPath('data.0.scheduled_date', '2026-12-08')
-            ->assertJsonPath('data.0.scheduled_time', '10:00')
-            ->assertJsonPath('data.0.zone', 'Nador centre');
+            ->assertJsonPath('data.0.needs_confirmation', true)
+            ->assertJsonPath('data.0.confirm_by', now()->addMinutes(120)->toIso8601String())
+            ->assertJsonPath('data.0.patient.last_name', $booking->patientProfile->last_name)
+            ->assertJsonPath('data.0.address.line', '12 rue Al Massira')
+            ->assertJsonPath('data.0.amount_to_collect', 10000)
+            ->assertJsonMissingPath('data.0.patient.care_notes')
+            ->assertJsonMissingPath('data.0.patient_note');
 
-        // Avant d'accepter : ni nom, ni adresse, ni note.
-        $body = $response->getContent();
-        $this->assertStringNotContainsString($booking->patientProfile->last_name, $body);
-        $this->assertStringNotContainsString('Al Massira', $body);
-        $this->assertStringNotContainsString('Sonner', $body);
-        $this->assertSame(0, AccessLog::query()->count());
-    }
-
-    public function test_only_one_offer_waits_for_an_answer_at_a_time(): void
-    {
-        $booking = $this->createBooking();
-        $other = $this->createProfessional();
-
-        app(OfferMission::class)->handle($booking, $this->samira, $this->coordinator);
-
-        $this->assertRefused('offer_already_pending', fn () => app(OfferMission::class)->handle($booking, $other, $this->coordinator));
-    }
-
-    public function test_accepting_an_offer_assigns_the_mission_and_opens_the_patient_record(): void
-    {
-        $booking = $this->createBooking();
-        $offer = app(OfferMission::class)->handle($booking, $this->samira, $this->coordinator);
-        Sanctum::actingAs($this->samira->user, ['app:pro']);
-
-        $this->postJson("/api/v1/pro/offers/{$offer->id}/accept")
+        $this->postJson("/api/v1/pro/missions/{$booking->id}/confirm")
             ->assertOk()
             ->assertJsonPath('data.status', 'assigned')
-            ->assertJsonPath('data.patient.last_name', $booking->patientProfile->last_name)
-            ->assertJsonPath('data.address.line', '12 rue Al Massira')
-            ->assertJsonPath('data.amount_to_collect', 10000)
-            ->assertJsonMissingPath('data.patient_note');
+            ->assertJsonPath('data.needs_confirmation', false);
+        $this->assertEquals(now(), $booking->fresh()->assignment_confirmed_at);
 
-        $this->assertSame(BookingOffer::STATUS_ACCEPTED, $offer->fresh()->status);
-        $this->assertSame($this->samira->id, $booking->fresh()->professional_id);
-        $this->assertSame($this->samira->user_id, $booking->statusHistory()->sole()->actor_id);
-
-        $this->getJson('/api/v1/pro/offers')->assertJsonCount(0, 'data');
-        $this->getJson('/api/v1/pro/missions')->assertJsonCount(1, 'data')->assertJsonMissingPath('data.0.patient.care_notes');
+        // Confirmer deux fois ne change rien.
+        $this->travel(5)->minutes();
+        $this->postJson("/api/v1/pro/missions/{$booking->id}/confirm")->assertOk();
+        $this->assertEquals(now()->subMinutes(5), $booking->fresh()->assignment_confirmed_at);
 
         // Le détail donne les données de santé utiles, et chaque lecture est journalisée.
         $this->getJson("/api/v1/pro/missions/{$booking->id}")
@@ -189,86 +178,62 @@ class AssignmentFlowTest extends TestCase
         $this->assertTrue($logs->every(fn (AccessLog $log) => $log->actor_id === $this->samira->user_id && $log->action === AccessAction::View));
     }
 
-    public function test_a_declined_offer_leaves_the_request_to_be_offered_to_someone_else(): void
+    public function test_leaving_for_the_mission_counts_as_a_confirmation(): void
     {
-        $booking = $this->createBooking();
-        $offer = app(OfferMission::class)->handle($booking, $this->samira, $this->coordinator);
+        $booking = app(AssignProfessional::class)->handle($this->createBooking(), $this->samira, $this->coordinator);
         Sanctum::actingAs($this->samira->user, ['app:pro']);
 
-        $this->postJson("/api/v1/pro/offers/{$offer->id}/decline", ['reason' => 'Déjà en déplacement'])
+        $this->postJson("/api/v1/pro/missions/{$booking->id}/depart")
             ->assertOk()
-            ->assertJsonPath('data.status', 'declined');
+            ->assertJsonPath('data.status', 'en_route')
+            ->assertJsonPath('data.needs_confirmation', false);
 
-        $this->assertSame('Déjà en déplacement', $offer->fresh()->decline_reason);
-        $this->assertSame(BookingStatus::Confirmed, $booking->fresh()->status);
-
-        // Une réponse ne se donne qu'une fois.
-        $this->postJson("/api/v1/pro/offers/{$offer->id}/accept")->assertStatus(409)->assertJsonPath('code', 'offer_unavailable');
-
-        $other = $this->createProfessional();
-        $this->assertSame(BookingOffer::STATUS_PENDING, app(OfferMission::class)->handle($booking, $other, $this->coordinator)->status);
+        $this->assertNotNull($booking->fresh()->assignment_confirmed_at);
+        // Une fois parti, il n'y a plus rien à confirmer.
+        $this->postJson("/api/v1/pro/missions/{$booking->id}/confirm")->assertStatus(409)->assertJsonPath('code', 'assignment_not_pending');
     }
 
-    public function test_an_offer_expires_after_the_response_delay(): void
+    public function test_without_an_answer_in_time_the_coordination_is_alerted(): void
     {
-        $booking = $this->createBooking();
-        $offer = app(OfferMission::class)->handle($booking, $this->samira, $this->coordinator);
+        $booking = app(AssignProfessional::class)->handle($this->createBooking(), $this->samira, $this->coordinator);
+
+        $this->assertFalse($booking->confirmationOverdue());
+        $this->assertSame(0, Booking::query()->needsReassignment()->count());
+
+        $this->travel(121)->minutes();
+
+        $this->assertTrue($booking->fresh()->confirmationOverdue());
+        $this->assertSame([$booking->id], Booking::query()->needsReassignment()->pluck('id')->all());
+
+        // La mission reste affectée : c'est le coordinateur qui relance ou réaffecte. Une
+        // confirmation tardive lève l'alerte.
         Sanctum::actingAs($this->samira->user, ['app:pro']);
-
-        $this->travel(121)->seconds();
-
-        $this->getJson('/api/v1/pro/offers')->assertJsonCount(0, 'data');
-        $this->postJson("/api/v1/pro/offers/{$offer->id}/accept")->assertStatus(409)->assertJsonPath('code', 'offer_unavailable');
-        $this->assertSame(BookingStatus::Confirmed, $booking->fresh()->status);
-
-        $this->artisan('nadorcare:expire-offers')->assertSuccessful();
-        $this->assertSame(BookingOffer::STATUS_EXPIRED, $offer->fresh()->status);
-
-        // La demande peut alors être proposée à un autre professionnel.
-        app(OfferMission::class)->handle($booking, $this->createProfessional(), $this->coordinator);
-    }
-
-    public function test_a_direct_assignment_cancels_the_pending_offer(): void
-    {
-        $booking = $this->createBooking();
-        $other = $this->createProfessional();
-        $offer = app(OfferMission::class)->handle($booking, $other, $this->coordinator);
-
-        app(AssignProfessional::class)->handle($booking, $this->samira, $this->coordinator);
-
-        $this->assertSame(BookingOffer::STATUS_CANCELLED, $offer->fresh()->status);
-        Sanctum::actingAs($other->user, ['app:pro']);
-        $this->postJson("/api/v1/pro/offers/{$offer->id}/accept")->assertStatus(409);
-        $this->assertSame($this->samira->id, $booking->fresh()->professional_id);
-    }
-
-    public function test_an_offer_cannot_be_accepted_if_the_professional_became_ineligible(): void
-    {
-        $booking = $this->createBooking();
-        $offer = app(OfferMission::class)->handle($booking, $this->samira, $this->coordinator);
-        DB::table('professional_documents')->where('professional_id', $this->samira->id)->update(['status' => 'expired']);
-        Sanctum::actingAs($this->samira->user, ['app:pro']);
-
-        $this->postJson("/api/v1/pro/offers/{$offer->id}/accept")->assertStatus(422)->assertJsonPath('code', 'professional_not_eligible');
-        $this->assertSame(BookingStatus::Confirmed, $booking->fresh()->status);
+        $this->postJson("/api/v1/pro/missions/{$booking->id}/confirm")->assertOk();
+        $this->assertSame(0, Booking::query()->needsReassignment()->count());
     }
 
     // --- Cloisonnement ---
 
-    public function test_offers_and_missions_of_other_professionals_are_invisible(): void
+    public function test_missions_of_other_professionals_are_invisible(): void
     {
         $other = $this->createProfessional();
-        $offered = $this->createBooking();
-        $offer = app(OfferMission::class)->handle($offered, $this->samira, $this->coordinator);
         $mission = $this->createBooking(BookingStatus::Assigned, '2026-12-08 14:00', $this->samira);
 
         Sanctum::actingAs($other->user, ['app:pro']);
 
-        $this->getJson('/api/v1/pro/offers')->assertJsonCount(0, 'data');
         $this->getJson('/api/v1/pro/missions')->assertJsonCount(0, 'data');
-        $this->postJson("/api/v1/pro/offers/{$offer->id}/accept")->assertNotFound();
         $this->getJson("/api/v1/pro/missions/{$mission->id}")->assertNotFound();
+        $this->postJson("/api/v1/pro/missions/{$mission->id}/confirm")->assertNotFound();
+        $this->postJson("/api/v1/pro/missions/{$mission->id}/decline", ['reason' => 'busy'])->assertNotFound();
+        $this->assertSame(BookingStatus::Assigned, $mission->fresh()->status);
         $this->assertSame(0, AccessLog::query()->count());
+    }
+
+    public function test_the_timed_offers_are_gone(): void
+    {
+        Sanctum::actingAs($this->samira->user, ['app:pro']);
+
+        $this->getJson('/api/v1/pro/offers')->assertNotFound();
     }
 
     public function test_a_finished_mission_is_no_longer_readable(): void
@@ -291,23 +256,44 @@ class AssignmentFlowTest extends TestCase
 
     // --- Désistement et réaffectation ---
 
-    public function test_a_professional_withdraws_before_leaving_and_the_request_returns_to_the_coordination(): void
+    public function test_a_caregiver_reports_being_unavailable_and_the_request_returns_to_the_coordination(): void
     {
-        $mission = $this->createBooking(BookingStatus::Assigned, '2026-12-08 14:00', $this->samira);
+        $mission = app(AssignProfessional::class)->handle(
+            $this->createBooking(BookingStatus::Confirmed, '2026-12-08 14:00'), $this->samira, $this->coordinator,
+        );
         Sanctum::actingAs($this->samira->user, ['app:pro']);
 
-        $this->postJson("/api/v1/pro/missions/{$mission->id}/withdraw", [])->assertStatus(422)->assertJsonValidationErrors('reason');
+        $this->postJson("/api/v1/pro/missions/{$mission->id}/decline", [])->assertStatus(422)->assertJsonValidationErrors('reason');
+        $this->postJson("/api/v1/pro/missions/{$mission->id}/decline", ['reason' => 'fatigue'])->assertStatus(422)->assertJsonValidationErrors('reason');
+        // « Autre » demande une précision.
+        $this->postJson("/api/v1/pro/missions/{$mission->id}/decline", ['reason' => 'other'])
+            ->assertStatus(422)->assertJsonPath('code', 'decline_note_required');
 
-        $this->postJson("/api/v1/pro/missions/{$mission->id}/withdraw", ['reason' => 'Panne de voiture'])
+        $this->postJson("/api/v1/pro/missions/{$mission->id}/decline", ['reason' => 'sick', 'note' => 'Forte fièvre depuis ce matin'])
             ->assertOk()
             ->assertJsonPath('data.status', 'confirmed');
 
         $mission->refresh();
         $this->assertNull($mission->professional_id);
-        $this->assertSame('Panne de voiture', $mission->statusHistory()->sole()->reason);
+        $this->assertNull($mission->assignment_confirm_by);
+        $this->assertTrue($mission->wasDeclined());
+        $this->assertSame('sick', $mission->assignment_decline_reason);
+        $this->assertSame($this->samira->id, $mission->assignment_declined_by);
+        $this->assertSame('Forte fièvre depuis ce matin', $mission->assignment_decline_note);
+        // La précision peut évoquer la santé du soignant : chiffrée en base, absente de l'historique.
+        $this->assertStringNotContainsString('fièvre', (string) DB::table('bookings')->where('id', $mission->id)->value('assignment_decline_note'));
+        $this->assertSame('declined:sick', $mission->statusHistory()->get()->last()->reason);
+
         $this->getJson('/api/v1/pro/missions')->assertJsonCount(0, 'data');
-        // Le professionnel perd aussitôt l'accès au dossier.
+        // Le soignant perd aussitôt l'accès au dossier.
         $this->assertFalse($this->samira->user->can('viewHealthData', $mission->patientProfile));
+
+        // La coordination est alertée, puis réaffecte : l'alerte disparaît.
+        $this->assertSame([$mission->id], Booking::query()->needsReassignment()->pluck('id')->all());
+        $reassigned = app(AssignProfessional::class)->handle($mission, $this->createProfessional(), $this->coordinator);
+        $this->assertFalse($reassigned->wasDeclined());
+        $this->assertNull($reassigned->assignment_decline_note);
+        $this->assertSame(0, Booking::query()->needsReassignment()->count());
     }
 
     public function test_once_on_the_way_only_the_coordination_can_reassign(): void
@@ -315,10 +301,23 @@ class AssignmentFlowTest extends TestCase
         $mission = $this->createBooking(BookingStatus::EnRoute, '2026-12-08 14:00', $this->samira);
         Sanctum::actingAs($this->samira->user, ['app:pro']);
 
-        $this->postJson("/api/v1/pro/missions/{$mission->id}/withdraw", ['reason' => 'Changement d\'avis'])
+        $this->postJson("/api/v1/pro/missions/{$mission->id}/decline", ['reason' => 'personal'])
             ->assertForbidden()
             ->assertJsonPath('code', 'transition_forbidden');
         $this->assertSame(BookingStatus::EnRoute, $mission->fresh()->status);
+        $this->assertNull($mission->fresh()->assignment_declined_at);
+    }
+
+    public function test_only_the_assigned_caregiver_answers_an_assignment(): void
+    {
+        $mission = app(AssignProfessional::class)->handle($this->createBooking(), $this->samira, $this->coordinator);
+        $respond = app(RespondToAssignment::class);
+
+        foreach ([$this->coordinator, $this->createProfessional()->user, $mission->user] as $actor) {
+            $this->assertRefused('transition_forbidden', fn () => $respond->confirm($mission, $actor));
+            $this->assertRefused('transition_forbidden', fn () => $respond->decline($mission, $actor, DeclineReason::Busy));
+        }
+        $this->assertTrue($mission->fresh()->awaitsConfirmation());
     }
 
     // --- Appareils ---
@@ -340,7 +339,7 @@ class AssignmentFlowTest extends TestCase
 
     // --- Back-office ---
 
-    public function test_the_coordinator_assigns_offers_and_reassigns_from_the_request_queue(): void
+    public function test_the_coordinator_assigns_follows_the_answer_and_reassigns_from_the_request_queue(): void
     {
         $this->flushSession();
         $staff = User::factory()->staff(Role::Coordinateur)->create();
@@ -348,13 +347,13 @@ class AssignmentFlowTest extends TestCase
         $this->actingAs($staff);
 
         $toAssign = $this->createBooking();
-        $toOffer = $this->createBooking(BookingStatus::Confirmed, '2026-12-08 15:00');
+        $second = $this->createBooking(BookingStatus::Confirmed, '2026-12-08 15:00');
         $other = $this->createProfessional(['name' => 'Karima']);
 
         $queue = Livewire::test(ListBookings::class)->filterTable('status', BookingStatus::Confirmed->value);
 
         $queue->assertTableActionVisible('assign', $toAssign)
-            ->assertTableActionVisible('offer', $toAssign)
+            ->assertTableActionDoesNotExist('offer')
             ->assertTableActionHidden('confirm', $toAssign)
             ->assertTableActionHidden('unassign', $toAssign)
             ->callTableAction('assign', $toAssign, data: ['professional_id' => $this->samira->id])
@@ -362,18 +361,38 @@ class AssignmentFlowTest extends TestCase
             ->assertNotified(__('admin.bookings.assigned'));
         $this->assertSame($this->samira->id, $toAssign->fresh()->professional_id);
 
-        $queue->callTableAction('offer', $toOffer, data: ['professional_id' => $other->id])
-            ->assertNotified(__('admin.bookings.offered'));
-        $this->assertSame(BookingOffer::STATUS_PENDING, BookingOffer::query()->where('booking_id', $toOffer->id)->sole()->status);
-
         // Sans professionnel choisi, rien ne se passe.
-        $queue->callTableAction('assign', $toOffer, data: ['professional_id' => null])
+        $queue->callTableAction('assign', $second, data: ['professional_id' => null])
             ->assertHasTableActionErrors(['professional_id' => 'required']);
 
+        // Le coordinateur suit la réponse du soignant : à confirmer, puis sans réponse après le délai.
         Livewire::test(ListBookings::class)
             ->filterTable('status', BookingStatus::Assigned->value)
             ->assertCanSeeTableRecords([$toAssign])
             ->assertSee('Samira')
+            ->assertSee(__('admin.bookings.assignment.waiting'));
+
+        $this->travel(121)->minutes();
+        Livewire::test(ListBookings::class)
+            ->removeTableFilter('status')
+            ->filterTable('needs_reassignment')
+            ->assertCanSeeTableRecords([$toAssign])
+            ->assertCanNotSeeTableRecords([$second])
+            ->assertSee(__('admin.bookings.assignment.overdue'));
+
+        // Karima signale son indisponibilité : sa demande rejoint la file à réaffecter, avec le motif.
+        app(AssignProfessional::class)->handle($second, $other, $staff);
+        app(RespondToAssignment::class)->decline($second->fresh(), $other->user, DeclineReason::Other, 'Rendez-vous médical');
+        Livewire::test(ListBookings::class)
+            ->removeTableFilter('status')
+            ->filterTable('needs_reassignment')
+            ->assertCanSeeTableRecords([$toAssign, $second])
+            ->assertSee(__('admin.bookings.assignment.declined', ['reason' => __('admin.bookings.assignment.reasons.other')]))
+            ->assertSee('Rendez-vous médical')
+            ->assertTableActionVisible('assign', $second);
+
+        Livewire::test(ListBookings::class)
+            ->filterTable('status', BookingStatus::Assigned->value)
             ->callTableAction('unassign', $toAssign, data: ['reason' => 'Soignant indisponible'])
             ->assertNotified(__('admin.bookings.unassigned'));
 

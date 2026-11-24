@@ -43,6 +43,12 @@ class LoginWithOtp
             throw new ApiException('account_suspended', 403);
         }
 
+        // Modèle « agence » (2026-11-23) : seul un numéro que l'agence a rattaché à son équipe ouvre
+        // l'application professionnel. Personne ne s'y inscrit seul. L'état est relu en base.
+        if ($app === ClientApp::Pro && ! ($user && $user->professional()->exists())) {
+            throw new ApiException('pro_account_unknown', 403);
+        }
+
         // Le code reste valable : l'application le renvoie avec accept_terms = true.
         if (! $user && ! $acceptTerms) {
             throw new ApiException('consent_required');

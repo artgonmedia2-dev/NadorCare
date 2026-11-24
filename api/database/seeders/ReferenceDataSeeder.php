@@ -15,7 +15,8 @@ use Illuminate\Support\Str;
  */
 class ReferenceDataSeeder extends Seeder
 {
-    private const DOCUMENTS = ['identity', 'diploma', 'practice_authorization', 'rc_insurance'];
+    // L'assurance personnelle est facultative depuis le modèle « agence » (règle n° 8 du 2026-11-23).
+    private const DOCUMENTS = ['identity', 'diploma', 'practice_authorization'];
 
     public function run(): void
     {

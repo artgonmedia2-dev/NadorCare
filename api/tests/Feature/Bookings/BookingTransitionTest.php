@@ -13,7 +13,6 @@ use App\Models\User;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
-use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class BookingTransitionTest extends TestCase
@@ -121,36 +120,16 @@ class BookingTransitionTest extends TestCase
         $this->assertRefused('professional_required', fn () => $this->transition($booking, BookingStatus::Assigned, $coordinator));
     }
 
-    public function test_a_professional_takes_a_mission_only_through_a_pending_offer(): void
-    {
-        $professional = Professional::factory()->create();
-        $booking = Booking::factory()->inStatus(BookingStatus::Confirmed)->create();
-        $meta = ['professional_id' => $professional->id];
-
-        $this->assertRefused('transition_forbidden', fn () => $this->transition($booking, BookingStatus::Assigned, $professional->user, null, $meta));
-
-        DB::table('booking_offers')->insert([
-            'id' => (string) Str::ulid(), 'booking_id' => $booking->id, 'professional_id' => $professional->id,
-            'status' => 'pending', 'expires_at' => now()->addMinutes(2), 'created_at' => now(), 'updated_at' => now(),
-        ]);
-
-        $this->transition($booking, BookingStatus::Assigned, $professional->user, null, $meta);
-        $this->assertSame($professional->id, $booking->fresh()->professional_id);
-    }
-
-    public function test_an_expired_offer_cannot_be_accepted(): void
+    public function test_a_professional_never_assigns_a_mission_to_themselves(): void
     {
         $professional = Professional::factory()->create();
         $booking = Booking::factory()->inStatus(BookingStatus::Confirmed)->create();
 
-        DB::table('booking_offers')->insert([
-            'id' => (string) Str::ulid(), 'booking_id' => $booking->id, 'professional_id' => $professional->id,
-            'status' => 'pending', 'expires_at' => now()->subMinute(), 'created_at' => now(), 'updated_at' => now(),
-        ]);
-
+        // Modèle « agence » : seule la coordination affecte.
         $this->assertRefused('transition_forbidden', fn () => $this->transition(
             $booking, BookingStatus::Assigned, $professional->user, null, ['professional_id' => $professional->id]
         ));
+        $this->assertNull($booking->fresh()->professional_id);
     }
 
     public function test_only_the_assigned_professional_runs_the_mission(): void

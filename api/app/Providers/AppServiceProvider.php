@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\User;
+use App\Services\Finance\CaregiverLedger;
 use Dedoc\Scramble\Scramble;
 use Dedoc\Scramble\Support\Generator\OpenApi;
 use Dedoc\Scramble\Support\Generator\SecurityScheme;
@@ -17,7 +18,8 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        //
+        // Une seule instance par requête : elle garde les chiffres du mois déjà calculés.
+        $this->app->scoped(CaregiverLedger::class);
     }
 
     public function boot(): void

@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\V1\PrescriptionController;
 use App\Http\Controllers\Api\V1\Pro\InterventionController;
 use App\Http\Controllers\Api\V1\Pro\MissionController;
 use App\Http\Controllers\Api\V1\Pro\ProfileController;
+use App\Http\Controllers\Api\V1\Pro\ScheduleRequestController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -45,19 +46,16 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
     // Réservé aux jetons de l'application professionnel.
     Route::middleware(['auth:sanctum', 'ability:app:pro'])->prefix('pro')->name('pro.')->group(function () {
         Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
-        Route::put('/profile', [ProfileController::class, 'save'])->name('profile.save');
         Route::post('/profile/documents', [ProfileController::class, 'uploadDocument'])->name('profile.documents.store');
         Route::post('/profile/submit', [ProfileController::class, 'submit'])->name('profile.submit');
-        Route::put('/profile/zones', [ProfileController::class, 'zones'])->name('profile.zones');
-        Route::put('/profile/availabilities', [ProfileController::class, 'availabilities'])->name('profile.availabilities');
-        Route::put('/profile/online', [ProfileController::class, 'online'])->name('profile.online');
+        Route::get('/schedule-requests', [ScheduleRequestController::class, 'index'])->name('schedule-requests.index');
+        Route::post('/schedule-requests', [ScheduleRequestController::class, 'store'])->middleware('throttle:20,1')->name('schedule-requests.store');
+        Route::delete('/schedule-requests/{scheduleRequest}', [ScheduleRequestController::class, 'destroy'])->name('schedule-requests.destroy');
 
-        Route::get('/offers', [MissionController::class, 'offers'])->name('offers.index');
-        Route::post('/offers/{offer}/accept', [MissionController::class, 'accept'])->name('offers.accept');
-        Route::post('/offers/{offer}/decline', [MissionController::class, 'decline'])->name('offers.decline');
         Route::get('/missions', [MissionController::class, 'index'])->name('missions.index');
         Route::get('/missions/{mission}', [MissionController::class, 'show'])->name('missions.show');
-        Route::post('/missions/{mission}/withdraw', [MissionController::class, 'withdraw'])->name('missions.withdraw');
+        Route::post('/missions/{mission}/confirm', [MissionController::class, 'confirm'])->name('missions.confirm');
+        Route::post('/missions/{mission}/decline', [MissionController::class, 'decline'])->name('missions.decline');
 
         Route::post('/missions/{mission}/depart', [InterventionController::class, 'depart'])->name('missions.depart');
         Route::post('/missions/{mission}/location', [InterventionController::class, 'location'])->middleware('throttle:120,1')->name('missions.location');

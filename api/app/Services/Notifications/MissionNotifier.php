@@ -14,11 +14,6 @@ class MissionNotifier
 {
     public function __construct(private readonly PushGateway $push) {}
 
-    public function missionOffered(Professional $professional, string $offerId): void
-    {
-        $this->send($professional, 'offer', ['type' => 'mission_offer', 'offer_id' => $offerId]);
-    }
-
     public function missionAssigned(Professional $professional, string $bookingId): void
     {
         $this->send($professional, 'assigned', ['type' => 'mission_assigned', 'booking_id' => $bookingId]);

@@ -29,33 +29,30 @@ class ProfessionalMatcherTest extends TestCase
             ->map(fn ($candidate) => $candidate->professional->user->name)->all();
     }
 
-    public function test_a_verified_insured_professional_of_the_right_profession_is_a_candidate(): void
+    public function test_a_verified_professional_of_the_right_profession_is_a_candidate(): void
     {
         $this->createProfessional(['name' => 'Samira']);
 
         $this->assertSame(['Samira'], $this->candidateNames());
     }
 
-    public function test_unverified_or_uninsured_professionals_never_receive_missions(): void
+    public function test_unverified_professionals_never_receive_missions(): void
     {
         $this->createProfessional(['name' => 'Samira']);
         $this->createProfessional(['name' => 'Dossier en cours', 'status' => 'under_review']);
         $this->createProfessional(['name' => 'Suspendu', 'status' => 'suspended']);
-        $this->createProfessional(['name' => 'Sans assurance', 'insurance' => null]);
-        $this->createProfessional(['name' => 'Assurance non contrôlée', 'insurance' => ProfessionalDocument::STATUS_PENDING]);
-        $this->createProfessional(['name' => 'Assurance refusée', 'insurance' => ProfessionalDocument::STATUS_REJECTED]);
-        $this->createProfessional(['name' => 'Assurance expirée', 'insurance_expires' => '2026-11-30']);
 
         $this->assertSame(['Samira'], $this->candidateNames());
     }
 
-    public function test_insurance_must_still_be_valid_on_the_day_of_care(): void
+    public function test_personal_insurance_is_no_longer_a_condition(): void
     {
-        // Valable aujourd'hui (7 décembre), mais plus le jour du soin (8 décembre).
-        $this->createProfessional(['name' => 'Expire la veille', 'insurance_expires' => '2026-12-07']);
-        $this->createProfessional(['name' => 'Expire le jour même', 'insurance_expires' => '2026-12-08']);
+        // Modèle « agence » (règle n° 8 du 2026-11-23) : c'est l'agence qui est assurée.
+        $this->createProfessional(['name' => 'Assurance expirée', 'insurance_expires' => '2026-11-30']);
+        $this->createProfessional(['name' => 'Assurance non contrôlée', 'insurance' => ProfessionalDocument::STATUS_PENDING]);
+        $this->createProfessional(['name' => 'Sans assurance', 'insurance' => null]);
 
-        $this->assertSame(['Expire le jour même'], $this->candidateNames());
+        $this->assertEqualsCanonicalizing(['Assurance expirée', 'Assurance non contrôlée', 'Sans assurance'], $this->candidateNames());
     }
 
     public function test_the_profession_must_match_the_service(): void

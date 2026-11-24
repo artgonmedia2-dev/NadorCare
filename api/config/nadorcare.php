@@ -27,6 +27,11 @@ return [
         'report_photos' => (int) env('LIMIT_REPORT_PHOTOS', 10),
     ],
 
+    'apps' => [
+        // Adresse où un soignant de l'équipe télécharge l'application professionnel.
+        'pro_url' => env('PRO_APP_URL', ''),
+    ],
+
     'legal' => [
         'documents_version' => env('LEGAL_DOCUMENTS_VERSION', '2026-11'),
     ],

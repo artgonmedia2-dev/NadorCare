@@ -3,11 +3,12 @@
 namespace App\Services\Assignment;
 
 use App\Enums\BookingStatus;
+use App\Enums\ScheduleRequestKind;
+use App\Enums\ScheduleRequestStatus;
 use App\Enums\UserStatus;
 use App\Enums\VerificationStatus;
 use App\Models\Booking;
 use App\Models\Professional;
-use App\Models\ProfessionalDocument;
 use App\Models\Service;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
@@ -16,9 +17,9 @@ use Illuminate\Support\Collection;
 /**
  * Trouve les professionnels qui peuvent prendre une réservation, et les classe.
  *
- * Conditions obligatoires (cahier des charges §3, §5) : compte actif et vérifié, assurance
- * responsabilité civile approuvée et valable le jour du soin, profession exigée par le service,
- * aucune autre mission au même moment.
+ * Conditions obligatoires (cahier des charges §3, §5) : compte actif et vérifié, profession
+ * exigée par le service, aucune autre mission au même moment. L'assurance personnelle n'en fait
+ * plus partie (modèle « agence », règle n° 8 du 2026-11-23) : c'est l'agence qui est assurée.
  *
  * Critères de classement (§6) : zone couverte, disponibilité sur le créneau, distance, note.
  * Ils orientent le choix sans l'interdire : le coordinateur peut toujours forcer.
@@ -62,10 +63,6 @@ class ProfessionalMatcher
             ->where('verification_status', VerificationStatus::Verified)
             ->where('professional_category_id', $requiredCategoryId)
             ->whereHas('user', fn (Builder $user) => $user->where('status', UserStatus::Active))
-            ->whereHas('documents', fn (Builder $document) => $document
-                ->where('type', ProfessionalDocument::TYPE_RC_INSURANCE)
-                ->where('status', ProfessionalDocument::STATUS_APPROVED)
-                ->whereDate('expires_at', '>=', $start->format('Y-m-d')))
             ->whereNotExists(fn ($busy) => $busy->from('bookings')
                 ->whereColumn('bookings.professional_id', 'professionals.id')
                 ->where('bookings.id', '!=', $booking->getKey())
@@ -79,8 +76,15 @@ class ProfessionalMatcher
             )
             ->selectRaw(
                 'EXISTS (SELECT 1 FROM availabilities a WHERE a.professional_id = professionals.id
-                    AND a.weekday = ? AND a.start_time <= ? AND a.end_time >= ?) AS is_available',
-                [$start->dayOfWeek, $start->format('H:i:s'), $end->format('H:i:s')],
+                    AND a.weekday = ? AND a.start_time <= ? AND a.end_time >= ?)
+                 AND NOT EXISTS (SELECT 1 FROM schedule_requests sr WHERE sr.professional_id = professionals.id
+                    AND sr.kind = ? AND sr.status = ? AND sr.starts_on <= ? AND sr.ends_on >= ?) AS is_available',
+                [
+                    $start->dayOfWeek, $start->format('H:i:s'), $end->format('H:i:s'),
+                    // Une indisponibilité acceptée par la coordination (congé, empêchement).
+                    ScheduleRequestKind::Unavailability->value, ScheduleRequestStatus::Accepted->value,
+                    $start->format('Y-m-d'), $start->format('Y-m-d'),
+                ],
             )
             ->when(
                 $latitude !== null && $longitude !== null,

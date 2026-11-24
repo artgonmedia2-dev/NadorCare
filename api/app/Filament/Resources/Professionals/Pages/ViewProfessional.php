@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Professionals\Pages;
 
 use App\Filament\Resources\Professionals\ProfessionalResource;
 use App\Models\Professional;
+use App\Services\Planning\TeamWeek;
 use App\Support\Translated;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Pages\ViewRecord;
@@ -47,10 +48,30 @@ class ViewProfessional extends ViewRecord
                     TextEntry::make('order_number')
                         ->label(__('admin.professionals.order_number'))
                         ->placeholder('—'),
+                    TextEntry::make('invited_at')
+                        ->label(__('admin.professionals.invited_at'))
+                        ->dateTime('d/m/Y H:i', (string) config('nadorcare.timezone'))
+                        ->placeholder(__('admin.professionals.not_invited')),
                     TextEntry::make('suspension_reason')
                         ->label(__('admin.professionals.reason'))
                         ->placeholder('—')
                         ->columnSpanFull(),
+                ]),
+            // Planning fixé par la coordination (action « Planning » en haut de la fiche).
+            Section::make(__('admin.planning.title'))
+                ->columns(2)
+                ->schema([
+                    TextEntry::make('planning_zones')
+                        ->label(__('admin.planning.zones'))
+                        ->state(fn (Professional $record) => $record->zones()->orderBy('sort')->get(['zones.id', 'zones.name'])
+                            ->map(fn ($zone) => Translated::pick($zone->name))->all())
+                        ->badge()
+                        ->placeholder(__('admin.planning.none')),
+                    TextEntry::make('planning_week')
+                        ->label(__('admin.planning.week'))
+                        ->state(fn (Professional $record) => TeamWeek::describe(TeamWeek::slotsOf($record->id)))
+                        ->listWithLineBreaks()
+                        ->placeholder(__('admin.planning.none')),
                 ]),
         ]);
     }

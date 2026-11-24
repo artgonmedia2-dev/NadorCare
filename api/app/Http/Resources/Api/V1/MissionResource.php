@@ -40,6 +40,10 @@ class MissionResource extends JsonResource
             'id' => $this->id,
             'reference' => $this->reference,
             'status' => $this->status->value,
+            /** La mission est affectée et attend la confirmation du soignant. */
+            'needs_confirmation' => $this->awaitsConfirmation(),
+            /** Heure limite de la confirmation. */
+            'confirm_by' => $this->assignment_confirm_by?->toIso8601String(),
             'service' => [
                 'name' => Translated::pick($this->service->name),
                 'duration_minutes' => $this->service->duration_minutes,

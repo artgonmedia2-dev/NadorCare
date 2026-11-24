@@ -17,6 +17,7 @@ enum Permission: string
     case HealthDataView = 'health-data.view';
     case ComplaintsManage = 'complaints.manage';
     case ProfessionalsView = 'professionals.view';
+    case ProfessionalsManage = 'professionals.manage';
     case ProfessionalsVerify = 'professionals.verify';
     case CatalogueManage = 'catalogue.manage';
     case ZonesManage = 'zones.manage';

@@ -33,6 +33,12 @@ class Settings
     /** Minutes avant l'heure prévue à partir desquelles la salle vidéo s'ouvre. */
     public const TELECONSULTATION_JOIN_BEFORE_MINUTES = 'teleconsultation.join_before_minutes';
 
+    /** Délai laissé au soignant pour confirmer une mission prévue le jour même, en minutes. */
+    public const ASSIGNMENT_CONFIRM_MINUTES_SAME_DAY = 'assignment.confirm_minutes_same_day';
+
+    /** Délai de confirmation pour une mission prévue un autre jour, en minutes. */
+    public const ASSIGNMENT_CONFIRM_MINUTES_LATER = 'assignment.confirm_minutes_later';
+
     /**
      * Valeurs de départ. Les horaires et les frais d'annulation sont provisoires :
      * ils attendent la décision du client (points à trancher n° 5 et question 15).
@@ -49,7 +55,8 @@ class Settings
         self::TELECONSULTATION_ENABLED => 0,
         self::TELECONSULTATION_JOIN_BEFORE_MINUTES => 10,
         'booking.escalation_minutes' => 10,
-        'offer.response_seconds' => 120,
+        self::ASSIGNMENT_CONFIRM_MINUTES_SAME_DAY => 15,
+        self::ASSIGNMENT_CONFIRM_MINUTES_LATER => 120,
         'location.retention_days' => 30,
     ];
 

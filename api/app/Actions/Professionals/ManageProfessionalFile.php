@@ -19,6 +19,13 @@ use Illuminate\Support\Facades\DB;
  */
 class ManageProfessionalFile
 {
+    /**
+     * Justificatifs qu'un soignant peut déposer sans qu'ils soient exigés. L'assurance
+     * responsabilité civile personnelle est facultative depuis le modèle « agence » (règle
+     * n° 8 du 2026-11-23), en attendant l'avis du juriste : c'est l'agence qui est assurée.
+     */
+    public const OPTIONAL_TYPES = [ProfessionalDocument::TYPE_RC_INSURANCE];
+
     /** Statuts dans lesquels le professionnel peut encore modifier son dossier. */
     private const EDITABLE = [VerificationStatus::Draft, VerificationStatus::Rejected];
 
@@ -26,6 +33,9 @@ class ManageProfessionalFile
 
     /**
      * Crée le dossier, ou le met à jour tant qu'il n'est pas soumis.
+     *
+     * N'est plus exposé par l'API depuis le modèle « agence » : la fiche d'un soignant se crée
+     * et se modifie au back-office, par `ManageTeam`.
      *
      * @param  array{professional_category_id: string, license_number?: string|null, order_number?: string|null}  $data
      */
@@ -64,13 +74,16 @@ class ManageProfessionalFile
      * été contrôlé ; un justificatif approuvé reste valable jusqu'à l'approbation de son
      * remplaçant (renouvellement de l'assurance, par exemple).
      */
-    public function uploadDocument(Professional $professional, string $type, string $contents, string $mime, ?string $expiresAt): ProfessionalDocument
+    public function uploadDocument(Professional $professional, string $type, string $contents, string $mime, ?string $expiresAt, ?User $uploader = null): ProfessionalDocument
     {
+        // Par défaut le soignant lui-même ; sinon la personne de l'agence qui dépose pour lui.
+        $uploader ??= $professional->user;
+
         if ($professional->verification_status === VerificationStatus::Suspended) {
             throw new ApiException('professional_file_locked', 409);
         }
 
-        if (! in_array($type, $this->requiredTypes($professional), true)) {
+        if (! in_array($type, $this->acceptedTypes($professional), true)) {
             throw new ApiException('document_type_not_expected');
         }
 
@@ -79,7 +92,7 @@ class ManageProfessionalFile
             throw new ApiException('document_expiry_required');
         }
 
-        return DB::transaction(function () use ($professional, $type, $contents, $mime, $expiresAt) {
+        return DB::transaction(function () use ($professional, $type, $contents, $mime, $expiresAt, $uploader) {
             // Seul un dépôt pas encore contrôlé est effacé. Un justificatif refusé reste
             // dans le dossier : il fait partie de l'historique des contrôles.
             $replaced = $professional->documents()
@@ -95,7 +108,7 @@ class ManageProfessionalFile
                 }
             }
 
-            $file = $this->files->store($contents, 'professional_document', $mime, $professional, $professional->user);
+            $file = $this->files->store($contents, 'professional_document', $mime, $professional, $uploader);
 
             return ProfessionalDocument::create([
                 'professional_id' => $professional->id,
@@ -135,6 +148,26 @@ class ManageProfessionalFile
     public function requiredTypes(Professional $professional): array
     {
         return array_values($professional->category->required_document_types ?? []);
+    }
+
+    /**
+     * Justificatifs facultatifs que le dossier peut recevoir en plus de ceux exigés.
+     *
+     * @return list<string>
+     */
+    public function optionalTypes(Professional $professional): array
+    {
+        return array_values(array_diff(self::OPTIONAL_TYPES, $this->requiredTypes($professional)));
+    }
+
+    /**
+     * Tout ce qui peut être déposé dans le dossier : exigé ou facultatif.
+     *
+     * @return list<string>
+     */
+    public function acceptedTypes(Professional $professional): array
+    {
+        return [...$this->requiredTypes($professional), ...$this->optionalTypes($professional)];
     }
 
     /**

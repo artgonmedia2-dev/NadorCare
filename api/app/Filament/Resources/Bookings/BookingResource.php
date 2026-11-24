@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\Bookings;
 
 use App\Actions\Assignment\AssignProfessional;
-use App\Actions\Assignment\OfferMission;
 use App\Actions\Assignment\UnassignProfessional;
 use App\Actions\Bookings\CancelBooking;
 use App\Actions\Bookings\TransitionBooking;
@@ -23,6 +22,7 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -69,13 +69,47 @@ class BookingResource extends Resource
     }
 
     /**
-     * Nombre de demandes à valider, affiché dans le menu.
+     * Nombre de demandes qui attendent la coordination, affiché dans le menu : celles à valider,
+     * et celles à réaffecter (soignant indisponible ou resté sans réponse).
      */
     public static function getNavigationBadge(): ?string
     {
-        $pending = Booking::query()->where('status', BookingStatus::Pending)->count();
+        $waiting = Booking::query()->where('status', BookingStatus::Pending)->count()
+            + Booking::query()->needsReassignment()->count();
 
-        return $pending > 0 ? (string) $pending : null;
+        return $waiting > 0 ? (string) $waiting : null;
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return Booking::query()->needsReassignment()->exists() ? 'danger' : 'warning';
+    }
+
+    /**
+     * Où en est la réponse du soignant : libellé et couleur, ou `null` s'il n'y a rien à dire.
+     *
+     * @return array{label: string, color: string}|null
+     */
+    public static function assignmentState(Booking $booking): ?array
+    {
+        if ($booking->wasDeclined()) {
+            return [
+                'label' => __('admin.bookings.assignment.declined', [
+                    'reason' => __('admin.bookings.assignment.reasons.'.$booking->assignment_decline_reason),
+                ]),
+                'color' => 'danger',
+            ];
+        }
+
+        if ($booking->status !== BookingStatus::Assigned) {
+            return null;
+        }
+
+        return match (true) {
+            $booking->assignment_confirmed_at !== null => ['label' => __('admin.bookings.assignment.confirmed'), 'color' => 'success'],
+            $booking->confirmationOverdue() => ['label' => __('admin.bookings.assignment.overdue'), 'color' => 'danger'],
+            default => ['label' => __('admin.bookings.assignment.waiting'), 'color' => 'warning'],
+        };
     }
 
     /**
@@ -123,6 +157,15 @@ class BookingResource extends Resource
                 TextColumn::make('professional.user.name')
                     ->label(__('admin.bookings.professional'))
                     ->placeholder('—'),
+                // Réponse du soignant à l'affectation : à surveiller par la coordination.
+                TextColumn::make('assignment')
+                    ->label(__('admin.bookings.assignment.label'))
+                    ->badge()
+                    ->state(fn (Booking $record) => self::assignmentState($record)['label'] ?? null)
+                    ->color(fn (Booking $record) => self::assignmentState($record)['color'] ?? 'gray')
+                    ->description(fn (Booking $record) => $record->wasDeclined() ? $record->assignment_decline_note : null)
+                    ->placeholder('—')
+                    ->wrap(),
                 TextColumn::make('user.phone')
                     ->label(__('admin.bookings.phone')),
                 TextColumn::make('address')
@@ -138,73 +181,77 @@ class BookingResource extends Resource
                     ->label(__('admin.bookings.status'))
                     ->options(self::statusOptions())
                     ->default(BookingStatus::Pending->value),
+                // Demandes rendues par un soignant indisponible, ou restées sans confirmation.
+                Filter::make('needs_reassignment')
+                    ->label(__('admin.bookings.assignment.to_reassign'))
+                    ->query(fn (Builder $query) => Booking::constrainToNeedsReassignment($query)),
             ])
-            ->recordActions([
-                Action::make('confirm')
-                    ->label(__('admin.bookings.confirm'))
-                    ->icon(Heroicon::OutlinedCheck)
-                    ->color('success')
-                    ->requiresConfirmation()
-                    ->visible(fn (Booking $record) => $record->status === BookingStatus::Pending
-                        && (auth()->user()?->can(Permission::BookingsConfirm->value) ?? false))
-                    ->action(fn (Booking $record) => self::run(
-                        fn () => app(TransitionBooking::class)->handle($record, BookingStatus::Confirmed, auth()->user()),
-                        __('admin.bookings.confirmed'),
-                    )),
-                // Affectation directe : la coordination désigne le soignant sans attendre sa réponse.
-                Action::make('assign')
-                    ->label(__('admin.bookings.assign'))
-                    ->icon(Heroicon::OutlinedUserPlus)
-                    ->color('primary')
-                    ->schema(fn (Booking $record) => [self::candidateSelect($record)])
-                    ->visible(fn (Booking $record) => $record->status === BookingStatus::Confirmed && self::mayAssign())
-                    ->action(fn (Booking $record, array $data) => self::run(
-                        fn () => app(AssignProfessional::class)->handle($record, Professional::query()->findOrFail($data['professional_id']), auth()->user()),
-                        __('admin.bookings.assigned'),
-                    )),
-                // Proposition : le soignant a un délai pour accepter ou refuser dans son application.
-                Action::make('offer')
-                    ->label(__('admin.bookings.offer'))
-                    ->icon(Heroicon::OutlinedPaperAirplane)
-                    ->color('gray')
-                    ->schema(fn (Booking $record) => [self::candidateSelect($record)])
-                    ->visible(fn (Booking $record) => $record->status === BookingStatus::Confirmed && self::mayAssign())
-                    ->action(fn (Booking $record, array $data) => self::run(
-                        fn () => app(OfferMission::class)->handle($record, Professional::query()->findOrFail($data['professional_id']), auth()->user()),
-                        __('admin.bookings.offered'),
-                    )),
-                Action::make('unassign')
-                    ->label(__('admin.bookings.unassign'))
-                    ->icon(Heroicon::OutlinedArrowUturnLeft)
-                    ->color('warning')
-                    ->schema([
-                        Textarea::make('reason')
-                            ->label(__('admin.bookings.unassign_reason'))
-                            ->required()
-                            ->maxLength(500),
-                    ])
-                    ->visible(fn (Booking $record) => in_array($record->status, [BookingStatus::Assigned, BookingStatus::EnRoute], true) && self::mayAssign())
-                    ->action(fn (Booking $record, array $data) => self::run(
-                        fn () => app(UnassignProfessional::class)->handle($record, auth()->user(), $data['reason']),
-                        __('admin.bookings.unassigned'),
-                    )),
-                Action::make('cancel')
-                    ->label(__('admin.bookings.cancel'))
-                    ->icon(Heroicon::OutlinedXMark)
-                    ->color('danger')
-                    ->schema([
-                        Textarea::make('reason')
-                            ->label(__('admin.bookings.cancel_reason'))
-                            ->required()
-                            ->maxLength(500),
-                    ])
-                    ->visible(fn (Booking $record) => $record->status->canTransitionTo(BookingStatus::Cancelled)
-                        && (auth()->user()?->can(Permission::BookingsCancel->value) ?? false))
-                    ->action(fn (Booking $record, array $data) => self::run(
-                        fn () => app(CancelBooking::class)->handle($record, auth()->user(), $data['reason']),
-                        __('admin.bookings.cancelled'),
-                    )),
-            ]);
+            ->recordActions(self::recordActions());
+    }
+
+    /**
+     * Actions sur une demande : valider, affecter, retirer le soignant, annuler. Partagées par la
+     * liste des demandes et le tableau de bord de la coordination.
+     *
+     * @return list<Action>
+     */
+    public static function recordActions(): array
+    {
+        return [
+            Action::make('confirm')
+                ->label(__('admin.bookings.confirm'))
+                ->icon(Heroicon::OutlinedCheck)
+                ->color('success')
+                ->requiresConfirmation()
+                ->visible(fn (Booking $record) => $record->status === BookingStatus::Pending
+                    && (auth()->user()?->can(Permission::BookingsConfirm->value) ?? false))
+                ->action(fn (Booking $record) => self::run(
+                    fn () => app(TransitionBooking::class)->handle($record, BookingStatus::Confirmed, auth()->user()),
+                    __('admin.bookings.confirmed'),
+                )),
+            // La coordination désigne le soignant, qui confirme ensuite dans son application.
+            Action::make('assign')
+                ->label(__('admin.bookings.assign'))
+                ->icon(Heroicon::OutlinedUserPlus)
+                ->color('primary')
+                ->schema(fn (Booking $record) => [self::candidateSelect($record)])
+                ->visible(fn (Booking $record) => $record->status === BookingStatus::Confirmed && self::mayAssign())
+                ->action(fn (Booking $record, array $data) => self::run(
+                    fn () => app(AssignProfessional::class)->handle($record, Professional::query()->findOrFail($data['professional_id']), auth()->user()),
+                    __('admin.bookings.assigned'),
+                )),
+            Action::make('unassign')
+                ->label(__('admin.bookings.unassign'))
+                ->icon(Heroicon::OutlinedArrowUturnLeft)
+                ->color('warning')
+                ->schema([
+                    Textarea::make('reason')
+                        ->label(__('admin.bookings.unassign_reason'))
+                        ->required()
+                        ->maxLength(500),
+                ])
+                ->visible(fn (Booking $record) => in_array($record->status, [BookingStatus::Assigned, BookingStatus::EnRoute], true) && self::mayAssign())
+                ->action(fn (Booking $record, array $data) => self::run(
+                    fn () => app(UnassignProfessional::class)->handle($record, auth()->user(), $data['reason']),
+                    __('admin.bookings.unassigned'),
+                )),
+            Action::make('cancel')
+                ->label(__('admin.bookings.cancel'))
+                ->icon(Heroicon::OutlinedXMark)
+                ->color('danger')
+                ->schema([
+                    Textarea::make('reason')
+                        ->label(__('admin.bookings.cancel_reason'))
+                        ->required()
+                        ->maxLength(500),
+                ])
+                ->visible(fn (Booking $record) => $record->status->canTransitionTo(BookingStatus::Cancelled)
+                    && (auth()->user()?->can(Permission::BookingsCancel->value) ?? false))
+                ->action(fn (Booking $record, array $data) => self::run(
+                    fn () => app(CancelBooking::class)->handle($record, auth()->user(), $data['reason']),
+                    __('admin.bookings.cancelled'),
+                )),
+        ];
     }
 
     private static function mayAssign(): bool

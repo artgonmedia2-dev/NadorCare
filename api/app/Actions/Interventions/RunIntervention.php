@@ -31,7 +31,20 @@ class RunIntervention
      */
     public function depart(Booking $booking, User $actor): Booking
     {
-        return $this->transition->handle($booking, BookingStatus::EnRoute, $actor);
+        return $this->confirmed($this->transition->handle($booking, BookingStatus::EnRoute, $actor));
+    }
+
+    /**
+     * Commencer une mission vaut confirmation de sa prise en charge.
+     */
+    private function confirmed(Booking $booking): Booking
+    {
+        if ($booking->assignment_confirmed_at === null) {
+            $booking->assignment_confirmed_at = now();
+            $booking->save();
+        }
+
+        return $booking;
     }
 
     /**
@@ -114,7 +127,7 @@ class RunIntervention
         $this->teleconsultation->handle($booking, $actor);
 
         return DB::transaction(function () use ($booking, $actor) {
-            $booking = $this->transition->handle($booking, BookingStatus::InProgress, $actor);
+            $booking = $this->confirmed($this->transition->handle($booking, BookingStatus::InProgress, $actor));
 
             $intervention = Intervention::create([
                 'booking_id' => $booking->getKey(),

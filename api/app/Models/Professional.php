@@ -39,6 +39,7 @@ class Professional extends Model
         return [
             'verification_status' => VerificationStatus::class,
             'verified_at' => 'datetime',
+            'invited_at' => 'datetime',
             'is_online' => 'boolean',
             'last_location_at' => 'datetime',
             'payout_details' => 'encrypted:array',

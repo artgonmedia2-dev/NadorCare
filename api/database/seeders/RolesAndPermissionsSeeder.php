@@ -48,6 +48,8 @@ class RolesAndPermissionsSeeder extends Seeder
             Permission::HealthDataView,
             Permission::ComplaintsManage,
             Permission::ProfessionalsView,
+            // Modèle « agence » : la coordination crée, modifie et invite les soignants de l'équipe.
+            Permission::ProfessionalsManage,
             Permission::StatsView,
         ];
 

@@ -46,7 +46,7 @@ class TransitionBooking
                 throw new ApiException('professional_required');
             }
 
-            if (! $this->actorMay($actor, $booking, $from, $target, $assignee)) {
+            if (! $this->actorMay($actor, $booking, $from, $target)) {
                 throw new ApiException('transition_forbidden', 403, ['from' => $from->value, 'to' => $target->value]);
             }
 
@@ -65,6 +65,8 @@ class TransitionBooking
             if ($target === BookingStatus::Confirmed && in_array($from, [BookingStatus::Assigned, BookingStatus::EnRoute], true)) {
                 $meta['previous_professional_id'] = $booking->professional_id;
                 $booking->professional_id = null;
+                $booking->assignment_confirm_by = null;
+                $booking->assignment_confirmed_at = null;
             }
 
             $booking->save();
@@ -84,22 +86,12 @@ class TransitionBooking
         });
     }
 
-    private function actorMay(User $actor, Booking $booking, BookingStatus $from, BookingStatus $target, ?string $assignee): bool
+    private function actorMay(User $actor, Booking $booking, BookingStatus $from, BookingStatus $target): bool
     {
         $isBooker = $booking->user_id === $actor->getKey();
         $actorProfessionalId = $actor->professional()->value('id');
         $isAssignedProfessional = $booking->professional_id !== null
             && $booking->professional_id === $actorProfessionalId;
-
-        // Un professionnel ne s'affecte lui-même que s'il répond à une offre de mission en attente.
-        $acceptsOwnOffer = $assignee !== null
-            && $assignee === $actorProfessionalId
-            && DB::table('booking_offers')
-                ->where('booking_id', $booking->getKey())
-                ->where('professional_id', $assignee)
-                ->where('status', 'pending')
-                ->where(fn ($query) => $query->whereNull('expires_at')->orWhere('expires_at', '>', now()))
-                ->exists();
 
         return match ($target) {
             // Décision du 2026-11-21 : la confirmation est toujours faite par la coordination.
@@ -107,7 +99,8 @@ class TransitionBooking
                 ? $actor->can(Permission::BookingsConfirm->value)
                 : ($from === BookingStatus::Assigned && $isAssignedProfessional) || $actor->can(Permission::BookingsAssign->value),
 
-            BookingStatus::Assigned => $acceptsOwnOffer || $actor->can(Permission::BookingsAssign->value),
+            // Modèle « agence » : seule la coordination affecte, un soignant ne se sert pas lui-même.
+            BookingStatus::Assigned => $actor->can(Permission::BookingsAssign->value),
 
             BookingStatus::EnRoute, BookingStatus::InProgress => $isAssignedProfessional || $actor->can(Permission::BookingsAssign->value),
 

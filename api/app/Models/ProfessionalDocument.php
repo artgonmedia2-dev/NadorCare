@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -43,6 +44,28 @@ class ProfessionalDocument extends Model
             'expires_at' => 'date',
             'reviewed_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Justificatifs à renouveler : approuvés et arrivant à échéance sous `$days` jours, ou
+     * périmés sans remplaçant approuvé du même type.
+     *
+     * @param  Builder<ProfessionalDocument>  $query
+     */
+    public static function constrainToNeedsRenewal(Builder $query, int $days): void
+    {
+        $query->whereNotNull('professional_documents.expires_at')
+            ->where(fn (Builder $either) => $either
+                ->where(fn (Builder $soon) => $soon
+                    ->where('professional_documents.status', self::STATUS_APPROVED)
+                    ->whereDate('professional_documents.expires_at', '<=', today()->addDays($days)->format('Y-m-d')))
+                ->orWhere(fn (Builder $expired) => $expired
+                    ->where('professional_documents.status', self::STATUS_EXPIRED)
+                    ->whereRaw('NOT EXISTS (SELECT 1 FROM professional_documents newer
+                        WHERE newer.professional_id = professional_documents.professional_id
+                        AND newer.type = professional_documents.type
+                        AND newer.id <> professional_documents.id
+                        AND (newer.status = ? OR newer.created_at > professional_documents.created_at))', [self::STATUS_APPROVED])));
     }
 
     /**
