@@ -1,0 +1,125 @@
+/*
+ * Habillage du back-office Nador Care (refonte du 2026-11-24, maquettes Figma « Nador Care — Refonte UX/UI »).
+ * Servi tel quel et branché par un render hook (AdminPanelProvider) : pas de compilation.
+ * Les couleurs reprennent les fondations du site : teal #0f766e, barre latérale #0b2e2b.
+ */
+:root {
+  --nc-primary: #0f766e;
+  --nc-primary-strong: #0b5c56;
+  --nc-primary-soft: #d5f2ec;
+  --nc-sidebar: #0b2e2b;
+  --nc-sidebar-hover: #12403b;
+  --nc-on-sidebar: #c9ddd9;
+  --nc-page: #f4f8f7;
+  --nc-border: #d3dedb;
+  --nc-text: #10201d;
+  --nc-text-muted: #4a5956;
+  --nc-accent: #c2410c;
+  --nc-radius: 14px;
+  --nc-shadow: 0 1px 2px rgb(16 32 29 / .06), 0 8px 24px rgb(16 32 29 / .07);
+}
+
+/* --- Page --- */
+.fi-body { background-color: var(--nc-page); color: var(--nc-text); }
+.fi-header-heading,
+.fi-section-header-heading,
+.fi-modal-heading,
+.fi-wi-stats-overview-stat-value,
+.fi-ta-header-heading {
+  font-family: 'Figtree', var(--font-family), system-ui, sans-serif;
+  letter-spacing: -0.01em;
+}
+.fi-header-heading { font-weight: 800; }
+.fi-header-subheading { color: var(--nc-text-muted); }
+
+/* --- Barre latérale --- */
+.fi-sidebar,
+.fi-sidebar-header { background-color: var(--nc-sidebar) !important; }
+.fi-sidebar-header { box-shadow: none !important; border: 0 !important; }
+.fi-sidebar .fi-sidebar-group-label { color: #8fb3ad; text-transform: uppercase; letter-spacing: .06em; font-size: 12px; }
+.fi-sidebar .fi-sidebar-item-btn { border-radius: 8px; }
+.fi-sidebar .fi-sidebar-item-label { color: var(--nc-on-sidebar); font-weight: 600; }
+.fi-sidebar .fi-sidebar-item-icon { color: var(--nc-on-sidebar); }
+.fi-sidebar .fi-sidebar-item-btn:hover { background-color: var(--nc-sidebar-hover) !important; }
+.fi-sidebar .fi-sidebar-item.fi-active > .fi-sidebar-item-btn { background-color: var(--nc-primary) !important; }
+.fi-sidebar .fi-sidebar-item.fi-active > .fi-sidebar-item-btn > .fi-sidebar-item-label,
+.fi-sidebar .fi-sidebar-item.fi-active > .fi-sidebar-item-btn > .fi-sidebar-item-icon { color: #ffffff !important; }
+.fi-sidebar .fi-sidebar-item-badge-ctn .fi-badge { background-color: var(--nc-accent) !important; color: #fff !important; box-shadow: none; }
+.fi-sidebar .fi-sidebar-group-btn .fi-icon-btn,
+.fi-sidebar .fi-sidebar-close-collapse-sidebar-btn,
+.fi-sidebar .fi-sidebar-open-collapse-sidebar-btn { color: var(--nc-on-sidebar); }
+.fi-sidebar-footer { color: var(--nc-on-sidebar); }
+
+/* Marque dans la barre latérale */
+.nc-brand { display: flex; align-items: center; gap: 10px; }
+.nc-brand-mark { width: 36px; height: 36px; border-radius: 8px; background: var(--nc-primary); display: grid; place-items: center; flex: none; }
+.nc-brand-mark svg { width: 20px; height: 20px; stroke: #fff; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.nc-brand-name { font: 700 17px/1.1 'Figtree', system-ui, sans-serif; color: #fff; }
+.nc-brand-sub { display: block; font: 400 12px/1.3 var(--font-family), system-ui, sans-serif; color: var(--nc-on-sidebar); }
+.fi-topbar .nc-brand-name { color: var(--nc-text); }
+.fi-topbar .nc-brand-sub { color: var(--nc-text-muted); }
+
+/* --- Barre du haut --- */
+.fi-topbar > nav, .fi-topbar { background-color: #ffffff; box-shadow: 0 1px 0 var(--nc-border); }
+
+/* --- Cartes, sections, tableaux --- */
+.fi-section,
+.fi-ta-ctn,
+.fi-wi-stats-overview-stat {
+  border-radius: var(--nc-radius) !important;
+  box-shadow: var(--nc-shadow) !important;
+  --tw-ring-color: var(--nc-border);
+}
+.fi-wi-stats-overview-stat-label { font-weight: 600; color: var(--nc-text-muted); }
+.fi-wi-stats-overview-stat-value { font-weight: 800; }
+.fi-ta-header-cell-label { text-transform: uppercase; letter-spacing: .05em; font-size: 12px; color: var(--nc-text-muted); }
+.fi-btn { border-radius: 8px; font-weight: 700; }
+.fi-badge { border-radius: 999px; }
+
+/* Chiffre qui demande une action (« À réaffecter ») */
+.nc-stat-alert { box-shadow: inset 0 0 0 1.5px #b42318, var(--nc-shadow) !important; }
+.nc-stat-alert .fi-wi-stats-overview-stat-value { color: #b42318; }
+
+/* --- Widgets du tableau de bord --- */
+.nc-list { display: grid; gap: 14px; }
+.nc-item { display: flex; gap: 14px; align-items: flex-start; }
+.nc-time { font: 700 15px/1.4 'Figtree', system-ui, sans-serif; color: var(--nc-primary-strong); min-width: 46px; }
+.nc-item-body { display: grid; gap: 3px; flex: 1; min-width: 0; }
+.nc-item-title { font-weight: 600; color: var(--nc-text); }
+.nc-item-sub { font-size: 13px; color: var(--nc-text-muted); }
+.nc-pict { width: 36px; height: 36px; border-radius: 8px; display: grid; place-items: center; flex: none; }
+.nc-pict svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.nc-pict-warning { background: #fef0c7; color: #92400e; }
+.nc-pict-danger { background: #fde8e6; color: #b42318; }
+.nc-pict-brand { background: var(--nc-primary-soft); color: var(--nc-primary-strong); }
+.nc-pict-success { background: #dcf5e3; color: #15803d; }
+.nc-empty { color: var(--nc-text-muted); font-size: 14px; }
+.nc-link { font-weight: 600; color: var(--nc-primary-strong); }
+.nc-link:hover { text-decoration: underline; }
+
+/* --- Planning de l'équipe --- */
+.nc-planning { width: 100%; min-width: 64rem; border-collapse: separate; border-spacing: 0; font-size: 14px; }
+.nc-planning th, .nc-planning td { border-bottom: 1px solid var(--nc-border); vertical-align: top; padding: 10px 8px; text-align: start; }
+.nc-planning td + td, .nc-planning th + th { border-inline-start: 1px solid var(--nc-border); }
+.nc-planning thead th { background: #eaf1ef; font-weight: 600; color: var(--nc-text-muted); }
+.nc-planning tbody tr:last-child td, .nc-planning tbody tr:last-child th { border-bottom: 0; }
+.nc-planning .nc-today { background: rgb(213 242 236 / .45); }
+.nc-day-num { display: inline-grid; place-items: center; min-width: 26px; height: 26px; border-radius: 999px; margin-inline-start: 4px; color: var(--nc-text); font-weight: 700; }
+.nc-today .nc-day-num { background: var(--nc-primary); color: #fff; }
+.nc-who { display: flex; gap: 10px; align-items: flex-start; font-weight: 400; }
+.nc-avatar { width: 34px; height: 34px; border-radius: 999px; background: var(--nc-primary-soft); color: var(--nc-primary-strong); display: grid; place-items: center; font-weight: 700; font-size: 13px; flex: none; }
+.nc-slot { display: block; border-radius: 6px; padding: 5px 8px; margin-bottom: 6px; font-size: 12px; line-height: 1.35; }
+.nc-slot b { display: block; font-size: 13px; }
+.nc-slot-hours { background: #eaf1ef; color: var(--nc-text-muted); font-weight: 600; }
+.nc-slot-mission { background: var(--nc-primary-soft); color: var(--nc-text-muted); box-shadow: inset 3px 0 0 var(--nc-primary); }
+.nc-slot-mission b { color: var(--nc-primary-strong); }
+.nc-slot-pending { background: #fef0c7; color: var(--nc-text-muted); box-shadow: inset 3px 0 0 #92400e; }
+.nc-slot-pending b { color: #92400e; }
+.nc-slot-off { background: #fde8e6; box-shadow: inset 3px 0 0 #b42318; }
+.nc-slot-off b { color: #b42318; }
+.nc-legend { display: flex; flex-wrap: wrap; gap: 16px; font-size: 13px; color: var(--nc-text-muted); }
+.nc-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.nc-legend i { width: 14px; height: 14px; border-radius: 3px; display: inline-block; }
+[dir='rtl'] .nc-slot-mission { box-shadow: inset -3px 0 0 var(--nc-primary); }
+[dir='rtl'] .nc-slot-pending { box-shadow: inset -3px 0 0 #92400e; }
+[dir='rtl'] .nc-slot-off { box-shadow: inset -3px 0 0 #b42318; }
