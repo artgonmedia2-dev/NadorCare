@@ -3,15 +3,14 @@ import { notFound } from 'next/navigation';
 
 import { Carousel } from '@/components/Carousel';
 import { Faq } from '@/components/Faq';
+import { QuickBook, type QuickBookGroup } from '@/components/QuickBook';
 import {
   ArrowIcon,
   CareIcon,
-  CashIcon,
   CheckIcon,
   ClockIcon,
   InfoIcon,
-  LockIcon,
-  ShieldIcon,
+  PinIcon,
 } from '@/components/icons';
 import { categoryPictures, Picture } from '@/components/Picture';
 import { isLocale } from '@/i18n/config';
@@ -33,6 +32,20 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   ]);
   const evening = surcharges?.find((surcharge) => surcharge.type === 'night') ?? null;
 
+  // Réservation rapide : tous les soins, rangés par catégorie, avec leur prix de départ.
+  const quickGroups: QuickBookGroup[] = (categories ?? [])
+    .map((category) => ({
+      category: category.name,
+      services: (services ?? [])
+        .filter((service) => service.category.slug === category.slug)
+        .map((service) => ({
+          slug: service.slug,
+          name: service.name,
+          price: formatDirhams(service.price.amount, locale, t.currencyUnit),
+        })),
+    }))
+    .filter((group) => group.services.length > 0);
+
   // Aperçu : le premier soin de chaque catégorie, dans l'ordre des catégories.
   const featured = (categories ?? []).flatMap((category) =>
     (services ?? []).filter((service) => service.category.slug === category.slug).slice(0, 1),
@@ -43,6 +56,10 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       <section className="hero">
         <div className="container hero-grid">
           <div className="stack" style={{ ['--gap' as string]: '1.25rem' }}>
+            <p className="hero-eyebrow">
+              <PinIcon size={16} />
+              {t.heroEyebrow}
+            </p>
             <h1>{t.heroTitle}</h1>
             <p className="lead">{t.heroBody}</p>
             <p className="hero-actions">
@@ -54,57 +71,42 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                 {t.seeAllPrices}
               </Link>
             </p>
+            <ul className="hero-proofs">
+              {[t.heroProof1, t.heroProof2, t.heroProof3].map((proof) => (
+                <li key={proof}>
+                  <CheckIcon size={18} />
+                  {proof}
+                </li>
+              ))}
+            </ul>
           </div>
 
           <div className="hero-visual">
             <div className="hero-media">
               <Picture name="hero" sizes="(min-width: 900px) 520px, 100vw" priority />
             </div>
-            {/* Carte posée sur la photo : l'engagement qui rassure avant de réserver. */}
+            {/* Carte posée sur la photo : ce que le patient verra une fois le soignant parti. */}
             <div className="hero-float">
-              <span className="icon-tile">
-                <ShieldIcon />
+              <span className="icon-tile icon-tile-live">
+                <PinIcon />
               </span>
               <p>
-                <strong>{t.trust1Title}</strong>
-                <span>{t.trust1Body}</span>
+                <strong>{t.heroLiveTitle}</strong>
+                <span>{t.heroLiveBody}</span>
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Bande d'atouts à cheval sur l'accroche. */}
-      <section className="feature-strip" aria-label={t.trustTitle}>
-        <div className="container">
-          <ul>
-            <li>
-              <span className="icon-tile">
-                <ShieldIcon />
-              </span>
-              <p>
-                <strong>{t.trust1Title}</strong>
-              </p>
-            </li>
-            <li>
-              <span className="icon-tile">
-                <LockIcon />
-              </span>
-              <p>
-                <strong>{t.trust2Title}</strong>
-              </p>
-            </li>
-            <li>
-              <span className="icon-tile">
-                <CashIcon />
-              </span>
-              <p>
-                <strong>{t.trust3Title}</strong>
-              </p>
-            </li>
-          </ul>
-        </div>
-      </section>
+      {/* Réservation rapide, à cheval sur l'accroche : choisir un soin mène droit au parcours. */}
+      {quickGroups.length > 0 && (
+        <section className="quickbook-wrap" aria-label={t.quickTitle}>
+          <div className="container">
+            <QuickBook locale={locale} t={t} groups={quickGroups} />
+          </div>
+        </section>
+      )}
 
       <section className="section" aria-labelledby="titre-apropos">
         <div className="container about-grid">

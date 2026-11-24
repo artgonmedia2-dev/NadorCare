@@ -6,7 +6,7 @@ import { useCallback, useEffect, useId, useRef, useState, type FormEvent, type R
 import type { Locale } from '@/i18n/config';
 import { fill, isolateLtr, type Dictionary } from '@/i18n/dictionary';
 import { ApiFailure, call } from '@/lib/client-api';
-import { formatDirhams, longDate, slotTime, todayInNador } from '@/lib/format';
+import { formatDirhams, longDate, shortDay, slotTime, todayInNador } from '@/lib/format';
 import type {
   AppUser,
   Booking,
@@ -15,9 +15,10 @@ import type {
   PatientAddress,
   PatientProfile,
   PriceQuote,
+  Surcharge,
 } from '@/lib/types';
 
-import { CheckIcon, InfoIcon, WarningIcon } from './icons';
+import { BoltIcon, CheckIcon, InfoIcon, WarningIcon } from './icons';
 
 type Step = 'loading' | 'phone' | 'code' | 'consent' | 'patient' | 'address' | 'slot' | 'summary' | 'done';
 
@@ -26,9 +27,32 @@ const RELATIONSHIPS = ['self', 'parent', 'child', 'spouse', 'other'] as const;
 /** Étapes numérotées du parcours, une fois connecté : les mêmes que dans l'application. */
 const NUMBERED: Partial<Record<Step, number>> = { patient: 1, address: 2, slot: 3, summary: 4 };
 
-type Props = { locale: Locale; t: Dictionary; service: CareService };
+/** Nombre de jours proposés en pastilles ; au-delà, « Autre date » ouvre le calendrier. */
+const CHIP_DAYS = 7;
 
-export function BookingWizard({ locale, t, service }: Props) {
+type Props = {
+  locale: Locale;
+  t: Dictionary;
+  service: CareService;
+  /** Majoration du soir, pour l'annoncer sur les créneaux concernés. */
+  evening?: Surcharge | null;
+};
+
+type DayPart = 'morning' | 'afternoon' | 'evening';
+
+/** Moment de la journée d'un créneau : le soir suit les heures de la majoration (19 h – 8 h par défaut). */
+function dayPart(slot: string, evening: Surcharge | null | undefined): DayPart {
+  const time = slotTime(slot);
+  const from = evening?.starts_at?.slice(0, 5) ?? '19:00';
+  const to = evening?.ends_at?.slice(0, 5) ?? '08:00';
+  const isEvening = from > to ? time >= from || time < to : time >= from && time < to;
+  if (isEvening) {
+    return 'evening';
+  }
+  return time < '12:00' ? 'morning' : 'afternoon';
+}
+
+export function BookingWizard({ locale, t, service, evening = null }: Props) {
   const [step, setStep] = useState<Step>('loading');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -859,24 +883,52 @@ export function BookingWizard({ locale, t, service }: Props) {
         {progress}
         {errorNotice}
 
-        <Field id="day" label={t.dayLabel} help={longDate(day, locale)}>
-          {(props) => (
-            <input
-              {...props}
-              type="date"
-              value={day}
-              min={todayInNador()}
-              max={todayInNador(30)}
-              onChange={(event) => {
-                if (event.target.value) {
-                  setDay(event.target.value);
-                  setSlotChoice(null);
-                  setError(null);
-                }
-              }}
-            />
-          )}
-        </Field>
+        <fieldset className="stack" style={{ ['--gap' as string]: '0.6rem', border: 0, margin: 0, padding: 0 }}>
+          <legend className="legend">{t.dayLabel}</legend>
+          <div className="day-chips">
+            {Array.from({ length: CHIP_DAYS }, (_, offset) => todayInNador(offset)).map((chip) => {
+              const label = shortDay(chip, locale);
+              return (
+                <button
+                  key={chip}
+                  type="button"
+                  className="day-chip"
+                  aria-pressed={chip === day}
+                  aria-label={longDate(chip, locale)}
+                  onClick={() => {
+                    setDay(chip);
+                    setSlotChoice(null);
+                    setError(null);
+                  }}
+                >
+                  <small>{label.weekday}</small>
+                  <strong className="ltr">{label.day}</strong>
+                </button>
+              );
+            })}
+          </div>
+          <details className="other-day" open={day > todayInNador(CHIP_DAYS - 1)}>
+            <summary>{t.slotOtherDay}</summary>
+            <Field id="day" label={t.dayLabel} help={longDate(day, locale)}>
+              {(props) => (
+                <input
+                  {...props}
+                  type="date"
+                  value={day}
+                  min={todayInNador()}
+                  max={todayInNador(30)}
+                  onChange={(event) => {
+                    if (event.target.value) {
+                      setDay(event.target.value);
+                      setSlotChoice(null);
+                      setError(null);
+                    }
+                  }}
+                />
+              )}
+            </Field>
+          </details>
+        </fieldset>
 
         {dayData === null ? (
           <p className="muted" role="status" style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
@@ -892,7 +944,7 @@ export function BookingWizard({ locale, t, service }: Props) {
           <fieldset>
             <legend className="legend">{t.summarySlot}</legend>
             {isToday && dayData.immediate_available && (
-              <label className="choice" style={{ marginBottom: '0.5rem' }}>
+              <label className="choice choice-asap" style={{ marginBottom: '1rem' }}>
                 <input
                   type="radio"
                   name="slot"
@@ -902,25 +954,52 @@ export function BookingWizard({ locale, t, service }: Props) {
                     setError(null);
                   }}
                 />
-                <span>{t.slotAsap}</span>
+                <BoltIcon />
+                <span>
+                  <strong>{t.slotAsap}</strong>
+                  <small>{t.slotAsapHelp}</small>
+                </span>
               </label>
             )}
-            <div className="slot-grid">
-              {dayData.slots.map((slot) => (
-                <label key={slot} className="choice">
-                  <input
-                    type="radio"
-                    name="slot"
-                    checked={slotChoice === slot}
-                    onChange={() => {
-                      setSlotChoice(slot);
-                      setError(null);
-                    }}
-                  />
-                  <span className="ltr">{slotTime(slot)}</span>
-                </label>
-              ))}
-            </div>
+            {(['morning', 'afternoon', 'evening'] as const).map((part) => {
+              const slots = dayData.slots.filter((slot) => dayPart(slot, evening) === part);
+              if (slots.length === 0) {
+                return null;
+              }
+              const extra =
+                part === 'evening' && evening
+                  ? fill(t.slotEveningExtra, {
+                      amount:
+                        evening.mode === 'fixed'
+                          ? formatDirhams(evening.value, locale, t.currencyUnit)
+                          : `${evening.value} %`,
+                    })
+                  : null;
+              return (
+                <div key={part} className="slot-group">
+                  <p className="slot-group-head">
+                    <span>{{ morning: t.slotMorning, afternoon: t.slotAfternoon, evening: t.slotEvening }[part]}</span>
+                    {extra && <span className="slot-extra ltr">{extra}</span>}
+                  </p>
+                  <div className="slot-grid">
+                    {slots.map((slot) => (
+                      <label key={slot} className="choice">
+                        <input
+                          type="radio"
+                          name="slot"
+                          checked={slotChoice === slot}
+                          onChange={() => {
+                            setSlotChoice(slot);
+                            setError(null);
+                          }}
+                        />
+                        <span className="ltr">{slotTime(slot)}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
           </fieldset>
         )}
 
@@ -953,14 +1032,23 @@ export function BookingWizard({ locale, t, service }: Props) {
             <dd>{service.name}</dd>
           </div>
           <div>
+            <button type="button" className="summary-edit" disabled={busy} onClick={() => go('patient')}>
+              {t.summaryEdit}
+            </button>
             <dt>{t.summaryPatient}</dt>
             <dd>{profile ? `${profile.first_name} ${profile.last_name}` : ''}</dd>
           </div>
           <div>
+            <button type="button" className="summary-edit" disabled={busy} onClick={() => go('address')}>
+              {t.summaryEdit}
+            </button>
             <dt>{t.summaryAddress}</dt>
             <dd>{address ? `${address.label}\n${address.line}` : ''}</dd>
           </div>
           <div>
+            <button type="button" className="summary-edit" disabled={busy} onClick={() => go('slot')}>
+              {t.summaryEdit}
+            </button>
             <dt>{t.summarySlot}</dt>
             <dd>
               {slotChoice === ASAP || !slotChoice

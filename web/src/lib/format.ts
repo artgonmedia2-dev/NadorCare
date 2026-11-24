@@ -25,6 +25,16 @@ export function longDate(isoDate: string, locale: Locale): string {
   }).format(date);
 }
 
+/** Jour `AAAA-MM-JJ` en abrégé pour une pastille : « mar. » et « 24 ». Date de Nador, chiffres latins. */
+export function shortDay(isoDate: string, locale: Locale): { weekday: string; day: string } {
+  const [year, month, day] = isoDate.slice(0, 10).split('-').map(Number);
+  const date = new Date(Date.UTC(year ?? 1970, (month ?? 1) - 1, day ?? 1));
+  return {
+    weekday: new Intl.DateTimeFormat(intlLocale[locale], { weekday: 'short', timeZone: 'UTC' }).format(date),
+    day: String(day ?? 1),
+  };
+}
+
 /** Heure d'un créneau : celle que le serveur envoie, à l'heure de Nador. */
 export function slotTime(iso: string): string {
   return iso.slice(11, 16);

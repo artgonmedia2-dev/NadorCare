@@ -7,7 +7,7 @@ import { isLocale } from '@/i18n/config';
 import { fill, getDictionary } from '@/i18n/dictionary';
 import { formatDirhams } from '@/lib/format';
 import { fetchPublic } from '@/lib/server-api';
-import type { CareService } from '@/lib/types';
+import type { CareService, Surcharge } from '@/lib/types';
 
 type Props = { params: Promise<{ locale: string; slug: string }> };
 
@@ -24,7 +24,12 @@ export default async function BookingPage({ params }: Props) {
     notFound();
   }
   const t = getDictionary(locale);
-  const service = await fetchPublic<CareService>(`/catalogue/services/${encodeURIComponent(slug)}`, locale);
+  const [service, surcharges] = await Promise.all([
+    fetchPublic<CareService>(`/catalogue/services/${encodeURIComponent(slug)}`, locale),
+    fetchPublic<Surcharge[]>('/catalogue/surcharges', locale),
+  ]);
+  // Majoration du soir, annoncée sur les créneaux concernés.
+  const evening = surcharges?.find((surcharge) => surcharge.type === 'night') ?? null;
   if (!service) {
     notFound();
   }
@@ -37,7 +42,7 @@ export default async function BookingPage({ params }: Props) {
     <section className="section">
       <div className="container booking-grid">
         <div className="card wizard-card">
-          <BookingWizard locale={locale} t={t} service={service} />
+          <BookingWizard locale={locale} t={t} service={service} evening={evening} />
         </div>
 
         {/* Rappel du soin choisi, visible pendant tout le parcours. */}

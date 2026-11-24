@@ -131,6 +131,41 @@ export function CareIcon({ size }: Sized) {
 }
 
 /** Marque provisoire, en attendant le logo : une maison et une croix de soin. */
+export function PinIcon({ size }: Sized) {
+  return (
+    <Icon size={size}>
+      <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+      <circle cx="12" cy="10" r="3" />
+    </Icon>
+  );
+}
+
+export function SearchIcon({ size }: Sized) {
+  return (
+    <Icon size={size}>
+      <circle cx="11" cy="11" r="8" />
+      <path d="m21 21-4.3-4.3" />
+    </Icon>
+  );
+}
+
+export function CalendarIcon({ size }: Sized) {
+  return (
+    <Icon size={size}>
+      <rect x="3" y="4" width="18" height="17" rx="2" />
+      <path d="M3 9h18M8 2v4M16 2v4" />
+    </Icon>
+  );
+}
+
+export function BoltIcon({ size }: Sized) {
+  return (
+    <Icon size={size}>
+      <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z" />
+    </Icon>
+  );
+}
+
 export function BrandMark({ size = 32 }: Sized) {
   return (
     <svg width={size} height={size} viewBox="0 0 32 32" aria-hidden="true" focusable="false">
