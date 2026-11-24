@@ -25,7 +25,8 @@ type Step = 'loading' | 'phone' | 'code' | 'consent' | 'patient' | 'address' | '
 const ASAP = 'asap';
 const RELATIONSHIPS = ['self', 'parent', 'child', 'spouse', 'other'] as const;
 /** Étapes numérotées du parcours, une fois connecté : les mêmes que dans l'application. */
-const NUMBERED: Partial<Record<Step, number>> = { patient: 1, address: 2, slot: 3, summary: 4 };
+// La connexion compte comme la première étape : sans elle, la page de réservation ne disait pas où l'on en était.
+const NUMBERED: Partial<Record<Step, number>> = { phone: 1, code: 1, consent: 1, patient: 2, address: 3, slot: 4, summary: 5 };
 
 /** Nombre de jours proposés en pastilles ; au-delà, « Autre date » ouvre le calendrier. */
 const CHIP_DAYS = 7;
@@ -521,10 +522,10 @@ export function BookingWizard({ locale, t, service, evening = null }: Props) {
   );
 
   // Les quatre étapes, avec leur nom : on voit d'où l'on vient et ce qui reste.
-  const stepNames = [t.summaryPatient, t.summaryAddress, t.summarySlot, t.stepCheck];
+  const stepNames = [t.stepLogin, t.summaryPatient, t.summaryAddress, t.summarySlot, t.stepCheck];
   const progress = numbered && (
     <div>
-      <p className="progress">{fill(t.stepProgress, { current: numbered, total: 4 })}</p>
+      <p className="progress">{fill(t.stepProgress, { current: numbered, total: stepNames.length })}</p>
       <ol className="stepper" aria-hidden="true">
         {stepNames.map((name, index) => (
           <li
@@ -559,6 +560,7 @@ export function BookingWizard({ locale, t, service, evening = null }: Props) {
         }}
       >
         {title(t.phoneTitle)}
+        {progress}
         <p className="muted">{t.phoneSubtitle}</p>
         {errorNotice}
         <Field id="phone" label={t.phoneLabel} error={fieldErrors.phone} help={t.phoneHelper}>
@@ -594,6 +596,7 @@ export function BookingWizard({ locale, t, service, evening = null }: Props) {
         }}
       >
         {title(t.otpTitle)}
+        {progress}
         <p className="muted">{fill(t.otpSubtitle, { phone: isolateLtr(phone.trim()) })}</p>
         {errorNotice}
         <Field id="code" label={t.otpLabel} error={fieldErrors.code}>
@@ -643,6 +646,7 @@ export function BookingWizard({ locale, t, service, evening = null }: Props) {
         }}
       >
         {title(t.consentTitle)}
+        {progress}
         <p className="muted">{t.consentIntro}</p>
         {errorNotice}
         {/* Rien n'est coché d'avance : l'accord doit être explicite. */}

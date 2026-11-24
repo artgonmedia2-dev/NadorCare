@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
 
 import { BookingWizard } from '@/components/BookingWizard';
-import { CareIcon } from '@/components/icons';
+import { CategoryIcon } from '@/components/icons';
 import { isLocale } from '@/i18n/config';
 import { fill, getDictionary } from '@/i18n/dictionary';
 import { formatDirhams } from '@/lib/format';
@@ -52,7 +52,7 @@ export default async function BookingPage({ params }: Props) {
           </p>
           <div className="order-service">
             <span className="icon-tile">
-              <CareIcon />
+              <CategoryIcon slug={service.category.slug} />
             </span>
             <p className="order-name">{service.name}</p>
           </div>

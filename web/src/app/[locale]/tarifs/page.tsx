@@ -2,12 +2,14 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
 import { Faq } from '@/components/Faq';
+import { JsonLd } from '@/components/JsonLd';
 import { InfoIcon } from '@/components/icons';
 import { PriceExplorer } from '@/components/PriceExplorer';
 import { guardRates, guardShifts } from '@/content/home-guard';
 import { isLocale } from '@/i18n/config';
 import { getDictionary } from '@/i18n/dictionary';
 import { formatDirhams } from '@/lib/format';
+import { absoluteUrl, dirhams, organizationId, pageMetadata } from '@/lib/seo';
 import { fetchPublic } from '@/lib/server-api';
 import type { CareCategory, CareService, Surcharge } from '@/lib/types';
 
@@ -19,7 +21,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return {};
   }
   const t = getDictionary(locale);
-  return { title: t.pricesTitle, description: t.pricesIntro };
+  return pageMetadata(locale, '/tarifs', { title: t.pricesTitle, description: t.pricesIntro });
 }
 
 /** Tarifs : grille des soins à explorer, garde-malade, questions fréquentes. */
@@ -37,8 +39,31 @@ export default async function PricesPage({ params }: Props) {
   ]);
   const evening = surcharges?.find((surcharge) => surcharge.type === 'night') ?? null;
 
+  // La grille, lisible par les moteurs : chaque soin à domicile et son tarif de jour, tirés de l'API.
+  const catalogue = {
+    '@context': 'https://schema.org',
+    '@type': 'OfferCatalog',
+    name: t.pricesTitle,
+    description: t.pricesIntro,
+    url: absoluteUrl(`/${locale}/tarifs`),
+    itemListElement: (services ?? [])
+      .filter((service) => service.delivery_mode === 'home')
+      .map((service) => ({
+        '@type': 'Offer',
+        price: dirhams(service.price.amount),
+        priceCurrency: 'MAD',
+        itemOffered: {
+          '@type': 'Service',
+          name: service.name,
+          url: absoluteUrl(`/${locale}/soins/${service.slug}`),
+          provider: { '@id': organizationId() },
+        },
+      })),
+  };
+
   return (
     <>
+      {services !== null && <JsonLd data={catalogue} />}
       <section className="page-head">
         <div className="container stack" style={{ ['--gap' as string]: '1rem' }}>
           <h1>{t.pricesTitle}</h1>

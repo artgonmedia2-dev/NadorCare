@@ -70,7 +70,7 @@ export function PriceExplorer({ locale, t, categories, services, evening }: Prop
             id={searchId}
             type="search"
             inputMode="search"
-            placeholder={t.catalogueSearchHint}
+            placeholder={t.priceSearchHint}
             value={query}
             onChange={(event) => setQuery(event.target.value)}
           />
@@ -153,7 +153,7 @@ export function PriceExplorer({ locale, t, categories, services, evening }: Prop
                 </p>
               </div>
               <p className="price-row-amount ltr">{money(priceOf(service))}</p>
-              <Link className="button button-secondary button-small" href={`/${locale}/reserver/${service.slug}`}>
+              <Link className="button button-text" href={`/${locale}/reserver/${service.slug}`}>
                 {t.bookShort}
               </Link>
             </li>

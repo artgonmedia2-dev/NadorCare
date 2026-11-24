@@ -46,32 +46,6 @@ img {
   text-decoration: underline;
 }
 
-.category-grid {
-  display: grid;
-  gap: 1rem;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
-}
-
-.category-card {
-  display: flex;
-  flex-direction: column;
-  border-radius: var(--radius-large);
-  overflow: hidden;
-  background: var(--card);
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow);
-  color: var(--text);
-  text-decoration: none;
-  cursor: pointer;
-  transition: border-color 200ms ease, box-shadow 200ms ease;
-}
-
-.category-card:hover {
-  border-color: var(--primary);
-  box-shadow: var(--shadow-hover);
-}
-
-.category-card img,
 .category-fallback {
   width: 100%;
   aspect-ratio: 4 / 3;
@@ -86,29 +60,8 @@ img {
   color: var(--on-primary-soft);
 }
 
-.category-label {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  padding: 1rem 1.15rem;
-  font-family: var(--font-heading), var(--font-body), system-ui, sans-serif;
-  font-weight: 700;
-  font-size: 1.1rem;
-}
-
-:lang(ar) .category-label,
 :lang(ar) .price-row-name {
   font-family: var(--font-arabic), var(--font-body), Tahoma, sans-serif;
-}
-
-.category-label svg {
-  color: var(--border-strong);
-  flex: none;
-}
-
-.category-card:hover .category-label svg {
-  color: var(--primary);
 }
 
 .narrow-wide {
@@ -200,7 +153,6 @@ button.chip {
   list-style: none;
   padding: 0;
   background: var(--card);
-  border: 1px solid var(--border);
   border-radius: var(--radius-large);
   box-shadow: var(--shadow);
   overflow: hidden;
@@ -266,11 +218,51 @@ button.chip {
   text-align: end;
 }
 
-/* Sur téléphone, le bouton passe sous le nom et le prix, sur toute la largeur. */
-@media (max-width: 719px) {
-  .price-row .button {
-    grid-column: 1 / -1;
-  }
+/* « Réserver » en lien discret : vingt boutons encadrés en colonne faisaient du bruit. */
+.price-row .button-text {
+  min-height: 44px;
+  padding-inline: 0.9rem;
+}
+
+/* Liste des soins : toute la ligne mène à la fiche du soin. */
+.service-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  color: inherit;
+  text-decoration: none;
+  transition: background-color 150ms ease;
+}
+
+.service-row:hover {
+  background: var(--surface);
+}
+
+.service-row + .service-row {
+  border-top: 1px solid var(--card-muted);
+}
+
+.service-row-price {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-heading), system-ui, sans-serif;
+  font-weight: 800;
+  font-size: 1.2rem;
+  white-space: nowrap;
+  color: var(--primary-strong);
+}
+
+.service-row-price svg {
+  color: var(--text-muted);
+}
+
+.category-head {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
 }
 
 /* Garde-malade : tableau sur grand écran, cartes sur téléphone. */
@@ -356,14 +348,16 @@ button.chip {
 }
 
 /* Questions fréquentes. */
-.faq details {
+/* Une seule carte, les questions séparées par un filet. */
+.faq {
   background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: var(--radius-large);
+  box-shadow: var(--shadow);
+  overflow: hidden;
 }
 
 .faq details + details {
-  margin-top: 0.6rem;
+  border-top: 1px solid var(--card-muted);
 }
 
 .faq summary {
@@ -372,11 +366,10 @@ button.chip {
   justify-content: space-between;
   gap: 1rem;
   min-height: 60px;
-  padding: 0.9rem 1.15rem;
+  padding: 0.9rem 1.25rem;
   font-weight: 700;
   cursor: pointer;
   list-style: none;
-  border-radius: var(--radius);
 }
 
 .faq summary::-webkit-details-marker {
@@ -407,6 +400,115 @@ button.chip {
 }
 
 .faq details p {
-  padding: 0 1.15rem 1.1rem;
+  padding: 0 1.25rem 1.1rem;
   color: var(--text-muted);
 }
+
+/* Fiche d'un soin : le résumé en une phrase, puis les questions sur ce soin (référencement). */
+.service-summary {
+  padding: 1rem 1.25rem;
+  border-radius: var(--radius);
+  background: var(--primary-soft);
+  color: var(--on-primary-soft);
+  font-weight: 600;
+}
+
+.service-faq {
+  margin-block-start: 3rem;
+}
+
+.service-faq-list {
+  background: var(--card);
+  border-radius: var(--radius-large);
+  box-shadow: var(--shadow);
+}
+
+.service-faq-item {
+  padding: 1.1rem 1.25rem;
+}
+
+.service-faq-item + .service-faq-item {
+  border-top: 1px solid var(--card-muted);
+}
+
+.service-faq-item h3 {
+  font-size: 1.125rem;
+  margin-block-end: 0.375rem;
+}
+
+/* --- Téléphone (2026-11-24) --- */
+@media (max-width: 619px) {
+  /* Catégories sur une ligne qui défile, jusqu'aux bords de l'écran. */
+  .chips {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    margin-inline: -1.25rem;
+    padding: 2px 1.25rem 6px;
+    scroll-snap-type: x proximity;
+    /* Sans cette marge, l'aimantation colle la première pastille au bord de l'écran. */
+    scroll-padding-inline: 1.25rem;
+    scrollbar-width: none;
+  }
+
+  .chips::-webkit-scrollbar {
+    display: none;
+  }
+
+  .chips > * {
+    flex: none;
+    scroll-snap-align: start;
+  }
+
+  /* Fiche d'un soin : l'icône au-dessus du titre, qui garde toute la largeur. */
+  .detail-title {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .detail-title .icon-tile-large {
+    width: 52px;
+    height: 52px;
+  }
+}
+
+/* Barre de réservation de la fiche d'un soin, sur téléphone seulement. */
+.mobile-book-bar {
+  display: none;
+}
+
+@media (max-width: 899px) {
+  .mobile-book-bar {
+    position: fixed;
+    inset-inline: 0;
+    bottom: 0;
+    z-index: 25;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.75rem 1.25rem calc(0.75rem + env(safe-area-inset-bottom));
+    background: var(--card);
+    box-shadow: 0 -8px 24px rgb(16 32 29 / 0.12);
+  }
+
+  .mobile-book-bar p {
+    display: grid;
+    line-height: 1.2;
+  }
+
+  .mobile-book-bar strong {
+    font-family: var(--font-heading), system-ui, sans-serif;
+    font-size: 1.35rem;
+  }
+
+  /* La barre ne cache pas la fin de la page, ni les boutons d'appel. */
+  body:has(.mobile-book-bar) {
+    padding-bottom: 5.5rem;
+  }
+
+  body:has(.mobile-book-bar) .contact-bar {
+    bottom: 6.5rem;
+  }
+}
+

@@ -5,9 +5,13 @@ import { notFound } from 'next/navigation';
 import type { ReactNode } from 'react';
 
 import { BrandMark, ChatIcon, PhoneIcon, WarningIcon } from '@/components/icons';
+import { HeaderCta } from '@/components/HeaderCta';
+import { JsonLd } from '@/components/JsonLd';
+import { MobileMenu } from '@/components/MobileMenu';
 import { LanguageSwitch } from '@/components/LanguageSwitch';
 import { direction, isLocale, locales } from '@/i18n/config';
 import { getDictionary } from '@/i18n/dictionary';
+import { absoluteUrl, organizationId, siteUrl, websiteId } from '@/lib/seo';
 import { fetchPublic } from '@/lib/server-api';
 import type { CareCategory } from '@/lib/types';
 
@@ -38,10 +42,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
   const t = getDictionary(locale);
 
+  // Adresse canonique et versions linguistiques : propres à chaque page (pageMetadata).
   return {
+    metadataBase: new URL(siteUrl()),
     title: { default: `${t.siteName} — ${t.heroTitle}`, template: `%s — ${t.siteName}` },
     description: t.metaDescription,
-    alternates: { languages: Object.fromEntries(locales.map((code) => [code, `/${code}`])) },
   };
 }
 
@@ -59,6 +64,35 @@ export default async function LocaleLayout({ children, params }: Props) {
   const phone = process.env.NEXT_PUBLIC_CONTACT_PHONE?.trim();
   const whatsapp = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER?.trim().replace(/\D/g, '');
 
+  // L'agence et le site, décrits pour les moteurs de recherche et les assistants. Seuls des faits
+  // établis : pas d'adresse postale ni de note tant qu'elles n'existent pas.
+  const organization: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'MedicalBusiness',
+        '@id': organizationId(),
+        name: t.siteName,
+        url: absoluteUrl(`/${locale}`),
+        description: t.metaDescription,
+        image: absoluteUrl('/images/hero-1200.webp'),
+        areaServed: { '@type': 'City', name: 'Nador', containedInPlace: { '@type': 'Country', name: 'MA' } },
+        availableLanguage: [...locales],
+        paymentAccepted: 'Cash',
+        currenciesAccepted: 'MAD',
+        ...(phone ? { telephone: phone } : {}),
+      },
+      {
+        '@type': 'WebSite',
+        '@id': websiteId(),
+        name: t.siteName,
+        url: siteUrl(),
+        inLanguage: locale,
+        publisher: { '@id': organizationId() },
+      },
+    ],
+  };
+
   return (
     <html
       lang={locale}
@@ -66,23 +100,10 @@ export default async function LocaleLayout({ children, params }: Props) {
       className={`${heading.variable} ${body.variable} ${arabic.variable}`}
     >
       <body>
+        <JsonLd data={organization} />
         <a className="skip-link" href="#contenu">
           {t.skipToContent}
         </a>
-
-        {/* Bandeau supérieur : où l'on intervient, comment joindre, la langue. */}
-        <div className="top-bar">
-          <div className="container">
-            <p className="top-bar-note">{t.heroEyebrow}</p>
-            {phone && (
-              <a className="top-bar-link ltr" href={`tel:${phone}`}>
-                <PhoneIcon />
-                {phone}
-              </a>
-            )}
-            <LanguageSwitch current={locale} label={t.languageLabel} />
-          </div>
-        </div>
 
         <header className="site-header">
           <div className="container">
@@ -90,17 +111,33 @@ export default async function LocaleLayout({ children, params }: Props) {
               <BrandMark />
               <span>{t.siteName}</span>
             </Link>
-            <nav className="site-nav" aria-label={t.siteName}>
+            {/* Grand écran : la navigation en ligne. Téléphone : le menu (MobileMenu), plus bas. */}
+            <nav className="site-nav" aria-label={t.mainNav}>
               <Link className="nav-link" href={`/${locale}/soins`}>
                 {t.homeCatalogue}
               </Link>
               <Link className="nav-link" href={`/${locale}/tarifs`}>
                 {t.navPrices}
               </Link>
-              <Link className="button button-primary button-small" href={`/${locale}/soins`}>
-                {t.headerCta}
-              </Link>
+              {phone && (
+                <a className="nav-link ltr" href={`tel:${phone}`}>
+                  <PhoneIcon />
+                  {phone}
+                </a>
+              )}
+              <LanguageSwitch current={locale} label={t.languageLabel} />
             </nav>
+            <HeaderCta href={`/${locale}/soins`} label={t.headerCta} />
+            <MobileMenu
+              locale={locale}
+              links={[
+                { href: `/${locale}`, label: t.navHome },
+                { href: `/${locale}/soins`, label: t.homeCatalogue },
+                { href: `/${locale}/tarifs`, label: t.navPrices },
+              ]}
+              phone={phone || undefined}
+              texts={{ open: t.menuOpen, close: t.menuClose, nav: t.mainNav, language: t.languageLabel }}
+            />
           </div>
         </header>
 

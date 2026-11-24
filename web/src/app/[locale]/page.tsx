@@ -1,23 +1,23 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 import { Carousel } from '@/components/Carousel';
 import { Faq } from '@/components/Faq';
 import { QuickBook, type QuickBookGroup } from '@/components/QuickBook';
-import {
-  ArrowIcon,
-  CareIcon,
-  CheckIcon,
-  ClockIcon,
-  InfoIcon,
-  PinIcon,
-} from '@/components/icons';
+import { CategoryIcon, CheckIcon, ClockIcon, InfoIcon } from '@/components/icons';
 import { categoryPictures, Picture } from '@/components/Picture';
 import { isLocale } from '@/i18n/config';
 import { fill, getDictionary } from '@/i18n/dictionary';
 import { formatDirhams } from '@/lib/format';
+import { pageMetadata } from '@/lib/seo';
 import { fetchPublic } from '@/lib/server-api';
 import type { CareCategory, CareService, Surcharge } from '@/lib/types';
+
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  return isLocale(locale) ? pageMetadata(locale, '') : {};
+}
 
 export default async function HomePage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
@@ -53,21 +53,22 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
 
   return (
     <>
-      <section className="hero">
+      <section className="hero" aria-labelledby="titre-accroche">
         <div className="container hero-grid">
-          <div className="stack" style={{ ['--gap' as string]: '1.25rem' }}>
-            <p className="hero-eyebrow">
-              <PinIcon size={16} />
-              {t.heroEyebrow}
-            </p>
-            <h1>{t.heroTitle}</h1>
+          <div className="stack" style={{ ['--gap' as string]: '1.5rem' }}>
+            <h1 id="titre-accroche">{t.heroTitle}</h1>
             <p className="lead">{t.heroBody}</p>
-            <p className="hero-actions">
-              <Link className="button button-primary button-large" href={`/${locale}/soins`}>
-                {t.heroCta}
-                <ArrowIcon />
-              </Link>
-              <Link className="button button-secondary button-large" href={`/${locale}/tarifs`}>
+            {quickGroups.length > 0 ? (
+              <QuickBook locale={locale} t={t} groups={quickGroups} />
+            ) : (
+              <p>
+                <Link className="button button-primary button-large" href={`/${locale}/soins`}>
+                  {t.heroCta}
+                </Link>
+              </p>
+            )}
+            <p>
+              <Link className="text-link quickbook-more" href={`/${locale}/tarifs`}>
                 {t.seeAllPrices}
               </Link>
             </p>
@@ -81,32 +82,25 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
             </ul>
           </div>
 
-          <div className="hero-visual">
-            <div className="hero-media">
-              <Picture name="hero" sizes="(min-width: 900px) 520px, 100vw" priority />
-            </div>
-            {/* Carte posée sur la photo : ce que le patient verra une fois le soignant parti. */}
-            <div className="hero-float">
-              <span className="icon-tile icon-tile-live">
-                <PinIcon />
-              </span>
-              <p>
-                <strong>{t.heroLiveTitle}</strong>
-                <span>{t.heroLiveBody}</span>
-              </p>
-            </div>
+          <div className="hero-media">
+            <Picture name="hero" sizes="(min-width: 900px) 480px, 100vw" priority />
           </div>
         </div>
-      </section>
 
-      {/* Réservation rapide, à cheval sur l'accroche : choisir un soin mène droit au parcours. */}
-      {quickGroups.length > 0 && (
-        <section className="quickbook-wrap" aria-label={t.quickTitle}>
-          <div className="container">
-            <QuickBook locale={locale} t={t} groups={quickGroups} />
-          </div>
-        </section>
-      )}
+        {/* Le tracé de pouls du logo, sur la lisière de l'accroche : le seul ornement de la page. */}
+        <svg className="hero-pulse" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+          <path
+            d="M0 60 H930 L975 60 L998 28 L1030 104 L1066 6 L1092 60 H1440"
+            pathLength={1}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            vectorEffect="non-scaling-stroke"
+          />
+        </svg>
+      </section>
 
       <section className="section" aria-labelledby="titre-apropos">
         <div className="container about-grid">
@@ -114,7 +108,6 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
             <Picture name="kinesitherapie" sizes="(min-width: 900px) 520px, 100vw" />
           </div>
           <div className="stack" style={{ ['--gap' as string]: '1rem' }}>
-            <p className="eyebrow">{t.aboutEyebrow}</p>
             <h2 id="titre-apropos">{t.aboutTitle}</h2>
             <p className="lead">{t.aboutBody}</p>
             <ul className="check-list">
@@ -127,12 +120,6 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                 </li>
               ))}
             </ul>
-            <p>
-              <Link className="button button-primary" href={`/${locale}/soins`}>
-                {t.allServices}
-                <ArrowIcon />
-              </Link>
-            </p>
           </div>
         </div>
       </section>
@@ -140,13 +127,9 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       <section className="section section-tinted" aria-labelledby="titre-soins">
         <div className="container stack" style={{ ['--gap' as string]: '1.5rem' }}>
           <div className="section-head">
-            <div>
-              <p className="eyebrow">{t.featuredEyebrow}</p>
-              <h2 id="titre-soins">{t.featuredTitle}</h2>
-            </div>
-            <Link className="text-link" href={`/${locale}/tarifs`}>
-              {t.seeAllPrices}
-              <ArrowIcon size={18} />
+            <h2 id="titre-soins">{t.featuredTitle}</h2>
+            <Link className="text-link" href={`/${locale}/soins`}>
+              {t.allServices}
             </Link>
           </div>
 
@@ -166,7 +149,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                       <Picture name={service.category.slug} sizes="320px" />
                     ) : (
                       <span className="category-fallback">
-                        <CareIcon size={40} />
+                        <CategoryIcon slug={service.category.slug} size={56} />
                       </span>
                     )}
                     <span className="offer-body">
@@ -190,35 +173,9 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         </div>
       </section>
 
-      {/* Chiffres réels, lus dans le catalogue : aucun n'est inventé. */}
-      {categories !== null && services !== null && services.length > 0 && (
-        <section className="stats-band" aria-labelledby="titre-chiffres">
-          <div className="container">
-            <h2 id="titre-chiffres">{t.statsTitle}</h2>
-            <dl>
-              <div>
-                <dd>{services.length}</dd>
-                <dt>{t.statServices}</dt>
-              </div>
-              <div>
-                <dd>{categories.length}</dd>
-                <dt>{t.statCategories}</dt>
-              </div>
-              <div>
-                <dd>3</dd>
-                <dt>{t.statLanguages}</dt>
-              </div>
-            </dl>
-          </div>
-        </section>
-      )}
-
-      <section className="section" aria-labelledby="titre-etapes">
+      <section className="section section-tinted" aria-labelledby="titre-etapes">
         <div className="container stack" style={{ ['--gap' as string]: '1.5rem' }}>
-          <div>
-            <p className="eyebrow">{t.howEyebrow}</p>
-            <h2 id="titre-etapes">{t.howTitle}</h2>
-          </div>
+          <h2 id="titre-etapes">{t.howTitle}</h2>
           <ol className="steps">
             <li>
               <h3>{t.how1Title}</h3>
@@ -238,37 +195,19 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
 
       <section className="section section-tinted" aria-labelledby="titre-faq">
         <div className="container faq-grid">
-          <div className="faq-media">
-            <Picture name="hygiene-et-confort" sizes="(min-width: 900px) 440px, 100vw" />
-          </div>
-          <div className="stack" style={{ ['--gap' as string]: '1.25rem' }}>
-            <div>
-              <p className="eyebrow">{t.faqEyebrow}</p>
-              <h2 id="titre-faq">{t.faqTitle}</h2>
-            </div>
-            <Faq t={t} locale={locale} evening={evening} />
-          </div>
+          <h2 id="titre-faq">{t.faqTitle}</h2>
+          <Faq t={t} locale={locale} evening={evening} />
         </div>
       </section>
 
-      <section className="section">
-        <div className="container">
-          <div className="cta-band">
-            <div className="stack" style={{ ['--gap' as string]: '0.5rem' }}>
-              <h2>{t.ctaTitle}</h2>
-              <p>{t.ctaBody}</p>
-            </div>
-            <div className="hero-actions">
-              <Link className="button button-inverse button-large" href={`/${locale}/soins`}>
-                {t.heroCta}
-                <ArrowIcon />
-              </Link>
-              <Link className="button button-ghost button-large" href={`/${locale}/tarifs`}>
-                {t.seeAllPrices}
-              </Link>
-            </div>
-          </div>
+      <section className="container closing" aria-labelledby="titre-fin">
+        <div className="stack" style={{ ['--gap' as string]: '0.35rem' }}>
+          <h2 id="titre-fin">{t.ctaTitle}</h2>
+          <p>{t.ctaBody}</p>
         </div>
+        <Link className="button button-primary button-large" href={`/${locale}/soins`}>
+          {t.heroCta}
+        </Link>
       </section>
     </>
   );

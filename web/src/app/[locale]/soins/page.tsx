@@ -1,10 +1,11 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
-import { InfoIcon } from '@/components/icons';
-import { ServiceCard } from '@/components/ServiceCard';
+import { CategoryIcon, InfoIcon } from '@/components/icons';
+import { ServiceRow } from '@/components/ServiceCard';
 import { isLocale } from '@/i18n/config';
 import { getDictionary } from '@/i18n/dictionary';
+import { pageMetadata } from '@/lib/seo';
 import { fetchPublic } from '@/lib/server-api';
 import type { CareCategory, CareService } from '@/lib/types';
 
@@ -12,7 +13,11 @@ type Props = { params: Promise<{ locale: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
-  return isLocale(locale) ? { title: getDictionary(locale).homeCatalogue } : {};
+  if (!isLocale(locale)) {
+    return {};
+  }
+  const t = getDictionary(locale);
+  return pageMetadata(locale, '/soins', { title: t.homeCatalogue, description: t.metaServicesDescription });
 }
 
 /** Tous les soins, regroupés par catégorie. */
@@ -73,12 +78,17 @@ export default async function ServicesPage({ params }: Props) {
                 className="stack anchor-target"
                 aria-labelledby={`categorie-${category.slug}`}
               >
-                <h2 id={`categorie-${category.slug}`}>{category.name}</h2>
-                <div className="grid">
-                  {items.map((service) => (
-                    <ServiceCard key={service.slug} service={service} locale={locale} t={t} />
-                  ))}
+                <div className="category-head">
+                  <span className="icon-tile">
+                    <CategoryIcon slug={category.slug} />
+                  </span>
+                  <h2 id={`categorie-${category.slug}`}>{category.name}</h2>
                 </div>
+                <ul className="price-list">
+                  {items.map((service) => (
+                    <ServiceRow key={service.slug} service={service} locale={locale} t={t} />
+                  ))}
+                </ul>
               </section>
             ))
           )}

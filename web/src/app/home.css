@@ -1,194 +1,178 @@
 /*
- * Mise en page inspirée d'un site de maison de soins : bandeau supérieur, accroche avec carte
- * flottante, bande d'atouts à cheval, bloc « à propos » avec photo, carrousel de soins avec prix,
- * chiffres, questions avec photo, pied de page sombre à colonnes. La structure seule est reprise.
+ * Accueil et cadre du site (seconde refonte du 2026-11-24, après la revue visuelle).
+ *
+ * Trois fonds seulement : le sable de l'accroche, le gris clair des pages (le même que les
+ * applications) et le teal profond du pied de page. Un seul élément marquant : le tracé de pouls
+ * du logo, qui souligne l'accroche. Pas de surtitre au-dessus des titres, pas de flèche sur les
+ * boutons, des cartes sans bordure.
  */
 
-/* --- Bandeau supérieur --- */
-.top-bar {
-  background: var(--primary-deep);
-  color: #e3f4f1;
-  font-size: 0.92rem;
-}
-
-.top-bar .container {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0.35rem 1.25rem;
-  min-height: 48px;
-  padding-block: 0.3rem;
-}
-
-.top-bar-note {
-  margin-inline-end: auto;
-  font-weight: 600;
-}
-
-.top-bar-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  min-height: 44px;
-  color: #ffffff;
-  font-weight: 700;
-  text-decoration: none;
-}
-
-.top-bar-link:hover {
-  text-decoration: underline;
-}
-
-.top-bar .lang-switch {
-  background: rgb(255 255 255 / 0.12);
-}
-
-.top-bar .lang-switch a {
-  color: #e3f4f1;
-  min-height: 36px;
-}
-
-.top-bar .lang-switch a:hover {
-  color: #ffffff;
-}
-
-.top-bar .lang-switch a[aria-current="true"] {
-  background: #ffffff;
-  color: var(--primary-deep);
-  box-shadow: none;
-}
-
-.top-bar :focus-visible {
-  outline-color: #ffffff;
-}
-
-/* Sur un petit écran, la note laisse la place au sélecteur de langue. */
-@media (max-width: 560px) {
-  .top-bar-note {
-    display: none;
-  }
-
-  .top-bar .container {
-    justify-content: space-between;
-  }
-}
-
+/* --- En-tête : la langue y prend place, il n'y a plus de bandeau au-dessus --- */
 .site-header {
-  background: color-mix(in srgb, var(--card) 92%, transparent);
+  background: color-mix(in srgb, var(--card) 94%, transparent);
+}
+
+.site-header .lang-switch a {
+  min-height: 36px;
+  font-size: 0.9rem;
 }
 
 /* --- Accroche --- */
 .hero {
-  padding-block: clamp(2.5rem, 6vw, 4.5rem) clamp(4.5rem, 9vw, 7rem);
-}
-
-.hero-visual {
   position: relative;
+  overflow: visible;
+  padding-block: clamp(2.5rem, 6vw, 4.5rem) clamp(4rem, 8vw, 6rem);
+  background: var(--sand);
+  border-bottom: 0;
 }
 
-/* Photo au coin arrondi dissymétrique, avec un aplat décalé derrière. */
-.hero-visual::before {
-  content: "";
-  position: absolute;
-  inset-block: 1.25rem -1.25rem;
-  inset-inline: 1.25rem -1.25rem;
-  border-radius: 28px 120px 28px 28px;
-  background: var(--primary);
-  opacity: 0.14;
+.hero h1 {
+  font-size: clamp(2.5rem, 6vw, 4rem);
+  line-height: 1.04;
+  letter-spacing: -0.03em;
+  max-width: 12ch;
 }
 
-[dir="rtl"] .hero-visual::before,
-[dir="rtl"] .hero-media {
-  border-radius: 120px 28px 28px 28px;
+/* Téléphone : l'accroche se resserre pour que le choix du soin arrive vite. */
+@media (max-width: 619px) {
+  .hero {
+    padding-block: 1.75rem 3.5rem;
+  }
+
+  .hero h1 {
+    font-size: 2.4rem;
+  }
+
+  .hero .lead {
+    font-size: 1.0625rem;
+  }
+
+  .quickbook {
+    padding: 0.85rem;
+  }
+}
+
+:lang(ar) .hero h1 {
+  line-height: 1.25;
+  letter-spacing: 0;
+}
+
+.hero .lead {
+  max-width: 46ch;
 }
 
 .hero-media {
-  position: relative;
-  border-radius: 28px 120px 28px 28px;
-}
-
-.hero-float {
-  position: absolute;
-  inset-block-end: -1.5rem;
-  inset-inline-start: -1rem;
-  display: flex;
-  align-items: flex-start;
-  gap: 0.85rem;
-  max-width: min(22rem, 88%);
-  padding: 1rem 1.1rem;
   border-radius: var(--radius-large);
-  background: var(--card);
-  border: 1px solid var(--border);
-  box-shadow: 0 2px 4px rgb(16 32 29 / 0.08), 0 18px 40px rgb(16 32 29 / 0.16);
+  box-shadow: none;
 }
 
-.hero-float strong {
-  display: block;
-  font-family: var(--font-heading), var(--font-body), system-ui, sans-serif;
-}
-
-.hero-float span:not(.icon-tile) {
-  display: block;
-  font-size: 0.92rem;
-  color: var(--text-muted);
-  line-height: 1.45;
-}
-
-@media (max-width: 899px) {
-  .hero-float {
-    inset-inline-start: 0.75rem;
-  }
-}
-
-/* --- Bande d'atouts, à cheval sur l'accroche --- */
-.feature-strip {
-  margin-top: clamp(-3.25rem, -5vw, -2.25rem);
-  position: relative;
-  z-index: 2;
-}
-
-.feature-strip ul {
+.hero-proofs {
   list-style: none;
+  margin: 0;
   padding: 0;
-  display: grid;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-large);
-  box-shadow: var(--shadow);
-  overflow: hidden;
-}
-
-.feature-strip li {
   display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.hero-proofs li {
+  display: inline-flex;
   align-items: center;
-  gap: 0.9rem;
-  padding: 1.1rem 1.25rem;
+  gap: 0.45rem;
 }
 
-.feature-strip li + li {
-  border-top: 1px solid var(--card-muted);
+.hero-proofs svg {
+  color: var(--primary);
 }
 
-@media (min-width: 820px) {
-  .feature-strip ul {
-    grid-template-columns: repeat(3, 1fr);
+/* Le tracé de pouls du logo, sur la lisière entre l'accroche et la suite : dessiné une fois. */
+.hero-pulse {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  transform: translateY(50%);
+  width: 100%;
+  height: auto;
+  z-index: 1;
+  pointer-events: none;
+  color: var(--primary);
+}
+
+[dir='rtl'] .hero-pulse {
+  transform: translateY(50%) scaleX(-1);
+}
+
+.hero-pulse path {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: pulse-draw 1.8s cubic-bezier(0.65, 0, 0.35, 1) 0.3s forwards;
+}
+
+@keyframes pulse-draw {
+  to {
+    stroke-dashoffset: 0;
   }
+}
 
-  .feature-strip li + li {
-    border-top: 0;
-    border-inline-start: 1px solid var(--card-muted);
+@media (prefers-reduced-motion: reduce) {
+  .hero-pulse path {
+    animation: none;
+    stroke-dashoffset: 0;
   }
 }
 
-.feature-strip strong {
-  font-family: var(--font-heading), var(--font-body), system-ui, sans-serif;
-  font-size: 1.05rem;
-  line-height: 1.3;
+/* --- Choix du soin, dans l'accroche : un vrai champ et un bouton, rien d'autre --- */
+.quickbook {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-radius: var(--radius-large);
+  background: var(--card);
+  box-shadow: var(--shadow);
+  max-width: 36rem;
 }
 
-/* --- À propos et questions : photo et texte côte à côte --- */
-.about-grid,
-.faq-grid {
+@media (min-width: 620px) {
+  .quickbook {
+    grid-template-columns: 1fr auto;
+    align-items: end;
+  }
+}
+
+.quickbook-field {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.quickbook-field label {
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.quickbook select {
+  width: 100%;
+  min-height: 52px;
+  padding: 0 1rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.quickbook select:hover {
+  border-color: var(--primary);
+}
+
+.quickbook-more {
+  font-weight: 600;
+}
+
+/* --- À propos --- */
+.about-grid {
   display: grid;
   gap: 2rem;
   align-items: center;
@@ -199,44 +183,24 @@
     grid-template-columns: 0.9fr 1.1fr;
     gap: 3.5rem;
   }
-
-  .faq-grid {
-    grid-template-columns: 0.8fr 1.2fr;
-    gap: 3rem;
-    align-items: start;
-  }
-}
-
-.about-media,
-.faq-media {
-  overflow: hidden;
-  aspect-ratio: 4 / 3;
-  background: var(--card-muted);
-  box-shadow: var(--shadow);
 }
 
 .about-media {
-  border-radius: 120px 28px 28px 28px;
+  overflow: hidden;
+  aspect-ratio: 4 / 3;
+  border-radius: var(--radius-large);
+  background: var(--card-muted);
 }
 
-[dir="rtl"] .about-media {
-  border-radius: 28px 120px 28px 28px;
-}
-
-.faq-media {
-  border-radius: 28px;
-}
-
-.about-media img,
-.faq-media img {
+.about-media img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-/* Sur téléphone, la photo des questions n'apporte rien : elle laisse la place aux réponses. */
+/* Sur téléphone, la photo de l'accroche suffit : deux grandes photos à la suite faisaient doublon. */
 @media (max-width: 899px) {
-  .faq-media {
+  .about-media {
     display: none;
   }
 }
@@ -270,8 +234,8 @@
   height: 1.6rem;
   margin-top: 0.1rem;
   border-radius: 50%;
-  background: var(--primary);
-  color: var(--on-primary);
+  background: var(--primary-soft);
+  color: var(--on-primary-soft);
 }
 
 /* --- Carrousel de soins avec prix --- */
@@ -300,16 +264,16 @@
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  border: 2px solid var(--border);
+  border: 0;
   background: var(--card);
   color: var(--primary-strong);
+  box-shadow: var(--shadow);
   cursor: pointer;
-  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+  transition: background-color 150ms ease, color 150ms ease;
 }
 
 .round-button:hover {
   background: var(--primary);
-  border-color: var(--primary);
   color: var(--on-primary);
 }
 
@@ -344,16 +308,14 @@
   border-radius: var(--radius-large);
   overflow: hidden;
   background: var(--card);
-  border: 1px solid var(--border);
   box-shadow: var(--shadow);
   color: var(--text);
   text-decoration: none;
   cursor: pointer;
-  transition: border-color 200ms ease, box-shadow 200ms ease;
+  transition: box-shadow 200ms ease;
 }
 
 .offer-card:hover {
-  border-color: var(--primary);
   box-shadow: var(--shadow-hover);
 }
 
@@ -362,6 +324,15 @@
   width: 100%;
   aspect-ratio: 4 / 3;
   object-fit: cover;
+}
+
+/* Un soin sans photo : l'icône de sa catégorie sur le teal profond, voulue plutôt que vide. */
+.offer-card .category-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary-deep);
+  color: #ffffff;
 }
 
 .offer-body {
@@ -373,9 +344,9 @@
 }
 
 .offer-category {
-  font-size: 0.88rem;
-  font-weight: 700;
-  color: var(--primary-strong);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-muted);
 }
 
 .offer-name {
@@ -385,9 +356,7 @@
   line-height: 1.3;
 }
 
-:lang(ar) .offer-name,
-:lang(ar) .hero-float strong,
-:lang(ar) .feature-strip strong {
+:lang(ar) .offer-name {
   font-family: var(--font-arabic), var(--font-body), Tahoma, sans-serif;
 }
 
@@ -415,79 +384,46 @@
   color: var(--primary-strong);
 }
 
-/* --- Chiffres --- */
-.stats-band {
-  background: linear-gradient(135deg, var(--primary-deep) 0%, #0a5650 100%);
-  color: #ffffff;
-  padding-block: clamp(2rem, 5vw, 3.25rem);
-}
-
-.stats-band h2 {
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: #bfe8e1;
-  margin-bottom: 1.25rem;
-  letter-spacing: 0.02em;
-}
-
-.stats-band dl {
+/* --- Questions fréquentes : le titre à côté, la liste dans une seule carte --- */
+.faq-grid {
   display: grid;
   gap: 1.5rem;
+  align-items: start;
 }
 
-@media (min-width: 640px) {
-  .stats-band dl {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 2rem;
+@media (min-width: 900px) {
+  .faq-grid {
+    grid-template-columns: 0.75fr 1.25fr;
+    gap: 3rem;
   }
 }
 
-.stats-band dl > div {
+/* --- Fin de page : une phrase et une action, sans encadré --- */
+.closing {
   display: flex;
-  flex-direction: column;
-  padding-inline-start: 1.1rem;
-  border-inline-start: 3px solid #5cc9bb;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem 2rem;
+  padding-block: clamp(2rem, 5vw, 3rem);
+  border-top: 1px solid var(--border);
 }
 
-.stats-band dd {
-  margin: 0;
-  font-family: var(--font-heading), system-ui, sans-serif;
-  font-size: clamp(2.4rem, 6vw, 3.4rem);
-  font-weight: 800;
-  line-height: 1;
+.closing p {
+  color: var(--text-muted);
 }
 
-.stats-band dt {
-  margin-top: 0.4rem;
-  color: #d5efeb;
-  font-size: 1.05rem;
-}
-
-/* --- Appel à l'action --- */
-.button-ghost {
-  background: transparent;
-  color: #ffffff;
-  border-color: rgb(255 255 255 / 0.55);
-}
-
-.button-ghost:hover {
-  background: rgb(255 255 255 / 0.14);
-  border-color: #ffffff;
-}
-
-.cta-band :focus-visible,
-.stats-band :focus-visible,
+/* --- Pied de page sombre, à colonnes --- */
 .site-footer :focus-visible {
   outline-color: #ffffff;
 }
 
-/* --- Pied de page sombre, à colonnes --- */
 .site-footer {
   background: var(--primary-deep);
   color: #d5efeb;
   border-top: 0;
   margin-top: 0;
-  padding-block: clamp(2.5rem, 6vw, 4rem);
+  padding-block: clamp(2.5rem, 6vw, 3.5rem);
 }
 
 .site-footer .footer-grid {
@@ -496,9 +432,20 @@
   align-items: start;
 }
 
-@media (min-width: 620px) {
-  .site-footer .footer-grid {
-    grid-template-columns: 1fr 1fr;
+/* Même sur téléphone, les deux listes de liens côte à côte : la page s'en trouve bien plus courte. */
+.site-footer .footer-grid {
+  grid-template-columns: 1fr 1fr;
+}
+
+.site-footer .footer-grid > :first-child,
+.site-footer .footer-grid > :last-child {
+  grid-column: 1 / -1;
+}
+
+@media (min-width: 1000px) {
+  .site-footer .footer-grid > :first-child,
+  .site-footer .footer-grid > :last-child {
+    grid-column: auto;
   }
 }
 
@@ -511,13 +458,13 @@
 
 .site-footer .brand {
   color: #ffffff;
+  margin-inline-end: 0;
 }
 
 .site-footer h2 {
   font-size: 1rem;
   color: #ffffff;
   margin-bottom: 0.8rem;
-  letter-spacing: 0.02em;
 }
 
 .site-footer ul {
@@ -538,140 +485,4 @@
 .site-footer a:hover {
   color: #ffffff;
   text-decoration: underline;
-}
-
-/* --- Refonte du 2026-11-24 : accueil --- */
-.hero,
-[dir='rtl'] .hero {
-  background:
-    radial-gradient(50rem 24rem at 90% -10%, rgb(15 118 110 / 0.1), transparent 60%),
-    var(--sand);
-}
-
-.hero-eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  justify-self: start;
-  width: fit-content;
-  padding: 0.35rem 0.85rem;
-  border-radius: 999px;
-  background: var(--primary-soft);
-  color: var(--on-primary-soft);
-  font-weight: 700;
-  font-size: 0.92rem;
-}
-
-.hero-proofs {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem 1.25rem;
-  font-weight: 700;
-}
-
-.hero-proofs li {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-
-.hero-proofs svg {
-  color: var(--success);
-}
-
-.icon-tile-live {
-  background: var(--success-soft);
-  color: var(--success);
-}
-
-/* Barre de réservation rapide, à cheval sur l'accroche. */
-.quickbook-wrap {
-  position: relative;
-  z-index: 2;
-  margin-top: clamp(-4rem, -6vw, -2.5rem);
-  padding-bottom: 1rem;
-}
-
-.quickbook {
-  display: grid;
-  gap: 0.25rem;
-  padding: 0.5rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-large);
-  background: var(--card);
-  box-shadow: 0 2px 4px rgb(16 32 29 / 0.06), 0 16px 40px rgb(16 32 29 / 0.12);
-}
-
-@media (min-width: 900px) {
-  .quickbook {
-    grid-template-columns: 1.4fr 1fr 1fr auto;
-    align-items: center;
-  }
-}
-
-.quickbook-field {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  min-height: 64px;
-  padding: 0.5rem 1rem;
-  border-radius: var(--radius);
-}
-
-.quickbook-field svg {
-  color: var(--primary);
-  flex: none;
-}
-
-@media (min-width: 900px) {
-  .quickbook-field + .quickbook-field {
-    border-inline-start: 1px solid var(--border);
-    border-radius: 0;
-  }
-}
-
-.quickbook-care {
-  cursor: pointer;
-}
-
-.quickbook-care:hover,
-.quickbook-care:focus-within {
-  background: var(--surface-tint);
-}
-
-.quickbook-text {
-  display: grid;
-  gap: 0.1rem;
-  min-width: 0;
-  flex: 1;
-}
-
-.quickbook-label {
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-
-.quickbook select {
-  width: 100%;
-  min-height: 32px;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: var(--text);
-  font: inherit;
-  cursor: pointer;
-}
-
-.quickbook select:focus-visible {
-  outline: none;
-}
-
-.quickbook .button {
-  margin: 0.25rem;
 }
