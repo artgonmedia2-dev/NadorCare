@@ -87,6 +87,10 @@ jobs:
         run: php artisan test
 
       - name: La documentation OpenAPI versionnée est à jour
+        # Scramble lit le schéma des tables pour décrire les modèles : la seule base du service
+        # est celle des tests, déjà migrée par l'étape précédente.
+        env:
+          DB_DATABASE: nadorcare_test
         run: |
           php artisan scramble:export --path=/tmp/openapi.json
           diff <(jq -S . /tmp/openapi.json) <(jq -S . ../docs/openapi.json) \
