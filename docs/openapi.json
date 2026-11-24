@@ -33,6 +33,9 @@
             "name": "Professionnel \u2014 dossier"
         },
         {
+            "name": "Professionnel \u2014 planning"
+        },
+        {
             "name": "Professionnel \u2014 missions"
         },
         {
@@ -1637,81 +1640,12 @@
                         "$ref": "#/components/responses/AuthenticationException"
                     }
                 }
-            },
-            "put": {
-                "operationId": "v1.pro.profile.save",
-                "description": "Possible tant que le dossier n'est pas soumis, ou apr\u00e8s un refus.",
-                "summary": "Cr\u00e9er ou modifier mon dossier",
-                "tags": [
-                    "Professionnel \u2014 dossier"
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "type": "object",
-                                "properties": {
-                                    "professional_category_id": {
-                                        "type": "string",
-                                        "description": "Profession, parmi celles de `GET /catalogue/professional-categories`."
-                                    },
-                                    "license_number": {
-                                        "type": [
-                                            "string",
-                                            "null"
-                                        ],
-                                        "description": "Num\u00e9ro d'autorisation d'exercice.",
-                                        "maxLength": 60
-                                    },
-                                    "order_number": {
-                                        "type": [
-                                            "string",
-                                            "null"
-                                        ],
-                                        "description": "Num\u00e9ro d'inscription \u00e0 l'Ordre, pour les professions qui en ont un.",
-                                        "maxLength": 60
-                                    }
-                                },
-                                "required": [
-                                    "professional_category_id"
-                                ]
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "`ProfessionalFileResource`",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/components/schemas/ProfessionalFileResource"
-                                        }
-                                    },
-                                    "required": [
-                                        "data"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
             }
         },
         "/pro/profile/documents": {
             "post": {
                 "operationId": "v1.pro.profile.documents.store",
-                "description": "Photo ou PDF, chiffr\u00e9 avant stockage. La date d'expiration est obligatoire pour\nl'assurance responsabilit\u00e9 civile.",
+                "description": "Photo ou PDF, chiffr\u00e9 avant stockage. L'assurance responsabilit\u00e9 civile est facultative ;\nsi elle est d\u00e9pos\u00e9e, sa date d'expiration est obligatoire.",
                 "summary": "D\u00e9poser un justificatif",
                 "tags": [
                     "Professionnel \u2014 dossier"
@@ -1818,341 +1752,10 @@
                 }
             }
         },
-        "/pro/profile/zones": {
-            "put": {
-                "operationId": "v1.pro.profile.zones",
-                "description": "Remplace la liste des zones couvertes, parmi celles de `GET /catalogue/zones`.",
-                "summary": "Choisir mes zones",
-                "tags": [
-                    "Professionnel \u2014 dossier"
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "type": "object",
-                                "properties": {
-                                    "zone_ids": {
-                                        "type": "array",
-                                        "items": {
-                                            "type": "string"
-                                        },
-                                        "maxItems": 50,
-                                        "uniqueItems": true
-                                    }
-                                },
-                                "required": [
-                                    "zone_ids"
-                                ]
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "`ProfessionalFileResource`",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/components/schemas/ProfessionalFileResource"
-                                        }
-                                    },
-                                    "required": [
-                                        "data"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            }
-        },
-        "/pro/profile/availabilities": {
-            "put": {
-                "operationId": "v1.pro.profile.availabilities",
-                "description": "Remplace toutes les plages. Heures de Nador ; `weekday` : 0 = dimanche \u2026 6 = samedi.",
-                "summary": "D\u00e9finir mon agenda hebdomadaire",
-                "tags": [
-                    "Professionnel \u2014 dossier"
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "type": "object",
-                                "properties": {
-                                    "availabilities": {
-                                        "type": "array",
-                                        "items": {
-                                            "type": "object",
-                                            "properties": {
-                                                "weekday": {
-                                                    "type": "integer",
-                                                    "minimum": 0,
-                                                    "maximum": 6
-                                                },
-                                                "start_time": {
-                                                    "type": "string"
-                                                },
-                                                "end_time": {
-                                                    "type": "string"
-                                                }
-                                            },
-                                            "required": [
-                                                "weekday",
-                                                "start_time",
-                                                "end_time"
-                                            ]
-                                        },
-                                        "maxItems": 42
-                                    }
-                                },
-                                "required": [
-                                    "availabilities"
-                                ]
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "`ProfessionalFileResource`",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/components/schemas/ProfessionalFileResource"
-                                        }
-                                    },
-                                    "required": [
-                                        "data"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            }
-        },
-        "/pro/profile/online": {
-            "put": {
-                "operationId": "v1.pro.profile.online",
-                "description": "R\u00e9serv\u00e9 aux professionnels v\u00e9rifi\u00e9s.",
-                "summary": "Me mettre en ligne ou hors ligne",
-                "tags": [
-                    "Professionnel \u2014 dossier"
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "type": "object",
-                                "properties": {
-                                    "is_online": {
-                                        "type": "boolean"
-                                    }
-                                },
-                                "required": [
-                                    "is_online"
-                                ]
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "`ProfessionalFileResource`",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/components/schemas/ProfessionalFileResource"
-                                        }
-                                    },
-                                    "required": [
-                                        "data"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            }
-        },
-        "/pro/offers": {
-            "get": {
-                "operationId": "v1.pro.offers.index",
-                "description": "Avant d'accepter, le professionnel ne voit que le soin, le cr\u00e9neau, la zone et la distance.",
-                "summary": "Propositions de mission en attente",
-                "tags": [
-                    "Professionnel \u2014 missions"
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Array of `MissionOfferResource`",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/components/schemas/MissionOfferResource"
-                                            }
-                                        }
-                                    },
-                                    "required": [
-                                        "data"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            }
-        },
-        "/pro/offers/{offer}/accept": {
-            "post": {
-                "operationId": "v1.pro.offers.accept",
-                "description": "La r\u00e9servation est alors affect\u00e9e au professionnel, qui acc\u00e8de au d\u00e9tail de la mission.\nR\u00e9pond `offer_unavailable` si le d\u00e9lai est d\u00e9pass\u00e9 ou si la proposition a \u00e9t\u00e9 retir\u00e9e.",
-                "summary": "Accepter une proposition",
-                "tags": [
-                    "Professionnel \u2014 missions"
-                ],
-                "parameters": [
-                    {
-                        "name": "offer",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "`MissionResource`",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/components/schemas/MissionResource"
-                                        }
-                                    },
-                                    "required": [
-                                        "data"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            }
-        },
-        "/pro/offers/{offer}/decline": {
-            "post": {
-                "operationId": "v1.pro.offers.decline",
-                "summary": "Refuser une proposition",
-                "tags": [
-                    "Professionnel \u2014 missions"
-                ],
-                "parameters": [
-                    {
-                        "name": "offer",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "type": "object",
-                                "properties": {
-                                    "reason": {
-                                        "type": [
-                                            "string",
-                                            "null"
-                                        ],
-                                        "maxLength": 500
-                                    }
-                                }
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "`MissionOfferResource`",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/components/schemas/MissionOfferResource"
-                                        }
-                                    },
-                                    "required": [
-                                        "data"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            }
-        },
         "/pro/missions": {
             "get": {
                 "operationId": "v1.pro.missions.index",
-                "description": "Missions affect\u00e9es, en route ou en cours. Sans donn\u00e9e de sant\u00e9.",
+                "description": "Missions affect\u00e9es, en route ou en cours. Sans donn\u00e9e de sant\u00e9. Une mission affect\u00e9e\nattend la confirmation du soignant tant que `needs_confirmation` est vrai.",
                 "summary": "Mes missions",
                 "tags": [
                     "Professionnel \u2014 missions"
@@ -2231,11 +1834,54 @@
                 }
             }
         },
-        "/pro/missions/{mission}/withdraw": {
+        "/pro/missions/{mission}/confirm": {
             "post": {
-                "operationId": "v1.pro.missions.withdraw",
-                "description": "Possible tant que le professionnel n'est pas parti. La r\u00e9servation retourne \u00e0 la\ncoordination, qui cherche un autre soignant.",
-                "summary": "Se d\u00e9sister d'une mission",
+                "operationId": "v1.pro.missions.confirm",
+                "description": "\u00c0 faire avant l'heure `confirm_by` : pass\u00e9 ce d\u00e9lai, la coordination est alert\u00e9e.",
+                "summary": "Confirmer la prise en charge d'une mission",
+                "tags": [
+                    "Professionnel \u2014 missions"
+                ],
+                "parameters": [
+                    {
+                        "name": "mission",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`MissionResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/MissionResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/pro/missions/{mission}/decline": {
+            "post": {
+                "operationId": "v1.pro.missions.decline",
+                "description": "Possible tant que le soignant n'est pas parti. La r\u00e9servation retourne \u00e0 la\ncoordination, qui affecte un autre soignant.",
+                "summary": "Signaler mon indisponibilit\u00e9 pour une mission",
                 "tags": [
                     "Professionnel \u2014 missions"
                 ],
@@ -2257,8 +1903,15 @@
                                 "type": "object",
                                 "properties": {
                                     "reason": {
-                                        "type": "string",
-                                        "minLength": 3,
+                                        "description": "`busy` (d\u00e9j\u00e0 en intervention), `sick`, `personal` ou `other`.\n\n| |\n|---|\n| `busy` <br/> D\u00e9j\u00e0 en intervention \u00e0 ce moment-l\u00e0. |\n| `sick` <br/>  |\n| `personal` <br/>  |\n| `other` <br/> Autre : une pr\u00e9cision est alors obligatoire. |",
+                                        "$ref": "#/components/schemas/DeclineReason"
+                                    },
+                                    "note": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "description": "Pr\u00e9cision libre ; obligatoire avec `other`.",
                                         "maxLength": 500
                                     }
                                 },
@@ -2290,6 +1943,199 @@
                     },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/pro/schedule-requests": {
+            "get": {
+                "operationId": "v1.pro.schedule-requests.index",
+                "description": "Les trente plus r\u00e9centes, de la plus r\u00e9cente \u00e0 la plus ancienne.",
+                "summary": "Mes demandes de planning",
+                "tags": [
+                    "Professionnel \u2014 planning"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Array of `ScheduleRequestResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/ScheduleRequestResource"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "v1.pro.schedule-requests.store",
+                "description": "Rien ne change dans le planning tant que la coordination n'a pas accept\u00e9.",
+                "summary": "Proposer une semaine type ou signaler une indisponibilit\u00e9",
+                "tags": [
+                    "Professionnel \u2014 planning"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "kind": {
+                                        "description": "`weekly` ou `unavailability`.\n\n| |\n|---|\n| `weekly` <br/> Une nouvelle semaine type (jours et heures de travail). |\n| `unavailability` <br/> Une indisponibilit\u00e9 dat\u00e9e : cong\u00e9, emp\u00eachement. |",
+                                        "$ref": "#/components/schemas/ScheduleRequestKind"
+                                    },
+                                    "slots": {
+                                        "type": "array",
+                                        "description": "Semaine propos\u00e9e (pour `weekly`). Heures de Nador ; `weekday` : 0 = dimanche \u2026 6 = samedi.",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "weekday": {
+                                                    "type": "integer",
+                                                    "minimum": 0,
+                                                    "maximum": 6
+                                                },
+                                                "start_time": {
+                                                    "type": "string"
+                                                },
+                                                "end_time": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "weekday",
+                                                "start_time",
+                                                "end_time"
+                                            ]
+                                        },
+                                        "maxItems": 42
+                                    },
+                                    "starts_on": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "description": "Premier et dernier jour d'indisponibilit\u00e9 (pour `unavailability`), `AAAA-MM-JJ`."
+                                    },
+                                    "ends_on": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "note": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 500
+                                    }
+                                },
+                                "required": [
+                                    "kind"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "`ScheduleRequestResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ScheduleRequestResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Too many requests",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview."
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/pro/schedule-requests/{scheduleRequest}": {
+            "delete": {
+                "operationId": "v1.pro.schedule-requests.destroy",
+                "description": "R\u00e9pond `schedule_request_closed` si la coordination a d\u00e9j\u00e0 r\u00e9pondu.",
+                "summary": "Retirer une demande en attente",
+                "tags": [
+                    "Professionnel \u2014 planning"
+                ],
+                "parameters": [
+                    {
+                        "name": "scheduleRequest",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`ScheduleRequestResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ScheduleRequestResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -3687,6 +3533,17 @@
                 ],
                 "title": "ClientApp"
             },
+            "DeclineReason": {
+                "type": "string",
+                "description": "Motif pour lequel un soignant signale qu'il ne peut pas prendre une mission affect\u00e9e.\n| |\n|---|\n| `busy` <br/> D\u00e9j\u00e0 en intervention \u00e0 ce moment-l\u00e0. |\n| `sick` <br/>  |\n| `personal` <br/>  |\n| `other` <br/> Autre : une pr\u00e9cision est alors obligatoire. |",
+                "enum": [
+                    "busy",
+                    "sick",
+                    "personal",
+                    "other"
+                ],
+                "title": "DeclineReason"
+            },
             "InterventionResource": {
                 "type": "object",
                 "properties": {
@@ -3869,77 +3726,6 @@
                 ],
                 "title": "InterventionResource"
             },
-            "MissionOfferResource": {
-                "type": "object",
-                "properties": {
-                    "id": {
-                        "type": "string"
-                    },
-                    "status": {
-                        "type": "string"
-                    },
-                    "expires_at": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "description": "Moment apr\u00e8s lequel la proposition n'est plus valable."
-                    },
-                    "service": {
-                        "type": "object",
-                        "properties": {
-                            "name": {
-                                "type": [
-                                    "string",
-                                    "null"
-                                ]
-                            },
-                            "duration_minutes": {
-                                "type": "integer"
-                            }
-                        },
-                        "required": [
-                            "name",
-                            "duration_minutes"
-                        ]
-                    },
-                    "scheduled_at": {
-                        "type": "string"
-                    },
-                    "scheduled_date": {
-                        "type": "string",
-                        "description": "Jour et heure du soin \u00e0 Nador."
-                    },
-                    "scheduled_time": {
-                        "type": "string"
-                    },
-                    "zone": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
-                    },
-                    "distance_meters": {
-                        "type": [
-                            "integer",
-                            "null"
-                        ],
-                        "description": "Distance depuis la derni\u00e8re position connue du professionnel, en m\u00e8tres."
-                    }
-                },
-                "required": [
-                    "id",
-                    "status",
-                    "expires_at",
-                    "service",
-                    "scheduled_at",
-                    "scheduled_date",
-                    "scheduled_time",
-                    "zone",
-                    "distance_meters"
-                ],
-                "title": "MissionOfferResource"
-            },
             "MissionResource": {
                 "type": "object",
                 "properties": {
@@ -3961,6 +3747,17 @@
                             "cancelled",
                             "disputed"
                         ]
+                    },
+                    "needs_confirmation": {
+                        "type": "boolean",
+                        "description": "La mission est affect\u00e9e et attend la confirmation du soignant."
+                    },
+                    "confirm_by": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Heure limite de la confirmation."
                     },
                     "service": {
                         "type": "object",
@@ -4086,6 +3883,8 @@
                     "id",
                     "reference",
                     "status",
+                    "needs_confirmation",
+                    "confirm_by",
                     "service",
                     "scheduled_at",
                     "scheduled_date",
@@ -4293,12 +4092,13 @@
                             "null"
                         ]
                     },
-                    "is_online": {
-                        "type": "boolean"
-                    },
                     "required_documents": {
                         "type": "string",
                         "description": "Justificatifs exig\u00e9s pour cette profession."
+                    },
+                    "optional_documents": {
+                        "type": "string",
+                        "description": "Justificatifs facultatifs (assurance personnelle) : ils peuvent \u00eatre d\u00e9pos\u00e9s, sans \u00eatre exig\u00e9s."
                     },
                     "missing_documents": {
                         "type": "string",
@@ -4396,8 +4196,8 @@
                     "category",
                     "license_number",
                     "order_number",
-                    "is_online",
                     "required_documents",
+                    "optional_documents",
                     "missing_documents",
                     "documents",
                     "can_submit",
@@ -4419,6 +4219,106 @@
                     "phone"
                 ],
                 "title": "RequestOtpRequest"
+            },
+            "ScheduleRequestKind": {
+                "type": "string",
+                "description": "Ce qu'un soignant peut demander \u00e0 la coordination au sujet de son planning.\n| |\n|---|\n| `weekly` <br/> Une nouvelle semaine type (jours et heures de travail). |\n| `unavailability` <br/> Une indisponibilit\u00e9 dat\u00e9e : cong\u00e9, emp\u00eachement. |",
+                "enum": [
+                    "weekly",
+                    "unavailability"
+                ],
+                "title": "ScheduleRequestKind"
+            },
+            "ScheduleRequestResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "kind": {
+                        "type": "string",
+                        "description": "`weekly` (nouvelle semaine type) ou `unavailability` (indisponibilit\u00e9 dat\u00e9e).",
+                        "enum": [
+                            "weekly",
+                            "unavailability"
+                        ]
+                    },
+                    "status": {
+                        "type": "string",
+                        "description": "`pending`, `accepted`, `refused` ou `cancelled`.",
+                        "enum": [
+                            "pending",
+                            "accepted",
+                            "refused",
+                            "cancelled"
+                        ]
+                    },
+                    "starts_on": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Premier jour d'indisponibilit\u00e9, `AAAA-MM-JJ`."
+                    },
+                    "ends_on": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Dernier jour d'indisponibilit\u00e9, compris."
+                    },
+                    "slots": {
+                        "type": "array",
+                        "description": "Semaine propos\u00e9e, heures de Nador. `weekday` : 0 = dimanche \u2026 6 = samedi.",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "weekday": {
+                                    "type": "integer"
+                                },
+                                "start_time": {
+                                    "type": "string"
+                                },
+                                "end_time": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "weekday",
+                                "start_time",
+                                "end_time"
+                            ]
+                        }
+                    },
+                    "note": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "decision_note": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Motif donn\u00e9 par la coordination en cas de refus."
+                    },
+                    "created_at": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "id",
+                    "kind",
+                    "status",
+                    "starts_on",
+                    "ends_on",
+                    "slots",
+                    "note",
+                    "decision_note",
+                    "created_at"
+                ],
+                "title": "ScheduleRequestResource"
             },
             "ServiceCategoryResource": {
                 "type": "object",

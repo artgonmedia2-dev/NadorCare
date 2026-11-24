@@ -76,9 +76,27 @@ Statut : **proposition à valider**. Dérivé de la section 9 du cahier des char
 
 **availabilities** — agenda hebdomadaire (§5)
 `id`, `professional_id`, `weekday` (0–6), `start_time`, `end_time`
+Modèle « agence » (2026-11-23) : fixé par la coordination, plus par le soignant.
+
+**schedule_requests** — demandes d'un soignant sur son planning (modèle « agence », 2026-11-23)
+`id`, `professional_id`, `kind` (weekly, unavailability), `status` (pending, accepted, refused, cancelled), `starts_on`, `ends_on` (indisponibilité : journées entières de Nador, bornes comprises), `slots` (jsonb, semaine proposée), `note` (chiffrée), `decided_by`, `decided_at`, `decision_note`
+Une semaine acceptée remplace `availabilities` ; une indisponibilité acceptée retire le soignant des disponibles sur ces journées.
 
 **professional_documents** — Justificatif (§9)
 `id`, `professional_id`, `type` (identity, diploma, practice_authorization, order_registration, rc_insurance), `file_id`, `expires_at`, `status` (pending, approved, rejected, expired), `reviewed_by`, `reviewed_at`, `rejection_reason`
+
+Depuis le 2026-11-23 (modèle « agence »), `rc_insurance` est facultatif : il n'est plus dans les justificatifs exigés des professions, et l'affectation ne le vérifie plus.
+
+**agency_insurances** — assurance de l'agence (modèle « agence », 2026-11-23)
+`id`, `insurer`, `policy_number`, `expires_on`, `file_id` (attestation chiffrée, nullable), `created_by`
+
+**cash_handovers** — espèces remises à l'agence par un soignant, pointées par le comptable (modèle « agence », 2026-11-23)
+`id`, `professional_id`, `amount` (centimes), `handed_on`, `note`, `recorded_by`
+
+**caregiver_remunerations** — rémunération due à un soignant pour un mois, saisie à la main (modèle « agence », 2026-11-23)
+`id`, `professional_id`, `period` (premier jour du mois), `amount` (centimes), `note`, `set_by`. Unique par soignant et par mois.
+
+Les tables `payouts` et `ledger_entries` (commission et reversements de l'ancien modèle) ne sont plus utilisées.
 
 **document_reviews** — historique des contrôles (§3)
 `id`, `professional_document_id`, `reviewer_id`, `decision`, `comment`, `created_at`
@@ -100,12 +118,14 @@ Les fichiers de santé sont chiffrés par l'application avant l'envoi vers le st
 **bookings** — Réservation (§9)
 `id`, `reference` (lisible, ex. `NC-2026-000123`), `user_id` (demandeur), `patient_profile_id`, `address_id`, `address_snapshot` (jsonb), `service_id`, `professional_id` (nullable), `series_id` (nullable), `series_index`, `channel` (app, web, phone, whatsapp), `created_by` (coordinateur en saisie téléphonique), `type` (immediate, scheduled), `scheduled_at`, `scheduled_end_at`, `status`, `base_price`, `surcharges_total`, `total_price`, `price_snapshot` (jsonb), `payment_method` (cash, card), `patient_note` 🔒, `prescription_file_id` (nullable), `escalated_at`, `cancelled_by`, `cancellation_reason`, `cancellation_fee`, horodatage
 
+Confirmation de l'affectation (modèle « agence », 2026-11-23) : `assignment_confirm_by` (heure limite), `assignment_confirmed_at`, puis, quand le soignant signale son indisponibilité, `assignment_declined_at`, `assignment_decline_reason` (busy, sick, personal, other), `assignment_decline_note` (chiffrée), `assignment_declined_by`. Ces quatre dernières sont effacées à l'affectation suivante.
+
 **booking_surcharges** — `booking_id`, `surcharge_id`, `label`, `amount`
 
 **booking_status_history** — chaque changement horodaté et attribué (§9)
 `id`, `booking_id`, `from_status`, `to_status`, `actor_id`, `actor_role`, `reason`, `meta` (jsonb), `created_at`
 
-**booking_offers** — propositions de mission et délai de réponse (§5, §6)
+**booking_offers** — propositions de mission et délai de réponse (§5, §6). **Plus utilisée depuis le 2026-11-23** (modèle « agence » : affectation à confirmer) ; gardée pour l'historique.
 `id`, `booking_id`, `professional_id`, `status` (pending, accepted, declined, expired, cancelled), `source` (auto, coordinator), `offered_by`, `score`, `distance_m`, `sent_at`, `expires_at`, `responded_at`, `decline_reason`. Index unique partiel : une seule offre acceptée par réservation.
 
 ### Statuts d'une réservation
