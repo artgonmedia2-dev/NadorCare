@@ -8,6 +8,7 @@ import 'package:nc_l10n/nc_l10n.dart';
 
 import '../bookings/bookings_providers.dart';
 import 'catalogue_providers.dart';
+import 'service_card.dart';
 
 /// Fiche d'un soin : description, durée, tarif indicatif, règle d'ordonnance.
 /// Le bouton de réservation viendra avec la tâche 4.4.
@@ -49,7 +50,12 @@ class ServiceDetailScreen extends ConsumerWidget {
     return NcPage(
       appBar: AppBar(),
       title: service.name,
-      subtitle: service.categoryName,
+      header: NcDetailHeader(
+        icon: service.isRemote ? Icons.videocam_outlined : categoryIcon(service.categorySlug),
+        title: service.name,
+        subtitle: service.categoryName,
+        badge: service.requiresPrescription ? const PrescriptionBadge() : null,
+      ),
       actions: <Widget>[
         NcPrimaryButton(
           label: l10n.bookService,
@@ -58,47 +64,51 @@ class ServiceDetailScreen extends ConsumerWidget {
         ),
       ],
       children: <Widget>[
-        if (description != null && description.isNotEmpty) ...<Widget>[
-          Text(description, style: textTheme.bodyLarge),
-          const SizedBox(height: NcSpacing.lg),
-        ],
+        // Durée et tarif : les deux informations qui décident, en tuiles.
+        NcTileGrid(
+          children: <Widget>[
+            NcStatTile(
+              value: l10n.serviceDuration(service.durationMinutes),
+              label: l10n.serviceDurationLabel,
+              icon: Icons.schedule,
+              tone: NcBadgeTone.info,
+            ),
+            NcStatTile(
+              value: l10n.priceDirhams(formatDirhams(service.priceAmount, language)),
+              label: l10n.servicePriceLabel,
+              icon: Icons.payments_outlined,
+            ),
+          ],
+        ),
+        Text(
+          l10n.servicePriceNote,
+          style: textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+        ),
+        const SizedBox(height: NcSpacing.lg),
         if (service.isRemote) ...<Widget>[
           NcStatusBadge(label: l10n.teleconsultationLabel, icon: Icons.videocam_outlined, tone: NcBadgeTone.success),
           const SizedBox(height: NcSpacing.sm),
           NcNotice(key: const ValueKey<String>('teleconsultation-notice'), message: l10n.teleconsultationServiceNote),
           const SizedBox(height: NcSpacing.md),
         ],
-        // Durée et tarif : les deux informations qui décident, regroupées dans une carte.
-        NcSurface(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+        if ((description != null && description.isNotEmpty) ||
+            (profession != null && profession.isNotEmpty) ||
+            service.allowsSeries)
+          NcSection(
+            title: l10n.serviceAboutTitle,
+            icon: Icons.info_outline,
             children: <Widget>[
-              _Fact(
-                icon: Icons.schedule,
-                label: l10n.serviceDurationLabel,
-                value: l10n.serviceDuration(service.durationMinutes),
-              ),
-              _Fact(
-                icon: Icons.payments_outlined,
-                label: l10n.servicePriceLabel,
-                value: l10n.priceDirhams(formatDirhams(service.priceAmount, language)),
-              ),
-              Text(
-                l10n.servicePriceNote,
-                style: textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
-              ),
+              if (description != null && description.isNotEmpty) Text(description, style: textTheme.bodyLarge),
+              if (profession != null && profession.isNotEmpty) ...<Widget>[
+                const SizedBox(height: NcSpacing.sm),
+                Text(l10n.serviceProvidedBy(profession), style: textTheme.bodyLarge),
+              ],
+              if (service.allowsSeries) ...<Widget>[
+                const SizedBox(height: NcSpacing.sm),
+                Text(l10n.serviceSeries, style: textTheme.bodyLarge),
+              ],
             ],
           ),
-        ),
-        if (profession != null && profession.isNotEmpty) ...<Widget>[
-          const SizedBox(height: NcSpacing.md),
-          Text(l10n.serviceProvidedBy(profession), style: textTheme.bodyLarge),
-        ],
-        if (service.allowsSeries) ...<Widget>[
-          const SizedBox(height: NcSpacing.sm),
-          Text(l10n.serviceSeries, style: textTheme.bodyLarge),
-        ],
-        const SizedBox(height: NcSpacing.lg),
         if (service.requiresPrescription) ...<Widget>[
           NcNotice(
             key: const ValueKey<String>('prescription-notice'),
@@ -107,31 +117,6 @@ class ServiceDetailScreen extends ConsumerWidget {
           ),
         ],
       ],
-    );
-  }
-}
-
-class _Fact extends StatelessWidget {
-  const _Fact({required this.icon, required this.label, required this.value});
-
-  final IconData icon;
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: NcSpacing.md),
-      child: Row(
-        children: <Widget>[
-          Icon(icon, color: Theme.of(context).colorScheme.primary, size: 28),
-          const SizedBox(width: NcSpacing.md),
-          Expanded(child: Text(label, style: textTheme.bodyLarge)),
-          Text(value, style: textTheme.titleLarge),
-        ],
-      ),
     );
   }
 }

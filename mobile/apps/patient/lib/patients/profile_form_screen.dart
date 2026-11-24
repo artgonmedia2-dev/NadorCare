@@ -247,7 +247,17 @@ class _ProfileFormScreenState extends ConsumerState<ProfileFormScreen> {
           onSelected: (value) => setState(() => _relationship = value),
           choices: <NcChoice<PatientRelationship>>[
             for (final relationship in PatientRelationship.values)
-              NcChoice<PatientRelationship>(value: relationship, label: relationshipLabel(l10n, relationship)),
+              NcChoice<PatientRelationship>(
+                value: relationship,
+                label: relationshipLabel(l10n, relationship),
+                icon: switch (relationship) {
+                  PatientRelationship.self => Icons.person_outline,
+                  PatientRelationship.parent => Icons.elderly,
+                  PatientRelationship.child => Icons.child_care,
+                  PatientRelationship.spouse => Icons.favorite_border,
+                  PatientRelationship.other => Icons.people_outline,
+                },
+              ),
           ],
         ),
         if (_fieldErrors['relationship'] != null)
@@ -256,20 +266,28 @@ class _ProfileFormScreenState extends ConsumerState<ProfileFormScreen> {
             style: textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.error),
           ),
         const SizedBox(height: NcSpacing.md),
-        TextField(
-          key: const ValueKey<String>('first-name-field'),
-          controller: _firstName,
-          textCapitalization: TextCapitalization.words,
-          textInputAction: TextInputAction.next,
-          decoration: InputDecoration(labelText: l10n.firstNameLabel, errorText: _fieldErrors['first_name']),
+        NcLabeledField(
+          label: l10n.firstNameLabel,
+          child: TextField(
+            key: const ValueKey<String>('first-name-field'),
+            controller: _firstName,
+            textCapitalization: TextCapitalization.words,
+            textInputAction: TextInputAction.next,
+            autofillHints: const <String>[AutofillHints.givenName],
+            decoration: InputDecoration(errorText: _fieldErrors['first_name']),
+          ),
         ),
         const SizedBox(height: NcSpacing.md),
-        TextField(
-          key: const ValueKey<String>('last-name-field'),
-          controller: _lastName,
-          textCapitalization: TextCapitalization.words,
-          textInputAction: TextInputAction.next,
-          decoration: InputDecoration(labelText: l10n.lastNameLabel, errorText: _fieldErrors['last_name']),
+        NcLabeledField(
+          label: l10n.lastNameLabel,
+          child: TextField(
+            key: const ValueKey<String>('last-name-field'),
+            controller: _lastName,
+            textCapitalization: TextCapitalization.words,
+            textInputAction: TextInputAction.done,
+            autofillHints: const <String>[AutofillHints.familyName],
+            decoration: InputDecoration(errorText: _fieldErrors['last_name']),
+          ),
         ),
         const SizedBox(height: NcSpacing.lg),
         NcSectionTitle(l10n.birthDateLabel),

@@ -76,7 +76,7 @@ class _CatalogueScreenState extends ConsumerState<CatalogueScreen> {
       emptyMessage: l10n.catalogueEmpty,
       itemBuilder: (category) => NcListCard(
         key: ValueKey<String>('category-${category.slug}'),
-        icon: Icons.healing_outlined,
+        icon: categoryIcon(category.slug),
         title: category.name,
         subtitle: l10n.servicesCount(category.servicesCount),
         onTap: () => context.push(routeCategory(category.slug)),

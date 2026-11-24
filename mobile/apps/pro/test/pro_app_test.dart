@@ -32,6 +32,14 @@ const ProfessionCategory nurse = ProfessionCategory(
   requiredDocuments: <String>['identity', 'diploma', 'practice_authorization', 'rc_insurance'],
 );
 
+/// Profession telle que l'agence la règle : l'assurance personnelle n'est plus exigée.
+const ProfessionCategory careAssistant = ProfessionCategory(
+  id: 'C3',
+  name: 'Aide-soignant',
+  hasOrder: false,
+  requiredDocuments: <String>['identity', 'diploma', 'practice_authorization'],
+);
+
 const ProfessionCategory doctor = ProfessionCategory(
   id: 'C2',
   name: 'Médecin généraliste',
@@ -44,18 +52,14 @@ const List<ServiceZone> allZones = <ServiceZone>[
   ServiceZone(id: 'Z2', name: 'Beni Ensar'),
 ];
 
-MissionOffer offer(String id) => MissionOffer(
-      id: id,
-      serviceName: 'Pansement',
-      durationMinutes: 30,
-      scheduledDate: DateTime(2026, 12, 8),
-      scheduledTime: '10:00',
-      expiresAt: DateTime.utc(2026, 12, 7, 9, 2),
-      zone: 'Nador centre',
-      distanceMeters: 2400,
-    );
-
-Mission buildMission(String id, {String status = 'assigned', bool detailed = false, bool remote = false}) => Mission(
+Mission buildMission(
+  String id, {
+  String status = 'assigned',
+  bool detailed = false,
+  bool remote = false,
+  bool toConfirm = false,
+}) =>
+    Mission(
       id: id,
       reference: 'NC-2026-000042',
       status: status,
@@ -72,9 +76,12 @@ Mission buildMission(String id, {String status = 'assigned', bool detailed = fal
       amountToCollect: 10000,
       hasPrescription: true,
       isRemote: remote,
+      needsConfirmation: toConfirm,
+      // Heure du téléphone : c'est un délai pour répondre, pas l'heure du soin.
+      confirmBy: toConfirm ? DateTime(2026, 12, 7, 12, 30) : null,
     );
 
-/// Imite le serveur pour le dossier, les propositions et les missions.
+/// Imite le serveur pour le dossier et les missions.
 class FakeProApi implements ProApi {
   FakeProApi({this.status, this.statusReason});
 
@@ -82,19 +89,20 @@ class FakeProApi implements ProApi {
   String? statusReason;
   ProfessionCategory category = nurse;
   String? licenseNumber;
-  bool online = false;
   final Map<String, ProfessionalDocument> documents = <String, ProfessionalDocument>{};
   List<ServiceZone> zonesChosen = <ServiceZone>[];
   List<AvailabilitySlot> slots = <AvailabilitySlot>[];
-  final List<MissionOffer> pendingOffers = <MissionOffer>[];
+
+  /// Demandes de planning, de la plus ancienne à la plus récente.
+  final List<ScheduleRequest> requests = <ScheduleRequest>[];
   final List<Mission> activeMissions = <Mission>[];
 
   ApiFailure? fileFailure;
-  ApiFailure? acceptFailure;
-  int offersCalls = 0;
-  final List<String> declined = <String>[];
+  ApiFailure? confirmFailure;
+  int missionsCalls = 0;
+  final List<String> confirmed = <String>[];
   final List<String> detailReads = <String>[];
-  final List<({String id, String reason})> withdrawals = [];
+  final List<({String id, String reason, String? note})> declines = [];
 
   ProfessionalFile _file() {
     final missing = category.requiredDocuments
@@ -107,9 +115,10 @@ class FakeProApi implements ProApi {
       categoryId: category.id,
       categoryName: category.name,
       licenseNumber: licenseNumber,
-      isOnline: online,
       requiredDocuments: category.requiredDocuments,
       missingDocuments: missing,
+      // Comme le serveur : l'assurance est facultative quand la profession ne l'exige pas.
+      optionalDocuments: category.requiredDocuments.contains('rc_insurance') ? const <String>[] : const <String>['rc_insurance'],
       documents: documents.values.toList(),
       canSubmit: status!.isEditable && missing.isEmpty,
       zones: zonesChosen,
@@ -121,22 +130,11 @@ class FakeProApi implements ProApi {
   Future<List<ProfessionCategory>> categories() async => const <ProfessionCategory>[nurse, doctor];
 
   @override
-  Future<List<ServiceZone>> zones() async => allZones;
-
-  @override
   Future<ProfessionalFile?> file() async {
     if (fileFailure != null) {
       throw fileFailure!;
     }
     return status == null ? null : _file();
-  }
-
-  @override
-  Future<ProfessionalFile> saveFile({required String categoryId, String? licenseNumber, String? orderNumber}) async {
-    category = <ProfessionCategory>[nurse, doctor].firstWhere((item) => item.id == categoryId);
-    this.licenseNumber = licenseNumber;
-    status ??= VerificationStatus.draft;
-    return _file();
   }
 
   @override
@@ -162,49 +160,74 @@ class FakeProApi implements ProApi {
   }
 
   @override
-  Future<ProfessionalFile> setZones(List<String> zoneIds) async {
-    zonesChosen = allZones.where((zone) => zoneIds.contains(zone.id)).toList();
-    return _file();
+  Future<List<ScheduleRequest>> scheduleRequests() async => requests.reversed.toList();
+
+  @override
+  Future<ScheduleRequest> proposeWeek(List<AvailabilitySlot> slots, {String? note}) async {
+    final request = ScheduleRequest(
+      id: 'R${requests.length + 1}',
+      kind: ScheduleRequest.kindWeekly,
+      status: ScheduleRequest.statusPending,
+      slots: slots,
+      note: note,
+    );
+    requests.add(request);
+    return request;
   }
 
   @override
-  Future<ProfessionalFile> setAvailabilities(List<AvailabilitySlot> slots) async {
-    this.slots = slots;
-    return _file();
+  Future<ScheduleRequest> reportUnavailability({
+    required DateTime startsOn,
+    required DateTime endsOn,
+    String? note,
+  }) async {
+    final request = ScheduleRequest(
+      id: 'R${requests.length + 1}',
+      kind: ScheduleRequest.kindUnavailability,
+      status: ScheduleRequest.statusPending,
+      startsOn: startsOn,
+      endsOn: endsOn,
+      note: (note == null || note.isEmpty) ? null : note,
+    );
+    requests.add(request);
+    return request;
   }
 
   @override
-  Future<ProfessionalFile> setOnline({required bool online}) async {
-    this.online = online;
-    return _file();
+  Future<void> cancelScheduleRequest(String id) async {
+    final index = requests.indexWhere((request) => request.id == id);
+    final current = requests[index];
+    requests[index] = ScheduleRequest(
+      id: current.id,
+      kind: current.kind,
+      status: ScheduleRequest.statusCancelled,
+      startsOn: current.startsOn,
+      endsOn: current.endsOn,
+      slots: current.slots,
+      note: current.note,
+    );
   }
 
   @override
-  Future<List<MissionOffer>> offers() async {
-    offersCalls++;
-    return List<MissionOffer>.of(pendingOffers);
+  Future<List<Mission>> missions() async {
+    missionsCalls++;
+    return List<Mission>.of(activeMissions);
   }
 
   @override
-  Future<Mission> acceptOffer(String offerId) async {
-    if (acceptFailure != null) {
-      pendingOffers.removeWhere((item) => item.id == offerId);
-      throw acceptFailure!;
+  Future<Mission> confirmMission(String missionId) async {
+    if (confirmFailure != null) {
+      throw confirmFailure!;
     }
-    pendingOffers.removeWhere((item) => item.id == offerId);
-    final accepted = buildMission('M-$offerId');
-    activeMissions.add(accepted);
-    return accepted;
+    confirmed.add(missionId);
+    return _move(missionId, 'assigned');
   }
 
   @override
-  Future<void> declineOffer(String offerId, {String? reason}) async {
-    declined.add(offerId);
-    pendingOffers.removeWhere((item) => item.id == offerId);
+  Future<void> declineMission(String missionId, {required String reason, String? note}) async {
+    declines.add((id: missionId, reason: reason, note: note));
+    activeMissions.removeWhere((item) => item.id == missionId);
   }
-
-  @override
-  Future<List<Mission>> missions() async => List<Mission>.of(activeMissions);
 
   @override
   Future<Mission> mission(String id) async {
@@ -231,13 +254,9 @@ class FakeProApi implements ProApi {
       amountToCollect: source.amountToCollect,
       hasPrescription: source.hasPrescription,
       isRemote: source.isRemote,
+      needsConfirmation: source.needsConfirmation,
+      confirmBy: source.confirmBy,
     );
-  }
-
-  @override
-  Future<void> withdraw(String missionId, {required String reason}) async {
-    withdrawals.add((id: missionId, reason: reason));
-    activeMissions.removeWhere((item) => item.id == missionId);
   }
 
   // --- Intervention ---
@@ -429,34 +448,47 @@ Future<void> pumpProApp(
 
 void main() {
   group('dossier', () {
-    testWidgets('un nouveau professionnel choisit sa profession puis voit les justificatifs à déposer', (tester) async {
+    testWidgets('un compte qui n est pas dans l équipe ne peut pas s inscrire seul', (tester) async {
       final api = FakeProApi();
       await pumpProApp(tester, api: api);
 
+      // Plus de création de dossier dans l'application : c'est l'agence qui fait entrer un soignant.
+      expect(byName('no-team'), findsOneWidget);
+      expect(find.text(fr.proStart), findsNothing);
+      expect(byName('home-planning'), findsNothing);
+    });
+
+    testWidgets('un soignant ajouté par l agence voit les justificatifs à déposer', (tester) async {
+      final api = FakeProApi(status: VerificationStatus.draft)..licenseNumber = 'AE-2020-114';
+      await pumpProApp(tester, api: api);
+
       expect(find.text(fr.proCreateFileTitle), findsOneWidget);
-      await tapAndSettle(tester, find.text(fr.proStart));
+      await tapAndSettle(tester, find.text(fr.proFileTitle));
 
-      // Sans profession choisie, on n'avance pas.
-      await tapAndSettle(tester, find.text(fr.continueButton));
-      expect(find.text(fr.professionRequired), findsOneWidget);
-
-      // Le numéro d'Ordre n'est demandé qu'aux professions qui ont un Ordre.
-      await tapAndSettle(tester, byName('profession-C1'));
-      expect(byName('order-field'), findsNothing);
-      await tapAndSettle(tester, byName('profession-C2'));
-      expect(byName('order-field'), findsOneWidget);
-      await tapAndSettle(tester, byName('profession-C1'));
-
-      await tester.enterText(byName('license-field'), 'AE-2020-114');
-      await tapAndSettle(tester, find.text(fr.continueButton));
-
-      expect(find.text(fr.proFileTitle), findsOneWidget);
       expect(find.text('Infirmier'), findsOneWidget);
-      expect(api.licenseNumber, 'AE-2020-114');
       expect(find.text(fr.docStatusMissing), findsNWidgets(4));
       expect(find.text(fr.docOrderRegistration), findsNothing);
       expect(find.text(fr.proSubmitIncomplete), findsOneWidget);
       expect(tester.widget<NcPrimaryButton>(find.widgetWithText(NcPrimaryButton, fr.proSubmit)).onPressed, isNull);
+      // La profession se règle au back-office : l'application ne propose plus de la changer.
+      expect(find.text(fr.proChangeProfession), findsNothing);
+    });
+
+    testWidgets('l assurance personnelle est facultative : le dossier est complet sans elle', (tester) async {
+      final api = FakeProApi(status: VerificationStatus.draft)..category = careAssistant;
+      for (final type in careAssistant.requiredDocuments) {
+        api.documents[type] = ProfessionalDocument(type: type, status: 'approved');
+      }
+      await pumpProApp(tester, api: api);
+      await tapAndSettle(tester, find.text(fr.proFileTitle));
+
+      // L'assurance reste proposée, sans bloquer l'envoi du dossier.
+      expect(byName('document-rc_insurance'), findsOneWidget);
+      expect(find.text(fr.docOptional), findsOneWidget);
+      expect(find.text(fr.docStatusMissing), findsNothing);
+      expect(find.text(fr.proSubmitIncomplete), findsNothing);
+      expect(tester.widget<NcPrimaryButton>(find.widgetWithText(NcPrimaryButton, fr.proSubmit)).onPressed, isNotNull);
+      expect(byName('camera-rc_insurance'), findsOneWidget);
     });
 
     testWidgets('les justificatifs se déposent un par un, puis le dossier est envoyé', (tester) async {
@@ -521,7 +553,7 @@ void main() {
 
       expect(find.text(fr.proStatusSuspendedTitle), findsOneWidget);
       expect(find.text(fr.proReason('Assurance contestée')), findsOneWidget);
-      expect(byName('online-switch'), findsNothing);
+      expect(byName('home-planning'), findsNothing);
     });
 
     testWidgets('sans réseau, l accueil propose de réessayer', (tester) async {
@@ -532,7 +564,7 @@ void main() {
 
       api.fileFailure = null;
       await tapAndSettle(tester, find.text(fr.retry));
-      expect(byName('online-switch'), findsOneWidget);
+      expect(byName('home-planning'), findsOneWidget);
     });
 
     testWidgets('la validation du dossier apparaît sans relancer l application', (tester) async {
@@ -545,41 +577,36 @@ void main() {
       await tester.pump(const Duration(seconds: 15));
       await tester.pumpAndSettle();
 
-      expect(byName('online-switch'), findsOneWidget);
+      expect(byName('home-planning'), findsOneWidget);
     });
   });
 
   group('missions', () {
-    testWidgets('un professionnel vérifié se met en ligne', (tester) async {
+    testWidgets('l accueil n a plus d interrupteur en ligne ni de propositions', (tester) async {
       final api = FakeProApi(status: VerificationStatus.verified);
       await pumpProApp(tester, api: api);
 
-      expect(find.text(fr.proOffline), findsOneWidget);
-      expect(find.text(fr.proOffersEmpty), findsOneWidget);
+      expect(byName('online-switch'), findsNothing);
+      expect(find.text(fr.proOffersTitle), findsNothing);
+      expect(find.text(fr.proToConfirmTitle), findsNothing);
       expect(find.text(fr.proMissionsEmpty), findsOneWidget);
-
-      await tapAndSettle(tester, byName('online-switch'));
-
-      expect(api.online, isTrue);
-      expect(find.text(fr.proOnline), findsOneWidget);
     });
 
-    testWidgets('une proposition ne montre ni le patient ni l adresse, puis s accepte', (tester) async {
-      final api = FakeProApi(status: VerificationStatus.verified)..pendingOffers.add(offer('O1'));
+    testWidgets('une mission affectée se confirme avant le départ', (tester) async {
+      final api = FakeProApi(status: VerificationStatus.verified)
+        ..activeMissions.add(buildMission('M1', toConfirm: true));
       await pumpProApp(tester, api: api);
 
-      expect(byName('offer-O1'), findsOneWidget);
-      expect(find.text('Pansement'), findsOneWidget);
-      expect(find.textContaining('Nador centre'), findsOneWidget);
-      expect(find.textContaining(fr.offerDistance('2,4 km')), findsOneWidget);
-      expect(find.textContaining('Aïcha'), findsNothing);
-      expect(find.textContaining('Al Massira'), findsNothing);
-      expect(api.detailReads, isEmpty);
+      // Elle passe devant les autres, avec l'heure limite de la réponse.
+      expect(find.text(fr.proToConfirmTitle), findsOneWidget);
+      expect(find.text(fr.missionConfirmBefore('12:30')), findsOneWidget);
+      expect(find.text(fr.proMissionsEmpty), findsOneWidget);
 
-      await tapAndSettle(tester, byName('accept-O1'));
+      await tapAndSettle(tester, byName('mission-M1'));
 
-      // La fiche de la mission s'ouvre, avec les informations utiles au soin.
-      expect(api.detailReads, <String>['M-O1']);
+      // La fiche donne ce qu'il faut pour décider ; le départ attend la confirmation.
+      expect(api.detailReads, <String>['M1']);
+      expect(byName('mission-to-confirm'), findsOneWidget);
       expect(find.text('Aïcha Benali'), findsOneWidget);
       expect(find.text('12 rue Al Massira\nNador'), findsOneWidget);
       expect(find.text('Porte verte, 2e étage'), findsOneWidget);
@@ -587,86 +614,105 @@ void main() {
       expect(find.text('Sonner deux fois'), findsOneWidget);
       expect(find.text('100 DH'), findsOneWidget);
       expect(find.text(fr.missionPrescription), findsOneWidget);
+      expect(byName('mission-depart'), findsNothing);
+
+      await tapAndSettle(tester, byName('mission-confirm'));
+
+      expect(api.confirmed, <String>['M1']);
+      expect(find.text(fr.missionConfirmed), findsOneWidget);
+      expect(byName('mission-confirm'), findsNothing);
+      expect(byName('mission-depart'), findsOneWidget);
 
       await tapAndSettle(tester, find.byType(BackButton));
-      expect(byName('offer-O1'), findsNothing);
-      expect(byName('mission-M-O1'), findsOneWidget);
+      expect(find.text(fr.proToConfirmTitle), findsNothing);
+      expect(byName('mission-M1'), findsOneWidget);
     });
 
-    testWidgets('une proposition refusée disparaît', (tester) async {
-      final api = FakeProApi(status: VerificationStatus.verified)..pendingOffers.add(offer('O1'));
-      await pumpProApp(tester, api: api);
-
-      await tapAndSettle(tester, byName('decline-O1'));
-
-      expect(api.declined, <String>['O1']);
-      expect(byName('offer-O1'), findsNothing);
-      expect(find.text(fr.proOffersEmpty), findsOneWidget);
-      expect(api.activeMissions, isEmpty);
-    });
-
-    testWidgets('une proposition qui n est plus valable le dit et disparaît', (tester) async {
+    testWidgets('un refus du serveur à la confirmation est affiché', (tester) async {
       final api = FakeProApi(status: VerificationStatus.verified)
-        ..pendingOffers.add(offer('O1'))
-        ..acceptFailure = const ApiFailure(
-          code: 'offer_unavailable',
-          message: 'Cette proposition n\'est plus disponible.',
+        ..activeMissions.add(buildMission('M1', toConfirm: true))
+        ..confirmFailure = const ApiFailure(
+          code: 'assignment_not_pending',
+          message: 'Cette mission n\'attend plus de confirmation.',
           status: 409,
         );
       await pumpProApp(tester, api: api);
+      await tapAndSettle(tester, byName('mission-M1'));
 
-      await tapAndSettle(tester, byName('accept-O1'));
+      await tapAndSettle(tester, byName('mission-confirm'));
 
-      expect(find.text('Cette proposition n\'est plus disponible.'), findsOneWidget);
-      expect(byName('offer-O1'), findsNothing);
+      expect(find.text('Cette mission n\'attend plus de confirmation.'), findsOneWidget);
+      expect(api.confirmed, isEmpty);
     });
 
-    testWidgets('les propositions arrivent d elles-mêmes, sans notification', (tester) async {
+    testWidgets('une mission affectée arrive d elle-même, sans notification', (tester) async {
       final api = FakeProApi(status: VerificationStatus.verified);
       await pumpProApp(tester, api: api);
-      final callsBefore = api.offersCalls;
+      final callsBefore = api.missionsCalls;
 
-      api.pendingOffers.add(offer('O2'));
+      api.activeMissions.add(buildMission('M2', toConfirm: true));
       await tester.pump(const Duration(seconds: 15));
       await tester.pumpAndSettle();
 
-      expect(api.offersCalls, greaterThan(callsBefore));
-      expect(byName('offer-O2'), findsOneWidget);
+      expect(api.missionsCalls, greaterThan(callsBefore));
+      expect(byName('mission-M2'), findsOneWidget);
+      expect(find.text(fr.proToConfirmTitle), findsOneWidget);
     });
 
-    testWidgets('le désistement demande un motif', (tester) async {
-      final api = FakeProApi(status: VerificationStatus.verified)..activeMissions.add(buildMission('M1'));
+    testWidgets('signaler son indisponibilité demande un motif', (tester) async {
+      final api = FakeProApi(status: VerificationStatus.verified)
+        ..activeMissions.add(buildMission('M1', toConfirm: true));
       await pumpProApp(tester, api: api);
       await tapAndSettle(tester, byName('mission-M1'));
 
       // Sans motif : la fenêtre reste ouverte et le signale.
-      await tapAndSettle(tester, byName('mission-withdraw'));
-      expect(find.text(fr.missionWithdrawTitle), findsOneWidget);
-      await tapAndSettle(tester, find.widgetWithText(TextButton, fr.missionWithdraw));
-      expect(find.text(fr.fieldRequired), findsOneWidget);
-      expect(find.text(fr.missionWithdrawTitle), findsOneWidget);
-      expect(api.withdrawals, isEmpty);
+      await tapAndSettle(tester, byName('mission-decline'));
+      expect(find.text(fr.missionDeclineTitle), findsOneWidget);
+      await tapAndSettle(tester, byName('decline-send'));
+      expect(find.text(fr.declineReasonRequired), findsOneWidget);
+      expect(api.declines, isEmpty);
+
+      // « Autre » demande une précision.
+      await tapAndSettle(tester, byName('decline-reason-other'));
+      await tapAndSettle(tester, byName('decline-send'));
+      expect(find.text(fr.declineNoteRequired), findsOneWidget);
+      expect(api.declines, isEmpty);
 
       // Renoncer ne fait rien.
       await tapAndSettle(tester, find.widgetWithText(TextButton, fr.cancel));
-      expect(api.withdrawals, isEmpty);
+      expect(api.declines, isEmpty);
+      expect(byName('mission-confirm'), findsOneWidget);
 
-      await tapAndSettle(tester, byName('mission-withdraw'));
-      await tester.enterText(byName('withdraw-reason'), 'Panne de voiture');
-      await tapAndSettle(tester, find.widgetWithText(TextButton, fr.missionWithdraw));
+      await tapAndSettle(tester, byName('mission-decline'));
+      await tapAndSettle(tester, byName('decline-reason-sick'));
+      await tester.enterText(byName('decline-note'), 'Forte fièvre');
+      await tapAndSettle(tester, byName('decline-send'));
 
-      expect(api.withdrawals.single, (id: 'M1', reason: 'Panne de voiture'));
+      expect(api.declines.single, (id: 'M1', reason: 'sick', note: 'Forte fièvre'));
       expect(byName('mission-M1'), findsNothing);
       expect(find.text(fr.proMissionsEmpty), findsOneWidget);
     });
 
-    testWidgets('une fois en route, le désistement n est plus proposé', (tester) async {
+    testWidgets('une mission déjà confirmée peut encore être rendue avant le départ', (tester) async {
+      final api = FakeProApi(status: VerificationStatus.verified)..activeMissions.add(buildMission('M1'));
+      await pumpProApp(tester, api: api);
+      await tapAndSettle(tester, byName('mission-M1'));
+
+      expect(byName('mission-confirm'), findsNothing);
+      await tapAndSettle(tester, byName('mission-decline'));
+      await tapAndSettle(tester, byName('decline-reason-busy'));
+      await tapAndSettle(tester, byName('decline-send'));
+
+      expect(api.declines.single, (id: 'M1', reason: 'busy', note: ''));
+    });
+
+    testWidgets('une fois en route, l indisponibilité n est plus proposée', (tester) async {
       final api = FakeProApi(status: VerificationStatus.verified)..activeMissions.add(buildMission('M1', status: 'en_route'));
       await pumpProApp(tester, api: api);
       await tapAndSettle(tester, byName('mission-M1'));
 
       expect(find.text(fr.missionStatusEnRoute), findsOneWidget);
-      expect(byName('mission-withdraw'), findsNothing);
+      expect(byName('mission-decline'), findsNothing);
     });
   });
 
@@ -680,7 +726,7 @@ void main() {
       await tapAndSettle(tester, byName('mission-depart'));
 
       expect(find.text(fr.missionStatusEnRoute), findsOneWidget);
-      expect(byName('mission-withdraw'), findsNothing);
+      expect(byName('mission-decline'), findsNothing);
       expect(byName('mission-arrive'), findsOneWidget);
       expect(api.positions.single, (latitude: 35.176, longitude: -2.92));
       expect(find.textContaining(fr.journeySharing), findsOneWidget);
@@ -874,54 +920,164 @@ void main() {
     });
   });
 
-  group('disponibilités', () {
-    testWidgets('le professionnel choisit ses zones', (tester) async {
-      final api = FakeProApi(status: VerificationStatus.verified);
+  group('planning', () {
+    testWidgets('le soignant lit le planning fixé par l agence, sans pouvoir le changer seul', (tester) async {
+      final api = FakeProApi(status: VerificationStatus.verified)
+        ..zonesChosen = <ServiceZone>[allZones.first]
+        ..slots = <AvailabilitySlot>[
+          const AvailabilitySlot(weekday: 1, startTime: '14:00', endTime: '18:00'),
+          const AvailabilitySlot(weekday: 1, startTime: '08:00', endTime: '12:00'),
+          const AvailabilitySlot(weekday: 6, startTime: '09:00', endTime: '13:00'),
+        ];
       await pumpProApp(tester, api: api);
-      expect(find.text(fr.proZonesCount(0)), findsOneWidget);
+      expect(byName('home-planning-missing'), findsNothing);
 
-      await tapAndSettle(tester, byName('home-zones'));
-      await tapAndSettle(tester, byName('zone-Z1'));
-      await tapAndSettle(tester, byName('zone-Z2'));
-      await tapAndSettle(tester, byName('zone-Z2'));
-      await tapAndSettle(tester, find.text(fr.save));
+      await tapAndSettle(tester, byName('home-planning'));
 
-      expect(api.zonesChosen.map((zone) => zone.id), <String>['Z1']);
-      expect(find.text(fr.proZonesCount(1)), findsOneWidget);
+      expect(find.text('Nador centre'), findsOneWidget);
+      // Les plages d'un jour se lisent dans l'ordre des heures.
+      expect(find.text('${fr.scheduleRange('08:00', '12:00')}, ${fr.scheduleRange('14:00', '18:00')}'), findsOneWidget);
+      expect(byName('planning-day-6'), findsOneWidget);
+      expect(byName('planning-day-2'), findsNothing);
+      expect(find.text(fr.planningRequestsEmpty), findsOneWidget);
+      expect(find.text(fr.save), findsNothing);
     });
 
-    testWidgets('le professionnel définit ses jours de travail', (tester) async {
+    testWidgets('un planning pas encore fixé est annoncé comme tel', (tester) async {
+      final api = FakeProApi(status: VerificationStatus.verified);
+      await pumpProApp(tester, api: api);
+      expect(byName('home-planning-missing'), findsOneWidget);
+
+      await tapAndSettle(tester, byName('home-planning'));
+      expect(byName('planning-zones-unset'), findsOneWidget);
+      expect(byName('planning-week-unset'), findsOneWidget);
+    });
+
+    testWidgets('une semaine proposée part en demande et ne change pas le planning', (tester) async {
       final api = FakeProApi(status: VerificationStatus.verified)
         ..slots = <AvailabilitySlot>[const AvailabilitySlot(weekday: 6, startTime: '09:00', endTime: '13:00')];
       await pumpProApp(tester, api: api);
-      expect(find.text(fr.proScheduleCount(1)), findsOneWidget);
+      await tapAndSettle(tester, byName('home-planning'));
+      await tapAndSettle(tester, byName('propose-week'));
 
-      await tapAndSettle(tester, byName('home-schedule'));
-      expect(find.text('Lundi'), findsOneWidget);
+      // La proposition part du planning actuel ; sans changement, il n'y a rien à envoyer.
       expect(find.text(fr.scheduleRange('09:00', '13:00')), findsOneWidget);
+      expect(tester.widget<NcPrimaryButton>(byName('send-week')).onPressed, isNull);
 
       await tapAndSettle(tester, byName('day-1'));
       await tapAndSettle(tester, byName('day-2'));
       await tapAndSettle(tester, byName('day-6'));
-      expect(find.text(fr.scheduleRange('08:00', '18:00')), findsNWidgets(2));
-      await tapAndSettle(tester, find.text(fr.save));
+      await tapAndSettle(tester, byName('send-week'));
 
-      expect(api.slots.map((slot) => slot.toJson()), <Map<String, dynamic>>[
+      expect(api.requests.single.slots.map((slot) => slot.toJson()), <Map<String, dynamic>>[
         <String, dynamic>{'weekday': 1, 'start_time': '08:00', 'end_time': '18:00'},
         <String, dynamic>{'weekday': 2, 'start_time': '08:00', 'end_time': '18:00'},
       ]);
-      expect(find.text(fr.proScheduleCount(2)), findsOneWidget);
+      expect(api.slots.single.weekday, 6, reason: 'le planning ne change qu avec l accord de la coordination');
+
+      // De retour sur le planning : la demande est en attente, le planning est celui d'avant.
+      expect(find.text(fr.planningSent), findsOneWidget);
+      expect(byName('request-R1'), findsOneWidget);
+      expect(find.text(fr.planningStatusPending), findsOneWidget);
+      expect(byName('planning-day-6'), findsOneWidget);
+      expect(byName('planning-day-1'), findsNothing);
+    });
+
+    testWidgets('quitter une proposition modifiée sans l envoyer demande une confirmation', (tester) async {
+      final api = FakeProApi(status: VerificationStatus.verified);
+      await pumpProApp(tester, api: api);
+      await tapAndSettle(tester, byName('home-planning'));
+      await tapAndSettle(tester, byName('propose-week'));
+
+      // Rien de modifié : le retour est immédiat.
+      await tapAndSettle(tester, find.byType(BackButton));
+      expect(find.text(fr.unsavedTitle), findsNothing);
+
+      await tapAndSettle(tester, byName('propose-week'));
+      await tapAndSettle(tester, byName('day-1'));
+      await tapAndSettle(tester, find.byType(BackButton));
+      expect(find.text(fr.unsavedTitle), findsOneWidget);
+
+      // « Rester » garde l'écran et la modification.
+      await tapAndSettle(tester, byName('unsaved-stay'));
+      expect(byName('day-1'), findsOneWidget);
+
+      await tapAndSettle(tester, find.byType(BackButton));
+      await tapAndSettle(tester, byName('unsaved-leave'));
+      expect(byName('propose-week'), findsOneWidget);
+      expect(api.requests, isEmpty, reason: 'rien n a été envoyé');
+    });
+
+    testWidgets('une indisponibilité se signale avec ses dates, puis peut être retirée', (tester) async {
+      final api = FakeProApi(status: VerificationStatus.verified);
+      await pumpProApp(tester, api: api);
+      await tapAndSettle(tester, byName('home-planning'));
+      await tapAndSettle(tester, byName('report-unavailability'));
+
+      // Sans date, rien à envoyer ; le dernier jour attend le premier.
+      expect(tester.widget<NcPrimaryButton>(byName('send-unavailability')).onPressed, isNull);
+      expect(
+        tester.widget<InkWell>(find.descendant(of: byName('last-day'), matching: find.byType(InkWell))).onTap,
+        isNull,
+      );
+
+      // Le calendrier s'ouvre sur aujourd'hui : on valide ce jour.
+      await tapAndSettle(tester, byName('first-day'));
+      await tapAndSettle(tester, find.text('OK'));
+      await tester.enterText(byName('unavailability-note'), 'Rendez-vous');
+      await tester.pumpAndSettle();
+      await tapAndSettle(tester, byName('send-unavailability'));
+
+      final sent = api.requests.single;
+      final now = DateTime.now();
+      expect(sent.kind, ScheduleRequest.kindUnavailability);
+      expect(sent.startsOn, DateTime(now.year, now.month, now.day));
+      expect(sent.endsOn, sent.startsOn, reason: 'une seule journée par défaut');
+      expect(sent.note, 'Rendez-vous');
+
+      expect(byName('request-R1'), findsOneWidget);
+      expect(find.text(fr.planningKindUnavailability), findsOneWidget);
+
+      await tapAndSettle(tester, byName('withdraw-R1'));
+      expect(find.text(fr.planningStatusCancelled), findsOneWidget);
+      expect(byName('withdraw-R1'), findsNothing);
+    });
+
+    testWidgets('un refus de la coordination s affiche avec son motif', (tester) async {
+      final api = FakeProApi(status: VerificationStatus.verified)
+        ..requests.add(
+          ScheduleRequest(
+            id: 'R1',
+            kind: ScheduleRequest.kindUnavailability,
+            status: ScheduleRequest.statusRefused,
+            startsOn: DateTime(2026, 12, 8),
+            endsOn: DateTime(2026, 12, 9),
+            decisionNote: 'Équipe déjà réduite.',
+          ),
+        );
+      await pumpProApp(tester, api: api);
+      await tapAndSettle(tester, byName('home-planning'));
+
+      expect(find.text(fr.planningStatusRefused), findsOneWidget);
+      expect(find.text(fr.planningDecisionNote('Équipe déjà réduite.')), findsOneWidget);
+      expect(
+        find.text(fr.planningFromTo(longDate(DateTime(2026, 12, 8), 'fr'), longDate(DateTime(2026, 12, 9), 'fr'))),
+        findsOneWidget,
+      );
+      expect(byName('withdraw-R1'), findsNothing);
     });
   });
 
   testWidgets('en arabe, l accueil du professionnel se lit de droite à gauche', (tester) async {
-    final api = FakeProApi(status: VerificationStatus.verified)..pendingOffers.add(offer('O1'));
+    final api = FakeProApi(status: VerificationStatus.verified)
+      ..activeMissions.add(buildMission('M1', toConfirm: true));
     await pumpProApp(tester, api: api, language: 'ar');
 
-    expect(find.text(ar.proOffersTitle), findsOneWidget);
-    expect(Directionality.of(tester.element(find.text(ar.proOffersTitle))), TextDirection.rtl);
-    expect(find.text(ar.offerAccept), findsOneWidget);
+    expect(find.text(ar.proToConfirmTitle), findsOneWidget);
+    expect(Directionality.of(tester.element(find.text(ar.proToConfirmTitle))), TextDirection.rtl);
+    // Les heures restent en chiffres latins : celle du soin, et l'heure limite de la réponse.
     expect(find.textContaining('10:00'), findsOneWidget);
+    expect(find.text(ar.missionConfirmBefore('12:30')), findsOneWidget);
   });
 
   test('les distances restent lisibles', () {

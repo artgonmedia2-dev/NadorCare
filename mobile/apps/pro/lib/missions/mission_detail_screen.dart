@@ -24,11 +24,14 @@ class _MissionDetailScreenState extends ConsumerState<MissionDetailScreen> {
   bool _busy = false;
   String? _error;
 
-  Future<void> _withdraw() async {
-    // La fenêtre renvoie le motif saisi, ou `null` si l'utilisateur renonce.
-    final text = await showDialog<String>(context: context, builder: (dialogContext) => const _WithdrawDialog());
+  Future<void> _decline() async {
+    // La fenêtre renvoie le motif choisi, ou `null` si l'utilisateur renonce.
+    final answer = await showDialog<({String reason, String note})>(
+      context: context,
+      builder: (dialogContext) => const _DeclineDialog(),
+    );
 
-    if (text == null || !mounted) {
+    if (answer == null || !mounted) {
       return;
     }
 
@@ -38,7 +41,7 @@ class _MissionDetailScreenState extends ConsumerState<MissionDetailScreen> {
     });
 
     try {
-      await ref.read(proApiProvider).withdraw(widget.missionId, reason: text);
+      await ref.read(proApiProvider).declineMission(widget.missionId, reason: answer.reason, note: answer.note);
       ref.invalidate(missionsProvider);
       if (mounted) {
         context.pop();
@@ -51,6 +54,14 @@ class _MissionDetailScreenState extends ConsumerState<MissionDetailScreen> {
       if (mounted) {
         setState(() => _busy = false);
       }
+    }
+  }
+
+  Future<void> _confirm() async {
+    final confirmed = await _step(() => ref.read(proApiProvider).confirmMission(widget.missionId));
+
+    if (confirmed && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.missionConfirmed)));
     }
   }
 
@@ -136,9 +147,18 @@ class _MissionDetailScreenState extends ConsumerState<MissionDetailScreen> {
       AsyncValue<Mission>(value: final mission?) => NcPage(
           appBar: AppBar(),
           title: mission.serviceName,
-          subtitle: l10n.dateAtTime(longDate(mission.scheduledDate, language), mission.scheduledTime),
+          header: _header(l10n, language, mission),
           actions: <Widget>[
-            if (mission.isRemote && mission.status == 'assigned')
+            // Une mission tout juste affectée se confirme d'abord ; le départ vient ensuite.
+            if (mission.needsConfirmation)
+              NcPrimaryButton(
+                key: const ValueKey<String>('mission-confirm'),
+                label: l10n.missionConfirm,
+                icon: Icons.check,
+                isLoading: _busy,
+                onPressed: _busy ? null : _confirm,
+              ),
+            if (mission.isRemote && mission.status == 'assigned' && !mission.needsConfirmation)
               NcPrimaryButton(
                 key: const ValueKey<String>('mission-start-call'),
                 label: l10n.teleconsultationStart,
@@ -153,7 +173,7 @@ class _MissionDetailScreenState extends ConsumerState<MissionDetailScreen> {
                 icon: Icons.videocam_outlined,
                 onPressed: () => _openCall(mission.serviceName),
               ),
-            if (!mission.isRemote && mission.status == 'assigned')
+            if (!mission.isRemote && mission.status == 'assigned' && !mission.needsConfirmation)
               NcPrimaryButton(
                 key: const ValueKey<String>('mission-depart'),
                 label: l10n.missionDepart,
@@ -176,11 +196,11 @@ class _MissionDetailScreenState extends ConsumerState<MissionDetailScreen> {
                 icon: Icons.description_outlined,
                 onPressed: () => context.push(routeReport(widget.missionId)),
               ),
-            if (mission.canWithdraw)
+            if (mission.canDecline)
               NcSecondaryButton(
-                key: const ValueKey<String>('mission-withdraw'),
-                label: l10n.missionWithdraw,
-                onPressed: _busy ? null : _withdraw,
+                key: const ValueKey<String>('mission-decline'),
+                label: l10n.missionDecline,
+                onPressed: _busy ? null : _decline,
               ),
           ],
           children: <Widget>[
@@ -188,16 +208,17 @@ class _MissionDetailScreenState extends ConsumerState<MissionDetailScreen> {
               NcNotice(message: _error!, kind: NcNoticeKind.error),
               const SizedBox(height: NcSpacing.md),
             ],
-            missionStatusBadge(l10n, mission.status),
-            if (mission.isRemote) ...<Widget>[
+            if (mission.needsConfirmation) ...<Widget>[
+              NcNotice(key: const ValueKey<String>('mission-to-confirm'), message: l10n.missionConfirmHelp),
               const SizedBox(height: NcSpacing.md),
+            ],
+            if (mission.isRemote) ...<Widget>[
               NcNotice(
                 key: const ValueKey<String>('mission-remote'),
                 message: '${l10n.teleconsultationNoJourney} ${l10n.teleconsultationRoomHelp}',
               ),
             ],
             if (mission.status == 'en_route') ...<Widget>[
-              const SizedBox(height: NcSpacing.md),
               if (journey.locationUnavailable)
                 NcNotice(
                   key: const ValueKey<String>('journey-location-off'),
@@ -211,14 +232,13 @@ class _MissionDetailScreenState extends ConsumerState<MissionDetailScreen> {
                       ? l10n.journeySharing
                       : '${l10n.journeySharing}\n${l10n.journeyEta((journey.etaSeconds! / 60).ceil())}',
                 ),
+              const SizedBox(height: NcSpacing.md),
             ],
-            const SizedBox(height: NcSpacing.md),
-            // Où aller et chez qui : regroupé dans une carte, une icône par information.
-            NcSurface(
-              margin: const EdgeInsets.only(bottom: NcSpacing.md),
-              padding: const EdgeInsets.symmetric(horizontal: NcSpacing.md, vertical: NcSpacing.sm),
-              child: Column(
-                children: <Widget>[
+            // Où aller et chez qui : une section, une icône par information.
+            NcSection(
+              title: l10n.missionWhereTitle,
+              icon: Icons.place_outlined,
+              children: <Widget>[
                   NcInfoRow(icon: Icons.person_outline, label: l10n.summaryPatient, value: mission.patientName),
                   NcInfoRow(
                     icon: Icons.place_outlined,
@@ -231,17 +251,15 @@ class _MissionDetailScreenState extends ConsumerState<MissionDetailScreen> {
                       label: l10n.missionAccessNotes,
                       value: mission.accessNotes!,
                     ),
-                ],
-              ),
+              ],
             ),
             if ((mission.careNotes ?? '').isNotEmpty ||
                 (mission.patientNote ?? '').isNotEmpty ||
                 mission.amountToCollect > 0)
-              NcSurface(
-                margin: const EdgeInsets.only(bottom: NcSpacing.md),
-                padding: const EdgeInsets.symmetric(horizontal: NcSpacing.md, vertical: NcSpacing.sm),
-                child: Column(
-                  children: <Widget>[
+              NcSection(
+                title: l10n.missionNotesTitle,
+                icon: Icons.info_outline,
+                children: <Widget>[
                     if ((mission.careNotes ?? '').isNotEmpty)
                       NcInfoRow(
                         icon: Icons.medical_information_outlined,
@@ -260,8 +278,7 @@ class _MissionDetailScreenState extends ConsumerState<MissionDetailScreen> {
                         label: l10n.missionAmount,
                         value: l10n.priceDirhams(formatDirhams(mission.amountToCollect, language)),
                       ),
-                  ],
-                ),
+                ],
               ),
             if (mission.hasPrescription) NcNotice(message: l10n.missionPrescription),
           ],
@@ -286,34 +303,55 @@ class _MissionDetailScreenState extends ConsumerState<MissionDetailScreen> {
   }
 }
 
-/// Fenêtre de désistement. Le motif est obligatoire : la coordination en a besoin pour
-/// réaffecter la mission.
-class _WithdrawDialog extends StatefulWidget {
-  const _WithdrawDialog();
+/// En-tête de la fiche : le soin, la date et l'état, dans le ton de l'état.
+Widget _header(NcLocalizations l10n, String language, Mission mission) {
+  final badge = mission.needsConfirmation ? missionToConfirmBadge(l10n, mission) : missionStatusBadge(l10n, mission.status);
 
-  @override
-  State<_WithdrawDialog> createState() => _WithdrawDialogState();
+  return NcDetailHeader(
+    icon: mission.isRemote ? Icons.videocam_outlined : badge.icon,
+    tone: badge.tone,
+    title: mission.serviceName,
+    subtitle: l10n.dateAtTime(longDate(mission.scheduledDate, language), mission.scheduledTime),
+    badge: badge,
+  );
 }
 
-class _WithdrawDialogState extends State<_WithdrawDialog> {
-  final TextEditingController _reason = TextEditingController();
-  String? _error;
+/// Fenêtre d'indisponibilité : un motif parmi quelques-uns, et une précision, obligatoire
+/// quand le motif est « Autre ». La coordination en a besoin pour réaffecter la mission.
+class _DeclineDialog extends StatefulWidget {
+  const _DeclineDialog();
+
+  @override
+  State<_DeclineDialog> createState() => _DeclineDialogState();
+}
+
+class _DeclineDialogState extends State<_DeclineDialog> {
+  final TextEditingController _note = TextEditingController();
+  String? _reason;
+  String? _reasonError;
+  String? _noteError;
 
   @override
   void dispose() {
-    _reason.dispose();
+    _note.dispose();
     super.dispose();
   }
 
-  void _confirm() {
-    final text = _reason.text.trim();
+  void _send() {
+    final l10n = context.l10n;
+    final reason = _reason;
+    final note = _note.text.trim();
 
-    if (text.length < 3) {
-      setState(() => _error = context.l10n.fieldRequired);
+    setState(() {
+      _reasonError = reason == null ? l10n.declineReasonRequired : null;
+      _noteError = reason == 'other' && note.isEmpty ? l10n.declineNoteRequired : null;
+    });
+
+    if (reason == null || _noteError != null) {
       return;
     }
 
-    Navigator.of(context).pop(text);
+    Navigator.of(context).pop((reason: reason, note: note));
   }
 
   @override
@@ -321,25 +359,55 @@ class _WithdrawDialogState extends State<_WithdrawDialog> {
     final l10n = context.l10n;
 
     return AlertDialog(
-      title: Text(l10n.missionWithdrawTitle),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: <Widget>[
-          Text(l10n.missionWithdrawBody),
-          const SizedBox(height: NcSpacing.md),
-          TextField(
-            key: const ValueKey<String>('withdraw-reason'),
-            controller: _reason,
-            maxLength: 500,
-            textCapitalization: TextCapitalization.sentences,
-            decoration: InputDecoration(labelText: l10n.missionWithdrawReason, errorText: _error),
-          ),
-        ],
+      title: Text(l10n.missionDeclineTitle),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            Text(l10n.missionDeclineBody),
+            const SizedBox(height: NcSpacing.md),
+            NcChoiceList<String>(
+              keyPrefix: 'decline-reason',
+              choices: <NcChoice<String>>[
+                for (final reason in declineReasons)
+                  NcChoice<String>(value: reason, label: declineReasonLabel(l10n, reason)),
+              ],
+              selected: _reason,
+              onSelected: (reason) => setState(() {
+                _reason = reason;
+                _reasonError = null;
+                _noteError = null;
+              }),
+            ),
+            if (_reasonError != null)
+              Text(
+                _reasonError!,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.error),
+              ),
+            const SizedBox(height: NcSpacing.sm),
+            NcLabeledField(
+              label: l10n.declineNoteLabel,
+              child: TextField(
+                key: const ValueKey<String>('decline-note'),
+                controller: _note,
+                maxLength: 500,
+                minLines: 1,
+                maxLines: 3,
+                textCapitalization: TextCapitalization.sentences,
+                decoration: InputDecoration(errorText: _noteError),
+              ),
+            ),
+          ],
+        ),
       ),
       actions: <Widget>[
         TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(l10n.cancel)),
-        TextButton(onPressed: _confirm, child: Text(l10n.missionWithdraw)),
+        TextButton(
+          key: const ValueKey<String>('decline-send'),
+          onPressed: _send,
+          child: Text(l10n.missionDeclineSend),
+        ),
       ],
     );
   }

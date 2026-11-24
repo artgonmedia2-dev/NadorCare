@@ -29,6 +29,21 @@ class ServiceCard extends StatelessWidget {
   }
 }
 
+/// Icône d'une catégorie de soins, d'après son identifiant (catalogue du client, 2026-11-23).
+IconData categoryIcon(String slug) {
+  return switch (slug) {
+    'medecine-a-domicile' => Icons.medical_services_outlined,
+    'teleconsultation' => Icons.video_call_outlined,
+    'soins-infirmiers' => Icons.vaccines_outlined,
+    'pansements-et-plaies' => Icons.healing_outlined,
+    'sondes' => Icons.water_drop_outlined,
+    'sage-femme' => Icons.pregnant_woman,
+    'kinesitherapie' => Icons.accessibility_new,
+    'hygiene-et-confort' => Icons.shower_outlined,
+    _ => Icons.health_and_safety_outlined,
+  };
+}
+
 class PrescriptionBadge extends StatelessWidget {
   const PrescriptionBadge({super.key});
 

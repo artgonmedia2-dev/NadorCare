@@ -212,43 +212,49 @@ class _AddressFormScreenState extends ConsumerState<AddressFormScreen> {
           NcNotice(message: _error!, kind: NcNoticeKind.error),
           const SizedBox(height: NcSpacing.md),
         ],
-        TextField(
-          key: const ValueKey<String>('address-label-field'),
-          controller: _label,
-          textCapitalization: TextCapitalization.sentences,
-          textInputAction: TextInputAction.next,
-          decoration: InputDecoration(
-            labelText: l10n.addressLabelLabel,
-            hintText: l10n.addressLabelHint,
-            errorText: _fieldErrors['label'],
-          ),
+        NcLabeledField(
+          label: l10n.addressLabelLabel,
+          child: TextField(
+            key: const ValueKey<String>('address-label-field'),
+            controller: _label,
+            textCapitalization: TextCapitalization.sentences,
+            textInputAction: TextInputAction.next,
+            decoration: InputDecoration(
+              hintText: l10n.addressLabelHint,
+              errorText: _fieldErrors['label'],
+            ),
+          )
         ),
         const SizedBox(height: NcSpacing.md),
-        TextField(
-          key: const ValueKey<String>('address-line-field'),
-          controller: _line,
-          minLines: 1,
-          maxLines: 3,
-          textCapitalization: TextCapitalization.sentences,
-          decoration: InputDecoration(
-            labelText: l10n.addressLineLabel,
-            hintText: l10n.addressLineHint,
-            errorText: _fieldErrors['line'],
-          ),
+        NcLabeledField(
+          label: l10n.addressLineLabel,
+          child: TextField(
+            key: const ValueKey<String>('address-line-field'),
+            controller: _line,
+            minLines: 1,
+            maxLines: 3,
+            textCapitalization: TextCapitalization.sentences,
+            decoration: InputDecoration(
+              hintText: l10n.addressLineHint,
+              errorText: _fieldErrors['line'],
+            ),
+          )
         ),
         const SizedBox(height: NcSpacing.md),
-        TextField(
-          key: const ValueKey<String>('access-notes-field'),
-          controller: _accessNotes,
-          minLines: 2,
-          maxLines: 4,
-          maxLength: 500,
-          textCapitalization: TextCapitalization.sentences,
-          decoration: InputDecoration(
-            labelText: l10n.accessNotesLabel,
-            hintText: l10n.accessNotesHint,
-            errorText: _fieldErrors['access_notes'],
-          ),
+        NcLabeledField(
+          label: l10n.accessNotesLabel,
+          child: TextField(
+            key: const ValueKey<String>('access-notes-field'),
+            controller: _accessNotes,
+            minLines: 2,
+            maxLines: 4,
+            maxLength: 500,
+            textCapitalization: TextCapitalization.sentences,
+            decoration: InputDecoration(
+              hintText: l10n.accessNotesHint,
+              errorText: _fieldErrors['access_notes'],
+            ),
+          )
         ),
         const SizedBox(height: NcSpacing.md),
         const SizedBox(height: NcSpacing.sm),

@@ -3,16 +3,17 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart' show DateFormat;
 import 'package:nc_account/nc_account.dart';
 import 'package:nc_api_client/nc_api_client.dart';
 import 'package:nc_core/nc_core.dart';
 import 'package:nc_design_system/nc_design_system.dart';
 import 'package:nc_l10n/nc_l10n.dart';
 
-const String routeProfession = '/file/profession';
 const String routeFile = '/file';
-const String routeZones = '/zones';
 const String routeSchedule = '/schedule';
+const String routeProposeWeek = '/schedule/propose';
+const String routeUnavailability = '/schedule/unavailability';
 
 String routeMission(String id) => '/missions/$id';
 
@@ -81,10 +82,6 @@ class ProfessionalFileController extends AsyncNotifier<ProfessionalFile?> {
     }
   }
 
-  Future<void> save({required String categoryId, String? licenseNumber, String? orderNumber}) async {
-    _set(await _api.saveFile(categoryId: categoryId, licenseNumber: licenseNumber, orderNumber: orderNumber));
-  }
-
   Future<void> uploadDocument({required String type, required PickedDocument document, String? expiresAt}) async {
     _set(
       await _api.uploadDocument(type: type, bytes: document.bytes, filename: document.filename, expiresAt: expiresAt),
@@ -92,12 +89,6 @@ class ProfessionalFileController extends AsyncNotifier<ProfessionalFile?> {
   }
 
   Future<void> submit() async => _set(await _api.submit());
-
-  Future<void> setZones(List<String> zoneIds) async => _set(await _api.setZones(zoneIds));
-
-  Future<void> setAvailabilities(List<AvailabilitySlot> slots) async => _set(await _api.setAvailabilities(slots));
-
-  Future<void> setOnline({required bool online}) async => _set(await _api.setOnline(online: online));
 
   void _set(ProfessionalFile file) => state = AsyncData<ProfessionalFile?>(file);
 }
@@ -108,29 +99,27 @@ final professionalFileProvider = AsyncNotifierProvider<ProfessionalFileControlle
   retry: (retryCount, error) => null,
 );
 
-final professionCategoriesProvider = FutureProvider.autoDispose<List<ProfessionCategory>>(
-  (ref) {
-    _language(ref);
-    return ref.watch(proApiProvider).categories();
-  },
+/// Demandes du soignant sur son planning (semaine proposée, indisponibilité).
+final scheduleRequestsProvider = FutureProvider.autoDispose<List<ScheduleRequest>>(
+  (ref) => ref.watch(proApiProvider).scheduleRequests(),
   retry: (retryCount, error) => null,
 );
 
-final serviceZonesProvider = FutureProvider.autoDispose<List<ServiceZone>>(
-  (ref) {
-    _language(ref);
-    return ref.watch(proApiProvider).zones();
-  },
-  retry: (retryCount, error) => null,
-);
+/// Ordre d'affichage de la semaine : elle commence le lundi. 0 = dimanche … 6 = samedi.
+const List<int> orderedWeekdays = <int>[1, 2, 3, 4, 5, 6, 0];
 
-final missionOffersProvider = FutureProvider.autoDispose<List<MissionOffer>>(
-  (ref) {
-    _language(ref);
-    return ref.watch(proApiProvider).offers();
-  },
-  retry: (retryCount, error) => null,
-);
+/// Nom du jour dans la langue de l'écran. Le 1er janvier 2023 est un dimanche.
+String weekdayName(int weekday, String languageCode) {
+  final name = DateFormat.EEEE(languageCode).format(DateTime(2023, 1, 1 + weekday));
+  return name.isEmpty ? name : name[0].toUpperCase() + name.substring(1);
+}
+
+/// Plages d'un jour, dans l'ordre : « 08:00 à 12:00, 14:00 à 18:00 ».
+String weekRanges(NcLocalizations l10n, List<AvailabilitySlot> slots, int weekday) {
+  final day = slots.where((slot) => slot.weekday == weekday).toList()
+    ..sort((a, b) => a.startTime.compareTo(b.startTime));
+  return day.map((slot) => l10n.scheduleRange(slot.startTime, slot.endTime)).join(', ');
+}
 
 final missionsProvider = FutureProvider.autoDispose<List<Mission>>(
   (ref) {
@@ -160,6 +149,18 @@ String documentTypeLabel(NcLocalizations l10n, String type) {
   };
 }
 
+/// Icône d'un type de justificatif.
+IconData documentTypeIcon(String type) {
+  return switch (type) {
+    'identity' => Icons.badge_outlined,
+    'diploma' => Icons.school_outlined,
+    'practice_authorization' => Icons.verified_outlined,
+    'order_registration' => Icons.assignment_ind_outlined,
+    'rc_insurance' => Icons.shield_outlined,
+    _ => Icons.description_outlined,
+  };
+}
+
 String missionStatusLabel(NcLocalizations l10n, String status) {
   return switch (status) {
     'en_route' => l10n.missionStatusEnRoute,
@@ -168,12 +169,43 @@ String missionStatusLabel(NcLocalizations l10n, String status) {
   };
 }
 
+/// Motifs d'indisponibilité acceptés par le serveur, dans l'ordre d'affichage.
+const List<String> declineReasons = <String>['busy', 'sick', 'personal', 'other'];
+
+String declineReasonLabel(NcLocalizations l10n, String reason) {
+  return switch (reason) {
+    'busy' => l10n.declineReasonBusy,
+    'sick' => l10n.declineReasonSick,
+    'personal' => l10n.declineReasonPersonal,
+    _ => l10n.declineReasonOther,
+  };
+}
+
+/// Heure limite d'une confirmation, à l'heure du téléphone : c'est un délai pour répondre,
+/// pas l'heure du soin. Sur 24 heures et en chiffres latins dans les trois langues, comme
+/// les heures de soin.
+String confirmDeadline(DateTime confirmBy) {
+  final local = confirmBy.toLocal();
+  return '${local.hour.toString().padLeft(2, '0')}:${local.minute.toString().padLeft(2, '0')}';
+}
+
+/// Étiquette d'une mission qui attend la confirmation du soignant.
+NcStatusBadge missionToConfirmBadge(NcLocalizations l10n, Mission mission) {
+  final confirmBy = mission.confirmBy;
+
+  return NcStatusBadge(
+    label: confirmBy == null ? l10n.missionToConfirm : l10n.missionConfirmBefore(confirmDeadline(confirmBy)),
+    icon: Icons.timer_outlined,
+    tone: NcBadgeTone.progress,
+  );
+}
+
 /// Étiquette d'état d'une mission : icône et texte, pour ne pas dépendre de la couleur.
 NcStatusBadge missionStatusBadge(NcLocalizations l10n, String status) {
   final (IconData icon, NcBadgeTone tone) = switch (status) {
-    'en_route' => (Icons.directions_car_outlined, NcBadgeTone.progress),
+    'en_route' => (Icons.directions_car_outlined, NcBadgeTone.info),
     'in_progress' => (Icons.medical_services_outlined, NcBadgeTone.success),
-    _ => (Icons.event_outlined, NcBadgeTone.neutral),
+    _ => (Icons.event_outlined, NcBadgeTone.brand),
   };
 
   return NcStatusBadge(label: missionStatusLabel(l10n, status), icon: icon, tone: tone);

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart' show DateFormat;
 import 'package:nc_account/nc_account.dart';
 import 'package:nc_core/nc_core.dart';
 import 'package:nc_design_system/nc_design_system.dart';
@@ -127,6 +128,8 @@ class _BookingFlowScreenState extends ConsumerState<BookingFlowScreen> {
     final l10n = context.l10n;
     final profiles = ref.watch(profilesControllerProvider);
     final list = profiles.value ?? const <PatientProfile>[];
+    // Un seul patient enregistré : il est déjà choisi, il ne reste qu'à continuer.
+    final chosenProfile = _profileId ?? (list.length == 1 ? list.first.id : null);
 
     return NcPage(
       appBar: _appBar(),
@@ -136,9 +139,10 @@ class _BookingFlowScreenState extends ConsumerState<BookingFlowScreen> {
           NcPrimaryButton(
             label: l10n.continueButton,
             onPressed: () {
-              if (_profileId == null) {
+              if (chosenProfile == null) {
                 setState(() => _error = l10n.bookingChoosePatient);
               } else {
+                _profileId = chosenProfile;
                 _go(_Step.address);
               }
             },
@@ -168,13 +172,19 @@ class _BookingFlowScreenState extends ConsumerState<BookingFlowScreen> {
         else
           NcChoiceList<String>(
             keyPrefix: 'booking-profile',
-            selected: _profileId,
+            selected: chosenProfile,
             onSelected: (id) => setState(() {
               _profileId = id;
               _error = null;
             }),
             choices: <NcChoice<String>>[
-              for (final profile in list) NcChoice<String>(value: profile.id, label: profile.fullName),
+              for (final profile in list)
+                NcChoice<String>(
+                  value: profile.id,
+                  label: profile.fullName,
+                  subtitle: relationshipLabel(l10n, profile.relationship),
+                  icon: Icons.person_outline,
+                ),
             ],
           ),
       ],
@@ -187,6 +197,9 @@ class _BookingFlowScreenState extends ConsumerState<BookingFlowScreen> {
     final l10n = context.l10n;
     final addresses = ref.watch(addressesControllerProvider);
     final list = addresses.value ?? const <PatientAddress>[];
+    // Une seule adresse dans une zone desservie : elle est déjà choisie.
+    final covered = list.where((address) => address.isCovered).toList();
+    final chosenAddress = _addressId ?? (covered.length == 1 ? covered.first.id : null);
 
     return NcPage(
       appBar: _appBar(),
@@ -196,12 +209,13 @@ class _BookingFlowScreenState extends ConsumerState<BookingFlowScreen> {
           NcPrimaryButton(
             label: l10n.continueButton,
             onPressed: () {
-              final chosen = list.where((address) => address.id == _addressId).firstOrNull;
+              final chosen = list.where((address) => address.id == chosenAddress).firstOrNull;
               if (chosen == null) {
                 setState(() => _error = l10n.bookingChooseAddress);
               } else if (!chosen.isCovered) {
                 setState(() => _error = l10n.bookingAddressNotCovered);
               } else {
+                _addressId = chosen.id;
                 _go(_Step.slot);
               }
             },
@@ -231,7 +245,7 @@ class _BookingFlowScreenState extends ConsumerState<BookingFlowScreen> {
         else
           NcChoiceList<String>(
             keyPrefix: 'booking-address',
-            selected: _addressId,
+            selected: chosenAddress,
             onSelected: (id) => setState(() {
               _addressId = id;
               _error = null;
@@ -240,9 +254,10 @@ class _BookingFlowScreenState extends ConsumerState<BookingFlowScreen> {
               for (final address in list)
                 NcChoice<String>(
                   value: address.id,
-                  label: address.isCovered
-                      ? '${address.label}\n${address.line}'
-                      : '${address.label}\n${address.line}\n${l10n.addressNotCovered}',
+                  label: address.label,
+                  subtitle: address.line,
+                  warning: address.isCovered ? null : l10n.addressNotCovered,
+                  icon: Icons.home_outlined,
                 ),
             ],
           ),
@@ -261,13 +276,92 @@ class _BookingFlowScreenState extends ConsumerState<BookingFlowScreen> {
       lastDate: now.add(const Duration(days: 30)),
     );
     if (picked != null && mounted) {
-      setState(() {
-        _day = picked;
-        _slotChoice = null;
-        _slot = null;
-        _error = null;
-      });
+      _setDay(picked);
     }
+  }
+
+  void _setDay(DateTime day) {
+    setState(() {
+      _day = day;
+      _slotChoice = null;
+      _slot = null;
+      _error = null;
+    });
+  }
+
+  /// Jours proposés en bande : aujourd'hui et les six suivants ; les autres par le calendrier.
+  static const int _stripDays = 7;
+
+  /// Moment de la journée d'un créneau, comme sur le site : le soir commence à 19 h,
+  /// heure de la majoration.
+  static int _dayPart(String time) {
+    final hour = int.tryParse(time.split(':').first) ?? 12;
+    if (hour >= 19 || hour < 8) {
+      return 2;
+    }
+    return hour < 12 ? 0 : 1;
+  }
+
+  Widget _slotGroups(BuildContext context, BookingDay loaded, bool asap) {
+    final l10n = context.l10n;
+    final textTheme = Theme.of(context).textTheme;
+    final parts = <(String, IconData)>[
+      (l10n.slotMorning, Icons.wb_sunny_outlined),
+      (l10n.slotAfternoon, Icons.wb_twilight_outlined),
+      (l10n.slotEvening, Icons.nightlight_outlined),
+    ];
+
+    void select(String choice) => setState(() {
+      _slotChoice = choice;
+      _slot = loaded.slots.where((slot) => slot.startsAt == choice).firstOrNull;
+      _error = null;
+    });
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        // « Dès que possible » d'abord, mis à part : ce n'est pas une heure.
+        if (asap) ...<Widget>[
+          NcChoiceList<String>(
+            keyPrefix: 'booking-slot',
+            selected: _slotChoice,
+            onSelected: select,
+            choices: <NcChoice<String>>[
+              NcChoice<String>(value: _asap, label: l10n.slotAsap, icon: Icons.bolt),
+            ],
+          ),
+          const SizedBox(height: NcSpacing.sm),
+        ],
+        for (final (index, part) in parts.indexed)
+          if (loaded.slots.any((slot) => _dayPart(slot.time) == index)) ...<Widget>[
+            Padding(
+              padding: const EdgeInsets.only(bottom: NcSpacing.sm),
+              child: Row(
+                children: <Widget>[
+                  Icon(part.$2, size: 20, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                  const SizedBox(width: NcSpacing.sm),
+                  Text(
+                    part.$1,
+                    style: textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            NcChipGrid<String>(
+              keyPrefix: 'booking-slot',
+              selected: _slotChoice,
+              onSelected: select,
+              chips: <NcChip<String>>[
+                for (final slot in loaded.slots)
+                  if (_dayPart(slot.time) == index) NcChip<String>(value: slot.startsAt, label: slot.time),
+              ],
+            ),
+          ],
+      ],
+    );
   }
 
   Widget _slotStep(BuildContext context, CareService service) {
@@ -277,6 +371,10 @@ class _BookingFlowScreenState extends ConsumerState<BookingFlowScreen> {
     final day = ref.watch(bookingDayProvider(query));
     final loaded = day.value;
     final isToday = apiDate(_day) == apiDate(DateTime.now());
+    final today = DateTime.now();
+    final strip = <DateTime>[
+      for (var offset = 0; offset < _stripDays; offset++) DateTime(today.year, today.month, today.day + offset),
+    ];
 
     return NcPage(
       appBar: _appBar(),
@@ -297,13 +395,33 @@ class _BookingFlowScreenState extends ConsumerState<BookingFlowScreen> {
       children: <Widget>[
         _progress(3),
         ..._errorNotice(),
-        NcSecondaryButton(
-          key: const ValueKey<String>('booking-day-button'),
-          icon: Icons.event_outlined,
-          label: longDate(_day, language),
-          onPressed: _pickDay,
+        NcDayStrip(
+          days: <NcDay>[
+            for (final day in strip)
+              NcDay(
+                top: DateFormat.E(language).format(day),
+                bottom: '${day.day}',
+                key: 'booking-day-${apiDate(day)}',
+                semanticLabel: longDate(day, language),
+              ),
+          ],
+          selected: strip.indexWhere((day) => apiDate(day) == apiDate(_day)),
+          onSelected: (index) => _setDay(strip[index]),
         ),
-        const SizedBox(height: NcSpacing.md),
+        const SizedBox(height: NcSpacing.sm),
+        // Un jour plus lointain se choisit dans le calendrier ; une fois choisi, il s'affiche ici.
+        Align(
+          alignment: AlignmentDirectional.centerStart,
+          child: TextButton.icon(
+            key: const ValueKey<String>('booking-day-button'),
+            onPressed: _pickDay,
+            icon: const Icon(Icons.calendar_month_outlined),
+            label: Text(
+              strip.any((day) => apiDate(day) == apiDate(_day)) ? l10n.slotOtherDay : longDate(_day, language),
+            ),
+          ),
+        ),
+        const SizedBox(height: NcSpacing.sm),
         if (day.hasError)
           ...<Widget>[
             NcNotice(message: failureMessage(context, day.error!), kind: NcNoticeKind.error),
@@ -315,19 +433,7 @@ class _BookingFlowScreenState extends ConsumerState<BookingFlowScreen> {
         else if (loaded.slots.isEmpty && !(isToday && loaded.immediateAvailable))
           NcEmptyState(message: l10n.slotNone, icon: Icons.event_busy_outlined)
         else
-          NcChoiceList<String>(
-            keyPrefix: 'booking-slot',
-            selected: _slotChoice,
-            onSelected: (choice) => setState(() {
-              _slotChoice = choice;
-              _slot = loaded.slots.where((slot) => slot.startsAt == choice).firstOrNull;
-              _error = null;
-            }),
-            choices: <NcChoice<String>>[
-              if (isToday && loaded.immediateAvailable) NcChoice<String>(value: _asap, label: l10n.slotAsap),
-              for (final slot in loaded.slots) NcChoice<String>(value: slot.startsAt, label: slot.time),
-            ],
-          ),
+          _slotGroups(context, loaded, isToday && loaded.immediateAvailable),
       ],
     );
   }
@@ -511,21 +617,15 @@ class _BookingFlowScreenState extends ConsumerState<BookingFlowScreen> {
 
     return NcPage(
       title: l10n.bookingSentTitle,
-      // Le numéro reste lisible de gauche à droite dans une phrase en arabe.
-      subtitle: l10n.bookingSentBody(isolateLtr(booking.reference)),
+      header: NcSuccessPanel(
+        title: l10n.bookingSentTitle,
+        // Le numéro reste lisible de gauche à droite dans une phrase en arabe.
+        body: l10n.bookingSentBody(isolateLtr(booking.reference)),
+      ),
       actions: <Widget>[
         NcPrimaryButton(label: l10n.bookingSeeMine, onPressed: () => context.go(routeBookings)),
       ],
       children: <Widget>[
-        Center(
-          child: Container(
-            width: 144,
-            height: 144,
-            decoration: BoxDecoration(color: Theme.of(context).colorScheme.primaryContainer, shape: BoxShape.circle),
-            child: Icon(Icons.check_rounded, size: 80, color: Theme.of(context).colorScheme.onPrimaryContainer),
-          ),
-        ),
-        const SizedBox(height: NcSpacing.lg),
         NcNotice(message: l10n.statusPending),
         const SizedBox(height: NcSpacing.md),
         NcNotice(message: l10n.emergencyNotice, kind: NcNoticeKind.warning),

@@ -10,7 +10,10 @@ import '../pro_providers.dart';
 
 /// Dossier du professionnel : un bloc par justificatif exigé, avec son état, puis l'envoi.
 class FileScreen extends ConsumerStatefulWidget {
-  const FileScreen({super.key});
+  const FileScreen({this.embedded = false, super.key});
+
+  /// Affiché dans un onglet de l'accueil : pas de bouton de retour.
+  final bool embedded;
 
   @override
   ConsumerState<FileScreen> createState() => _FileScreenState();
@@ -107,7 +110,7 @@ class _FileScreenState extends ConsumerState<FileScreen> {
 
     if (file == null) {
       return NcPage(
-        appBar: AppBar(),
+        appBar: widget.embedded ? null : AppBar(),
         title: l10n.proFileTitle,
         children: const <Widget>[Center(child: CircularProgressIndicator())],
       );
@@ -116,9 +119,23 @@ class _FileScreenState extends ConsumerState<FileScreen> {
     final editable = file.status.isEditable;
 
     return NcPage(
-      appBar: AppBar(leading: BackButton(onPressed: () => context.go(NcRoutes.home))),
+      appBar: widget.embedded ? null : AppBar(leading: BackButton(onPressed: () => context.go(NcRoutes.home))),
       title: l10n.proFileTitle,
-      subtitle: file.categoryName,
+      header: NcDetailHeader(
+        icon: Icons.folder_outlined,
+        title: l10n.proFileTitle,
+        subtitle: file.categoryName,
+        // Avancement : les justificatifs exigés déjà validés.
+        badge: NcStepIndicator(
+          key: const ValueKey<String>('file-progress'),
+          label: l10n.docProgress(
+            file.requiredDocuments.where((type) => file.documentOf(type)?.status == 'approved').length,
+            file.requiredDocuments.length,
+          ),
+          current: file.requiredDocuments.where((type) => file.documentOf(type)?.status == 'approved').length,
+          total: file.requiredDocuments.length,
+        ),
+      ),
       actions: <Widget>[
         if (editable)
           NcPrimaryButton(
@@ -127,8 +144,6 @@ class _FileScreenState extends ConsumerState<FileScreen> {
             isLoading: _submitting,
             onPressed: file.canSubmit && _uploading == null ? _submit : null,
           ),
-        if (editable)
-          TextButton(onPressed: () => context.push(routeProfession), child: Text(l10n.proChangeProfession)),
       ],
       children: <Widget>[
         if (_error != null) ...<Widget>[
@@ -144,11 +159,14 @@ class _FileScreenState extends ConsumerState<FileScreen> {
           const SizedBox(height: NcSpacing.md),
         ],
         NcSectionTitle(l10n.proDocumentsTitle),
-        for (final type in file.requiredDocuments)
+        // Les justificatifs exigés d'abord, puis les facultatifs (l'assurance personnelle).
+        for (final type in <String>[...file.requiredDocuments, ...file.optionalDocuments])
           _DocumentBlock(
             type: type,
             document: file.documentOf(type),
-            isMissing: file.missingDocuments.contains(type),
+            isOptional: file.optionalDocuments.contains(type),
+            isMissing: file.missingDocuments.contains(type) ||
+                (file.optionalDocuments.contains(type) && file.documentOf(type) == null),
             isUploading: _uploading == type,
             // Un renouvellement d'assurance reste possible une fois le dossier validé.
             canUpload: _uploading == null && (editable || type == _insurance),
@@ -173,6 +191,7 @@ class _DocumentBlock extends StatelessWidget {
     required this.onUpload,
     required this.isRenewing,
     required this.onRenew,
+    this.isOptional = false,
     this.insuranceExpiry,
     this.onPickExpiry,
   });
@@ -180,6 +199,9 @@ class _DocumentBlock extends StatelessWidget {
   final String type;
   final ProfessionalDocument? document;
   final bool isMissing;
+
+  /// Justificatif facultatif : il peut être déposé, mais le dossier est complet sans lui.
+  final bool isOptional;
   final bool isUploading;
   final bool canUpload;
   final void Function(bool fromCamera) onUpload;
@@ -207,7 +229,7 @@ class _DocumentBlock extends StatelessWidget {
           Icons.error_outline,
         ),
       'expired' => (l10n.docStatusExpired, NcBadgeTone.danger, Icons.event_busy_outlined),
-      _ => (l10n.docStatusMissing, NcBadgeTone.neutral, Icons.upload_file_outlined),
+      _ => (isOptional ? l10n.docOptional : l10n.docStatusMissing, NcBadgeTone.neutral, Icons.upload_file_outlined),
     };
 
     final expiresAt = current?.expiresAt;
@@ -224,13 +246,34 @@ class _DocumentBlock extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
-          Text(documentTypeLabel(l10n, type), style: textTheme.titleMedium),
-          const SizedBox(height: NcSpacing.sm),
-          NcStatusBadge(label: label, icon: icon, tone: tone),
-          if (expiresAt != null && status != 'rejected') ...<Widget>[
-            const SizedBox(height: NcSpacing.sm),
-            Text(l10n.docValidUntil(longDate(expiresAt, language)), style: textTheme.bodyMedium),
-          ],
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              NcIconBubble(
+                icon: documentTypeIcon(type),
+                background: ncToneColors(tone).$1,
+                foreground: ncToneColors(tone).$2,
+              ),
+              const SizedBox(width: NcSpacing.sm + 4),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(documentTypeLabel(l10n, type), style: textTheme.titleMedium),
+                    const SizedBox(height: NcSpacing.xs + 2),
+                    NcStatusBadge(label: label, icon: icon, tone: tone),
+                    if (expiresAt != null && status != 'rejected') ...<Widget>[
+                      const SizedBox(height: NcSpacing.xs + 2),
+                      Text(
+                        l10n.docValidUntil(longDate(expiresAt, language)),
+                        style: textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
           if (isUploading) ...<Widget>[
             const SizedBox(height: NcSpacing.sm),
             const Center(child: CircularProgressIndicator()),
@@ -254,19 +297,25 @@ class _DocumentBlock extends StatelessWidget {
                 onPressed: onPickExpiry,
               ),
             ],
-            const SizedBox(height: NcSpacing.sm),
-            NcSecondaryButton(
-              key: ValueKey<String>('camera-$type'),
-              icon: Icons.photo_camera_outlined,
-              label: l10n.docTakePhoto,
-              onPressed: () => onUpload(true),
-            ),
-            const SizedBox(height: NcSpacing.sm),
-            NcSecondaryButton(
-              key: ValueKey<String>('gallery-$type'),
-              icon: Icons.photo_library_outlined,
-              label: l10n.docChoosePhoto,
-              onPressed: () => onUpload(false),
+            const SizedBox(height: NcSpacing.md),
+            // Photo ou galerie : deux tuiles côte à côte, plutôt que deux longs boutons.
+            NcTileGrid(
+              children: <Widget>[
+                NcActionTile(
+                  key: ValueKey<String>('camera-$type'),
+                  icon: Icons.photo_camera_outlined,
+                  label: l10n.docTakePhoto,
+                  flat: true,
+                  onTap: () => onUpload(true),
+                ),
+                NcActionTile(
+                  key: ValueKey<String>('gallery-$type'),
+                  icon: Icons.photo_library_outlined,
+                  label: l10n.docChoosePhoto,
+                  flat: true,
+                  onTap: () => onUpload(false),
+                ),
+              ],
             ),
           ],
         ],

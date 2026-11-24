@@ -13,7 +13,10 @@ import 'price_breakdown.dart';
 
 /// Mes réservations : celles en cours et à venir, ou les passées.
 class BookingsScreen extends ConsumerStatefulWidget {
-  const BookingsScreen({super.key});
+  const BookingsScreen({this.embedded = false, super.key});
+
+  /// Affiché dans un onglet de l'accueil : pas de bouton de retour.
+  final bool embedded;
 
   @override
   ConsumerState<BookingsScreen> createState() => _BookingsScreenState();
@@ -29,16 +32,17 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> {
     final bookings = ref.watch(bookingsListProvider(_past));
 
     return NcPage(
-      appBar: AppBar(leading: BackButton(onPressed: () => context.go(NcRoutes.home))),
+      appBar: widget.embedded ? null : AppBar(leading: BackButton(onPressed: () => context.go(NcRoutes.home))),
       title: l10n.homeBookings,
+      onRefresh: () async => ref.invalidate(bookingsListProvider(_past)),
       children: <Widget>[
-        NcChoiceList<bool>(
+        NcSegmented<bool>(
           keyPrefix: 'bookings-scope',
           selected: _past,
           onSelected: (past) => setState(() => _past = past),
-          choices: <NcChoice<bool>>[
-            NcChoice<bool>(value: false, label: l10n.bookingsUpcoming),
-            NcChoice<bool>(value: true, label: l10n.bookingsPast),
+          segments: <NcChip<bool>>[
+            NcChip<bool>(value: false, label: l10n.bookingsUpcoming),
+            NcChip<bool>(value: true, label: l10n.bookingsPast),
           ],
         ),
         const SizedBox(height: NcSpacing.md),
@@ -53,7 +57,9 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> {
               for (final booking in value)
                 NcListCard(
                   key: ValueKey<String>('booking-${booking.id}'),
-                  icon: Icons.event_note_outlined,
+                  // La pastille prend la couleur de l'état : on repère d'un coup d'œil ce qui bouge.
+                  icon: bookingStatusBadge(l10n, booking.status).icon,
+                  iconTone: bookingStatusBadge(l10n, booking.status).tone,
                   title: booking.serviceName,
                   subtitle:
                       '${booking.patientName}\n${l10n.dateAtTime(longDate(booking.scheduledDate, language), booking.scheduledTime)}',
@@ -78,6 +84,57 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> {
 }
 
 /// Fiche d'une réservation : statut, détails, prix, et annulation tant qu'elle est possible.
+/// En-tête de la fiche : le soin, la référence et l'état, dans le ton de l'état.
+Widget _header(NcLocalizations l10n, Booking booking) {
+  final status = bookingStatusBadge(l10n, booking.status, key: const ValueKey<String>('booking-status'));
+
+  return NcDetailHeader(
+    icon: booking.isRemote ? Icons.videocam_outlined : status.icon,
+    tone: status.tone,
+    title: booking.serviceName,
+    // La référence reste lisible de gauche à droite dans une phrase en arabe.
+    subtitle: l10n.bookingReference(isolateLtr(booking.reference)),
+    badge: status,
+  );
+}
+
+/// Suivi de la demande, étape par étape. Rien pour une demande annulée ou contestée :
+/// l'étiquette d'état suffit.
+Widget? _progress(NcLocalizations l10n, Booking booking) {
+  final steps = <NcTimelineStep>[
+    NcTimelineStep(label: l10n.timelineSent),
+    NcTimelineStep(label: l10n.timelineConfirmed),
+    NcTimelineStep(label: l10n.timelineAssigned),
+    // Une téléconsultation n'a pas de trajet.
+    if (!booking.isRemote) NcTimelineStep(label: l10n.timelineOnTheWay),
+    NcTimelineStep(label: l10n.timelineCare),
+    NcTimelineStep(label: l10n.timelineDone),
+  ];
+  final care = booking.isRemote ? 3 : 4;
+
+  final current = switch (booking.status) {
+    BookingStatus.pending => 0,
+    BookingStatus.confirmed => 1,
+    BookingStatus.assigned => 2,
+    BookingStatus.enRoute => 3,
+    BookingStatus.inProgress => care,
+    // Terminé : toutes les étapes sont cochées.
+    BookingStatus.completed => steps.length,
+    BookingStatus.cancelled || BookingStatus.disputed => -1,
+  };
+
+  if (current < 0) {
+    return null;
+  }
+
+  return NcSection(
+    key: const ValueKey<String>('booking-progress'),
+    title: l10n.bookingProgressTitle,
+    icon: Icons.timeline,
+    children: <Widget>[NcTimeline(steps: steps, current: current)],
+  );
+}
+
 class BookingDetailScreen extends ConsumerStatefulWidget {
   const BookingDetailScreen({required this.bookingId, super.key});
 
@@ -166,7 +223,7 @@ class _BookingDetailScreenState extends ConsumerState<BookingDetailScreen> {
       AsyncValue<Booking>(value: final booking?) => NcPage(
           appBar: AppBar(),
           title: booking.serviceName,
-          subtitle: l10n.bookingReference(isolateLtr(booking.reference)),
+          header: _header(l10n, booking),
           actions: <Widget>[
             if (booking.canJoinTeleconsultation)
               NcPrimaryButton(
@@ -201,9 +258,7 @@ class _BookingDetailScreenState extends ConsumerState<BookingDetailScreen> {
               NcNotice(message: _error!, kind: NcNoticeKind.error),
               const SizedBox(height: NcSpacing.md),
             ],
-            bookingStatusBadge(l10n, booking.status, key: const ValueKey<String>('booking-status')),
             if (booking.isRemote) ...<Widget>[
-              const SizedBox(height: NcSpacing.sm),
               NcNotice(
                 key: const ValueKey<String>('booking-remote'),
                 message: booking.canJoinTeleconsultation
@@ -225,11 +280,11 @@ class _BookingDetailScreenState extends ConsumerState<BookingDetailScreen> {
               ),
             ],
             const SizedBox(height: NcSpacing.md),
-            NcSurface(
-              margin: const EdgeInsets.only(bottom: NcSpacing.md),
-              padding: const EdgeInsets.symmetric(horizontal: NcSpacing.md, vertical: NcSpacing.sm),
-              child: Column(
-                children: <Widget>[
+            ?_progress(l10n, booking),
+            NcSection(
+              title: l10n.bookingDetailsTitle,
+              icon: Icons.info_outline,
+              children: <Widget>[
                   if ((booking.professionalName ?? '').isNotEmpty)
                     SummaryRow(
                       icon: Icons.medical_services_outlined,
@@ -256,10 +311,13 @@ class _BookingDetailScreenState extends ConsumerState<BookingDetailScreen> {
                   ),
                   if ((booking.patientNote ?? '').isNotEmpty)
                     SummaryRow(icon: Icons.chat_bubble_outline, label: l10n.noteLabel, value: booking.patientNote!),
-                ],
-              ),
+              ],
             ),
-            NcSurface(child: PriceBreakdown(price: booking.price)),
+            NcSection(
+              title: l10n.servicePriceLabel,
+              icon: Icons.payments_outlined,
+              children: <Widget>[PriceBreakdown(price: booking.price)],
+            ),
           ],
         ),
       AsyncError<Booking>(:final error) => NcPage(

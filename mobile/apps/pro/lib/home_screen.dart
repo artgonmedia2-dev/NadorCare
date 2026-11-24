@@ -3,17 +3,19 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart' show DateFormat;
 import 'package:nc_account/nc_account.dart';
 import 'package:nc_core/nc_core.dart';
 import 'package:nc_design_system/nc_design_system.dart';
 import 'package:nc_l10n/nc_l10n.dart';
 
+import 'file/file_screen.dart';
 import 'missions/journey_tracker.dart';
 import 'pro_providers.dart';
+import 'schedule/planning_screen.dart';
 
 /// Accueil de l'application professionnel. Ce qu'il montre dépend de l'état du dossier :
-/// création, justificatifs à déposer, vérification en cours, puis propositions et missions.
+/// justificatifs à déposer, vérification en cours, puis (soignant vérifié) un écran à onglets :
+/// missions, planning, dossier et compte (refonte du 2026-11-24).
 class ProHomeScreen extends ConsumerStatefulWidget {
   const ProHomeScreen({super.key});
 
@@ -22,14 +24,14 @@ class ProHomeScreen extends ConsumerStatefulWidget {
 }
 
 class _ProHomeScreenState extends ConsumerState<ProHomeScreen> {
-  /// Les propositions expirent vite et les notifications ne sont pas encore branchées :
-  /// l'écran se rafraîchit de lui-même.
+  /// Les notifications ne sont pas encore branchées : l'écran se rafraîchit de lui-même,
+  /// pour qu'une mission affectée par la coordination apparaisse sans attendre.
   static const Duration _refreshEvery = Duration(seconds: 15);
 
   Timer? _timer;
-  String? _busyOffer;
-  bool _togglingOnline = false;
-  String? _error;
+
+  /// Onglet affiché, une fois le soignant vérifié.
+  int _tab = 0;
 
   @override
   void initState() {
@@ -48,9 +50,7 @@ class _ProHomeScreenState extends ConsumerState<ProHomeScreen> {
       return;
     }
     ref.read(professionalFileProvider.notifier).refreshQuietly();
-    ref
-      ..invalidate(missionOffersProvider)
-      ..invalidate(missionsProvider);
+    ref.invalidate(missionsProvider);
   }
 
   /// Rechargement demandé par un geste : on attend la réponse avant de retirer l'indicateur.
@@ -59,59 +59,7 @@ class _ProHomeScreenState extends ConsumerState<ProHomeScreen> {
     if (!mounted) {
       return;
     }
-    ref
-      ..invalidate(missionOffersProvider)
-      ..invalidate(missionsProvider);
-  }
-
-  Future<void> _setOnline(bool online) async {
-    setState(() {
-      _togglingOnline = true;
-      _error = null;
-    });
-
-    try {
-      await ref.read(professionalFileProvider.notifier).setOnline(online: online);
-    } on ApiFailure catch (failure) {
-      if (mounted) {
-        setState(() => _error = failureMessage(context, failure));
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _togglingOnline = false);
-      }
-    }
-  }
-
-  Future<void> _answer(MissionOffer offer, {required bool accept}) async {
-    setState(() {
-      _busyOffer = offer.id;
-      _error = null;
-    });
-
-    try {
-      if (accept) {
-        final mission = await ref.read(proApiProvider).acceptOffer(offer.id);
-        ref
-          ..invalidate(missionOffersProvider)
-          ..invalidate(missionsProvider);
-        if (mounted) {
-          await context.push(routeMission(mission.id));
-        }
-      } else {
-        await ref.read(proApiProvider).declineOffer(offer.id);
-        ref.invalidate(missionOffersProvider);
-      }
-    } on ApiFailure catch (failure) {
-      if (mounted) {
-        setState(() => _error = failureMessage(context, failure));
-      }
-      ref.invalidate(missionOffersProvider);
-    } finally {
-      if (mounted) {
-        setState(() => _busyOffer = null);
-      }
-    }
+    ref.invalidate(missionsProvider);
   }
 
   @override
@@ -158,14 +106,15 @@ class _ProHomeScreenState extends ConsumerState<ProHomeScreen> {
 
     final current = file.value;
 
-    // Pas encore de dossier.
+    // Modèle « agence » : la fiche est créée par l'agence. Sans fiche, le compte n'est pas dans
+    // l'équipe (le serveur refuse d'ailleurs la connexion) : il n'y a rien à faire ici.
     if (current == null) {
       return NcPage(
         appBar: appBar,
-        title: l10n.proCreateFileTitle,
-        subtitle: l10n.proCreateFileIntro,
-        actions: <Widget>[NcPrimaryButton(label: l10n.proStart, onPressed: () => context.push(routeProfession))],
-        children: const <Widget>[],
+        title: l10n.proNoTeamTitle,
+        children: <Widget>[
+          NcNotice(key: const ValueKey<String>('no-team'), message: l10n.proNoTeamBody, kind: NcNoticeKind.warning),
+        ],
       );
     }
 
@@ -218,16 +167,14 @@ class _ProHomeScreenState extends ConsumerState<ProHomeScreen> {
               NcNotice(message: l10n.proReason(current.statusReason!), kind: NcNoticeKind.warning),
           ],
         ),
-      VerificationStatus.verified => _verified(context, appBar, greeting, current),
+      VerificationStatus.verified => _verifiedShell(context, greeting, name, current),
     };
   }
 
-  Widget _verified(BuildContext context, PreferredSizeWidget appBar, String greeting, ProfessionalFile file) {
+  /// Soignant vérifié : l'écran à onglets. Les missions sont suivies quel que soit l'onglet
+  /// ouvert, car le suivi du trajet se règle sur elles.
+  Widget _verifiedShell(BuildContext context, String greeting, String? name, ProfessionalFile file) {
     final l10n = context.l10n;
-    final textTheme = Theme.of(context).textTheme;
-    final language = Localizations.localeOf(context).languageCode;
-    final offers = ref.watch(missionOffersProvider);
-    final missions = ref.watch(missionsProvider);
 
     // La position n'est partagée que pendant un trajet : le suivi s'aligne sur les missions.
     ref.listen(missionsProvider, (previous, next) {
@@ -235,94 +182,140 @@ class _ProHomeScreenState extends ConsumerState<ProHomeScreen> {
         ref.read(journeyTrackerProvider.notifier).sync(value);
       }
     });
+
+    return NcTabScaffold(
+      index: _tab,
+      onSelected: (tab) => setState(() => _tab = tab),
+      tabs: <NcTab>[
+        NcTab(
+          key: const ValueKey<String>('tab-missions'),
+          icon: Icons.assignment_outlined,
+          selectedIcon: Icons.assignment,
+          label: l10n.navMissions,
+        ),
+        NcTab(
+          key: const ValueKey<String>('tab-planning'),
+          icon: Icons.calendar_month_outlined,
+          selectedIcon: Icons.calendar_month,
+          label: l10n.navPlanning,
+        ),
+        NcTab(
+          key: const ValueKey<String>('tab-file'),
+          icon: Icons.folder_outlined,
+          selectedIcon: Icons.folder,
+          label: l10n.navFile,
+        ),
+        NcTab(
+          key: const ValueKey<String>('tab-account'),
+          icon: Icons.person_outline,
+          selectedIcon: Icons.person,
+          label: l10n.navAccount,
+        ),
+      ],
+      body: switch (_tab) {
+        1 => const PlanningScreen(),
+        2 => const FileScreen(embedded: true),
+        3 => const SettingsScreen(),
+        _ => _missionsTab(context, greeting, name, file),
+      },
+    );
+  }
+
+  /// Onglet des missions : salutation, chiffres du jour, missions à confirmer, missions,
+  /// puis l'accès rapide au planning.
+  Widget _missionsTab(BuildContext context, String greeting, String? name, ProfessionalFile file) {
+    final l10n = context.l10n;
+    final language = Localizations.localeOf(context).languageCode;
+    final missions = ref.watch(missionsProvider);
     final workingDays = file.availabilities.map((slot) => slot.weekday).toSet().length;
 
-    final scheme = Theme.of(context).colorScheme;
-    final offerList = offers.value;
     final missionList = missions.value;
+    // Les missions que la coordination vient d'affecter passent devant : elles attendent une réponse.
+    final toConfirm = <Mission>[...?missionList?.where((mission) => mission.needsConfirmation)];
+    final confirmed = <Mission>[...?missionList?.where((mission) => !mission.needsConfirmation)];
+    final today = DateTime.now();
+    final todayCount = confirmed.where((mission) => DateUtils.isSameDay(mission.scheduledDate, today)).length;
+
+    // Flèche directionnelle : elle s'inverse en arabe.
+    final chevron = Icon(
+      Icons.chevron_right,
+      color: Theme.of(context).colorScheme.onSurfaceVariant,
+      textDirection: Directionality.of(context),
+    );
+
+    String when(Mission mission) =>
+        '${mission.patientName}\n${l10n.dateAtTime(longDate(mission.scheduledDate, language), mission.scheduledTime)}';
 
     return NcPage(
-      appBar: appBar,
       title: greeting,
+      header: NcHomeHeader(
+        greeting: greeting,
+        caption: file.categoryName,
+        trailing: <Widget>[
+          NcRoundIconButton(icon: Icons.refresh, tooltip: l10n.refresh, onPressed: _refresh),
+          NcAvatar(name: name),
+        ],
+      ),
       onRefresh: _pullToRefresh,
       children: <Widget>[
-        if (_error != null) ...<Widget>[
-          NcNotice(message: _error!, kind: NcNoticeKind.error),
+        // Le planning est fixé par l'agence : tant qu'il manque des zones ou des jours, on le dit.
+        if (file.zones.isEmpty || workingDays == 0) ...<Widget>[
+          NcNotice(key: const ValueKey<String>('home-planning-missing'), message: l10n.planningMissing),
           const SizedBox(height: NcSpacing.md),
         ],
-        // L'état en ligne est le réglage le plus important de l'écran : il a sa carte, qui change de couleur.
-        NcSurface(
-          color: file.isOnline ? scheme.primaryContainer : null,
-          padding: const EdgeInsetsDirectional.fromSTEB(NcSpacing.md, NcSpacing.xs, NcSpacing.sm, NcSpacing.xs),
-          margin: EdgeInsets.zero,
-          child: SwitchListTile(
-            key: const ValueKey<String>('online-switch'),
-            contentPadding: EdgeInsets.zero,
-            value: file.isOnline,
-            onChanged: _togglingOnline ? null : _setOnline,
-            title: Text(file.isOnline ? l10n.proOnline : l10n.proOffline, style: textTheme.titleLarge),
-            subtitle: Text(l10n.proOnlineHelp),
+        if (missionList != null)
+          NcTileGrid(
+            columns: 3,
+            children: <Widget>[
+              NcStatTile(
+                key: const ValueKey<String>('stat-today'),
+                value: '$todayCount',
+                label: l10n.proStatToday,
+                icon: Icons.today_outlined,
+              ),
+              NcStatTile(
+                key: const ValueKey<String>('stat-to-confirm'),
+                value: '${toConfirm.length}',
+                label: l10n.proStatToConfirm,
+                icon: Icons.timer_outlined,
+                tone: toConfirm.isEmpty ? NcBadgeTone.neutral : NcBadgeTone.progress,
+              ),
+              NcStatTile(
+                key: const ValueKey<String>('stat-upcoming'),
+                value: '${confirmed.length}',
+                label: l10n.proStatUpcoming,
+                icon: Icons.event_available_outlined,
+                tone: NcBadgeTone.info,
+              ),
+            ],
           ),
-        ),
-        // Sans zone ni jour de travail, les propositions ne peuvent pas tenir compte du professionnel.
-        if (file.zones.isEmpty) ...<Widget>[
-          const SizedBox(height: NcSpacing.md),
-          NcNotice(
-            key: const ValueKey<String>('home-zones-missing'),
-            message: l10n.proZonesMissing,
-            kind: NcNoticeKind.warning,
-          ),
+        if (toConfirm.isNotEmpty) ...<Widget>[
           const SizedBox(height: NcSpacing.sm),
-          NcSecondaryButton(
-            label: l10n.proZonesSetUp,
-            icon: Icons.map_outlined,
-            onPressed: () => context.push(routeZones),
-          ),
-        ],
-        if (workingDays == 0) ...<Widget>[
-          const SizedBox(height: NcSpacing.md),
-          NcNotice(
-            key: const ValueKey<String>('home-schedule-missing'),
-            message: l10n.proScheduleMissing,
-            kind: NcNoticeKind.warning,
-          ),
-          const SizedBox(height: NcSpacing.sm),
-          NcSecondaryButton(
-            label: l10n.proScheduleSetUp,
-            icon: Icons.calendar_month_outlined,
-            onPressed: () => context.push(routeSchedule),
-          ),
-        ],
-        const SizedBox(height: NcSpacing.lg),
-        NcSectionTitle(l10n.proOffersTitle),
-        // Pendant un rechargement, la liste déjà affichée reste en place : pas de clignotement.
-        if (offerList != null && offerList.isEmpty)
-          NcEmptyState(message: l10n.proOffersEmpty, icon: Icons.notifications_none)
-        else if (offerList != null)
-          for (final offer in offerList)
-            _OfferCard(
-              offer: offer,
-              language: language,
-              isBusy: _busyOffer == offer.id,
-              onAccept: () => _answer(offer, accept: true),
-              onDecline: () => _answer(offer, accept: false),
-            )
-        else if (offers.hasError)
-          NcNotice(message: failureMessage(context, offers.error!), kind: NcNoticeKind.error)
-        else
-          const Center(child: CircularProgressIndicator()),
-        const SizedBox(height: NcSpacing.md),
-        NcSectionTitle(l10n.proMissionsTitle),
-        if (missionList != null && missionList.isEmpty)
-          NcEmptyState(message: l10n.proMissionsEmpty, icon: Icons.event_available_outlined)
-        else if (missionList != null)
-          for (final mission in missionList)
+          NcSectionTitle(l10n.proToConfirmTitle),
+          for (final mission in toConfirm)
             NcListCard(
               key: ValueKey<String>('mission-${mission.id}'),
-              icon: Icons.medical_services_outlined,
+              icon: Icons.assignment_late_outlined,
               title: mission.serviceName,
-              subtitle:
-                  '${mission.patientName}\n${l10n.dateAtTime(longDate(mission.scheduledDate, language), mission.scheduledTime)}',
+              subtitle: when(mission),
+              badge: missionToConfirmBadge(l10n, mission),
+              highlighted: true,
+              onTap: () => context.push(routeMission(mission.id)),
+            ),
+        ],
+        const SizedBox(height: NcSpacing.sm),
+        NcSectionTitle(l10n.proMissionsTitle),
+        // Pendant un rechargement, la liste déjà affichée reste en place : pas de clignotement.
+        if (missionList != null && confirmed.isEmpty)
+          NcEmptyState(message: l10n.proMissionsEmpty, icon: Icons.event_available_outlined)
+        else if (missionList != null)
+          for (final mission in confirmed)
+            NcListCard(
+              key: ValueKey<String>('mission-${mission.id}'),
+              icon: missionStatusBadge(l10n, mission.status).icon,
+              iconTone: missionStatusBadge(l10n, mission.status).tone,
+              title: mission.serviceName,
+              subtitle: when(mission),
               badge: missionStatusBadge(l10n, mission.status),
               onTap: () => context.push(routeMission(mission.id)),
             )
@@ -331,106 +324,33 @@ class _ProHomeScreenState extends ConsumerState<ProHomeScreen> {
         else
           const Center(child: CircularProgressIndicator()),
         const SizedBox(height: NcSpacing.md),
-        NcSectionTitle(l10n.proAccountSection),
-        NcListCard(
-          key: const ValueKey<String>('home-zones'),
-          icon: Icons.map_outlined,
-          title: l10n.proZones,
-          subtitle: l10n.proZonesCount(file.zones.length),
-          onTap: () => context.push(routeZones),
-        ),
-        NcListCard(
-          key: const ValueKey<String>('home-schedule'),
+        NcSectionTitle(l10n.homeQuickActions),
+        // Des lignes plutôt que des tuiles : les libellés sont longs.
+        NcFeedRow(
+          key: const ValueKey<String>('home-planning'),
           icon: Icons.calendar_month_outlined,
-          title: l10n.proSchedule,
-          subtitle: l10n.proScheduleCount(workingDays),
+          title: l10n.proPlanningTitle,
+          subtitle: '${l10n.proScheduleCount(workingDays)} · ${l10n.proZonesCount(file.zones.length)}',
+          trailing: chevron,
           onTap: () => context.push(routeSchedule),
         ),
-        NcListCard(
-          key: const ValueKey<String>('home-file'),
-          icon: Icons.folder_outlined,
-          title: l10n.proFileTitle,
-          subtitle: file.categoryName,
-          onTap: () => context.push(routeFile),
+        NcFeedRow(
+          key: const ValueKey<String>('home-unavailability'),
+          icon: Icons.event_busy_outlined,
+          tone: NcBadgeTone.progress,
+          title: l10n.planningReportUnavailability,
+          trailing: chevron,
+          onTap: () => context.push(routeUnavailability),
+        ),
+        NcFeedRow(
+          key: const ValueKey<String>('home-propose-week'),
+          icon: Icons.edit_calendar_outlined,
+          tone: NcBadgeTone.info,
+          title: l10n.planningProposeWeek,
+          trailing: chevron,
+          onTap: () => context.push(routeProposeWeek),
         ),
       ],
-    );
-  }
-}
-
-/// Proposition de mission : avant d'accepter, seuls le soin, le créneau, la zone et la
-/// distance sont connus.
-class _OfferCard extends StatelessWidget {
-  const _OfferCard({
-    required this.offer,
-    required this.language,
-    required this.isBusy,
-    required this.onAccept,
-    required this.onDecline,
-  });
-
-  final MissionOffer offer;
-  final String language;
-  final bool isBusy;
-  final VoidCallback onAccept;
-  final VoidCallback onDecline;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final scheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
-    final expiresAt = offer.expiresAt;
-    final distance = offer.distanceMeters;
-
-    final details = <String>[
-      l10n.dateAtTime(longDate(offer.scheduledDate, language), offer.scheduledTime),
-      l10n.serviceDuration(offer.durationMinutes),
-      if ((offer.zone ?? '').isNotEmpty) offer.zone!,
-      if (distance != null) l10n.offerDistance(formatDistance(distance, language)),
-    ];
-
-    return Container(
-      key: ValueKey<String>('offer-${offer.id}'),
-      margin: const EdgeInsets.only(bottom: NcSpacing.md),
-      padding: const EdgeInsets.all(NcSpacing.md),
-      decoration: BoxDecoration(color: scheme.primaryContainer, borderRadius: BorderRadius.circular(14)),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: <Widget>[
-          Text(offer.serviceName, style: textTheme.titleLarge),
-          const SizedBox(height: NcSpacing.xs),
-          Text(details.join('\n'), style: textTheme.bodyLarge),
-          if (expiresAt != null) ...<Widget>[
-            const SizedBox(height: NcSpacing.sm),
-            NcStatusBadge(
-              icon: Icons.timer_outlined,
-              tone: NcBadgeTone.progress,
-              // Heure du téléphone : c'est le délai pour répondre, pas l'heure du soin.
-              label: l10n.offerAnswerBefore(
-                DateFormat.Hms(language == 'ar' ? 'ar_MA' : language).format(expiresAt.toLocal()),
-              ),
-            ),
-          ],
-          const SizedBox(height: NcSpacing.md),
-          if (isBusy)
-            const Center(child: CircularProgressIndicator())
-          else ...<Widget>[
-            NcPrimaryButton(
-              key: ValueKey<String>('accept-${offer.id}'),
-              label: l10n.offerAccept,
-              icon: Icons.check,
-              onPressed: onAccept,
-            ),
-            const SizedBox(height: NcSpacing.sm),
-            NcSecondaryButton(
-              key: ValueKey<String>('decline-${offer.id}'),
-              label: l10n.offerDecline,
-              onPressed: onDecline,
-            ),
-          ],
-        ],
-      ),
     );
   }
 }

@@ -23,6 +23,16 @@ final careCategoriesProvider = FutureProvider.autoDispose<List<CareCategory>>(
   retry: (retryCount, error) => null,
 );
 
+/// Catégories de la grille de l'accueil. Lecture à part : l'accueil reste ouvert sous le
+/// catalogue, et partager la lecture empêcherait le catalogue de se recharger à son ouverture.
+final homeCategoriesProvider = FutureProvider.autoDispose<List<CareCategory>>(
+  (ref) {
+    _language(ref);
+    return ref.watch(catalogueApiProvider).categories();
+  },
+  retry: (retryCount, error) => null,
+);
+
 typedef ServiceFilter = ({String? categorySlug, String? query});
 
 final careServicesProvider = FutureProvider.autoDispose.family<List<CareService>, ServiceFilter>(

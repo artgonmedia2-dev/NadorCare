@@ -308,19 +308,15 @@ void main() {
     await openService(tester, 'pansement');
     await tapAndSettle(tester, find.text(fr.bookService));
 
-    // 1. Patient
+    // 1. Patient : il n'y en a qu'un, il est déjà choisi.
     expect(find.text(fr.bookingStepPatientTitle), findsOneWidget);
     await tapAndSettle(tester, find.text(fr.continueButton));
-    expect(find.text(fr.bookingChoosePatient), findsOneWidget);
-    await tapAndSettle(tester, byName('booking-profile-P1'));
-    await tapAndSettle(tester, find.text(fr.continueButton));
+    expect(find.text(fr.bookingChoosePatient), findsNothing);
 
-    // 2. Adresse
+    // 2. Adresse : une seule est dans une zone desservie, elle est déjà choisie.
     expect(find.text(fr.bookingStepAddressTitle), findsOneWidget);
     await tapAndSettle(tester, find.text(fr.continueButton));
-    expect(find.text(fr.bookingChooseAddress), findsOneWidget);
-    await tapAndSettle(tester, byName('booking-address-A1'));
-    await tapAndSettle(tester, find.text(fr.continueButton));
+    expect(find.text(fr.bookingChooseAddress), findsNothing);
 
     // 3. Créneau
     expect(find.text(fr.bookingStepSlotTitle), findsOneWidget);
@@ -358,6 +354,46 @@ void main() {
     await tapAndSettle(tester, find.text(fr.bookingSeeMine));
     expect(byName('booking-B1'), findsOneWidget);
     expect(find.text(fr.statusPending), findsOneWidget);
+  });
+
+  testWidgets('avec plusieurs patients ou adresses desservies, rien n est choisi d avance', (tester) async {
+    const father = PatientProfile(
+      id: 'P2',
+      firstName: 'Hassan',
+      lastName: 'Benali',
+      relationship: PatientRelationship.parent,
+    );
+    const office = PatientAddress(
+      id: 'A3',
+      label: 'Bureau',
+      line: '3 avenue Mohammed V',
+      city: 'Nador',
+      latitude: 35.168,
+      longitude: -2.933,
+      isCovered: true,
+    );
+    final env = Env(
+      patients: FakePatientsApi(
+        profiles: <PatientProfile>[mother, father],
+        addresses: <PatientAddress>[home, office],
+      ),
+    );
+    await env.pump(tester);
+    await openService(tester, 'pansement');
+    await tapAndSettle(tester, find.text(fr.bookService));
+
+    await tapAndSettle(tester, find.text(fr.continueButton));
+    expect(find.text(fr.bookingChoosePatient), findsOneWidget);
+    await tapAndSettle(tester, byName('booking-profile-P2'));
+    await tapAndSettle(tester, find.text(fr.continueButton));
+
+    expect(find.text(fr.bookingStepAddressTitle), findsOneWidget);
+    await tapAndSettle(tester, find.text(fr.continueButton));
+    expect(find.text(fr.bookingChooseAddress), findsOneWidget);
+    await tapAndSettle(tester, byName('booking-address-A3'));
+    await tapAndSettle(tester, find.text(fr.continueButton));
+
+    expect(find.text(fr.bookingStepSlotTitle), findsOneWidget);
   });
 
   testWidgets('une adresse hors zone ne permet pas de continuer', (tester) async {

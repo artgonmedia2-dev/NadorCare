@@ -271,7 +271,11 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
     return NcPage(
       appBar: AppBar(),
       title: l10n.reportTitle,
-      subtitle: _mission == null ? null : '${_mission!.serviceName}\n${_mission!.patientName}',
+      header: NcDetailHeader(
+        icon: Icons.description_outlined,
+        title: l10n.reportTitle,
+        subtitle: _mission == null ? null : '${_mission!.serviceName}\n${_mission!.patientName}',
+      ),
       actions: <Widget>[
         NcPrimaryButton(
           key: const ValueKey<String>('report-complete'),
@@ -296,31 +300,45 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
           const SizedBox(height: NcSpacing.md),
         ],
         NcSectionTitle(l10n.reportVitalsTitle),
-        for (final vital in Vital.values)
+        // Les constantes en tuiles, deux par rangée : le libellé au-dessus de chaque champ.
+        for (var start = 0; start < Vital.values.length; start += 2)
           Padding(
-            padding: const EdgeInsets.only(bottom: NcSpacing.sm),
-            child: TextField(
-              key: ValueKey<String>('vital-${vital.name}'),
-              controller: _vitals[vital],
-              keyboardType: TextInputType.numberWithOptions(decimal: vital.isDecimal),
-              // Les mesures se lisent de gauche à droite, même en arabe.
-              textDirection: TextDirection.ltr,
-              decoration: InputDecoration(labelText: vitalLabel(l10n, vital), errorText: _vitalErrors[vital]),
+            padding: const EdgeInsets.only(bottom: NcSpacing.sm + 4),
+            // Même hauteur pour les deux tuiles d'une rangée, champs alignés en bas.
+            child: IntrinsicHeight(
+              child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                Expanded(child: _vitalTile(l10n, Vital.values[start])),
+                const SizedBox(width: NcSpacing.sm + 4),
+                Expanded(
+                  child: start + 1 < Vital.values.length
+                      ? _vitalTile(l10n, Vital.values[start + 1])
+                      : const SizedBox.shrink(),
+                ),
+              ],
+            ),
             ),
           ),
-        const SizedBox(height: NcSpacing.md),
-        TextField(
-          key: const ValueKey<String>('report-observations'),
-          controller: _observations,
-          minLines: 3,
-          maxLines: 8,
-          maxLength: 5000,
-          textCapitalization: TextCapitalization.sentences,
-          decoration: InputDecoration(labelText: l10n.reportObservations, errorText: _observationsError),
+        const SizedBox(height: NcSpacing.sm),
+        NcSection(
+          title: l10n.reportObservations,
+          icon: Icons.notes,
+          children: <Widget>[
+            TextField(
+              key: const ValueKey<String>('report-observations'),
+              controller: _observations,
+              minLines: 3,
+              maxLines: 8,
+              maxLength: 5000,
+              textCapitalization: TextCapitalization.sentences,
+              decoration: InputDecoration(errorText: _observationsError),
+            ),
+          ],
         ),
-        const SizedBox(height: NcSpacing.md),
         _Lines(
           title: l10n.reportActsTitle,
+          icon: Icons.medical_services_outlined,
           addLabel: l10n.reportActAdd,
           addKey: 'report-add-act',
           lines: _acts,
@@ -329,28 +347,36 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
         ),
         _Lines(
           title: l10n.reportConsumablesTitle,
+          icon: Icons.inventory_2_outlined,
           addLabel: l10n.reportConsumableAdd,
           addKey: 'report-add-consumable',
           lines: _consumables,
           onAdd: () => _addLine(act: false),
           onRemove: (line) => setState(() => _consumables = _consumables.where((item) => item != line).toList()),
         ),
-        NcSectionTitle(l10n.reportPhotosTitle),
-        Text(
-          l10n.reportPhotosCount(intervention.photosCount),
-          key: const ValueKey<String>('report-photos-count'),
-          style: textTheme.bodyLarge,
-        ),
-        const SizedBox(height: NcSpacing.sm),
-        NcSecondaryButton(
-          key: const ValueKey<String>('report-add-photo'),
-          label: l10n.reportPhotoAdd,
+        NcSection(
+          title: l10n.reportPhotosTitle,
           icon: Icons.photo_camera_outlined,
-          onPressed: _busy ? null : _addPhoto,
+          children: <Widget>[
+            Text(
+              l10n.reportPhotosCount(intervention.photosCount),
+              key: const ValueKey<String>('report-photos-count'),
+              style: textTheme.bodyLarge,
+            ),
+            const SizedBox(height: NcSpacing.sm),
+            NcSecondaryButton(
+              key: const ValueKey<String>('report-add-photo'),
+              label: l10n.reportPhotoAdd,
+              icon: Icons.photo_camera_outlined,
+              onPressed: _busy ? null : _addPhoto,
+            ),
+          ],
         ),
-        const SizedBox(height: NcSpacing.lg),
-        if (!_isRemote) ...<Widget>[
-          NcSectionTitle(l10n.reportSignatureTitle),
+        if (!_isRemote)
+          NcSection(
+            title: l10n.reportSignatureTitle,
+            icon: Icons.draw_outlined,
+            children: <Widget>[
           Row(
             children: <Widget>[
               Icon(
@@ -376,9 +402,10 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
             icon: Icons.draw_outlined,
             onPressed: _busy ? null : _sign,
           ),
-        ],
+            ],
+          ),
         if (amount > 0) ...<Widget>[
-          const SizedBox(height: NcSpacing.lg),
+          const SizedBox(height: NcSpacing.sm),
           NcSurface(
             color: _cashCollected ? Theme.of(context).colorScheme.primaryContainer : null,
             padding: const EdgeInsetsDirectional.fromSTEB(NcSpacing.md, NcSpacing.xs, NcSpacing.sm, NcSpacing.xs),
@@ -395,12 +422,56 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
       ],
     );
   }
+
+  /// Tuile d'une constante : pastille, libellé avec l'unité au-dessus, champ de saisie.
+  Widget _vitalTile(NcLocalizations l10n, Vital vital) {
+    final textTheme = Theme.of(context).textTheme;
+
+    return NcSurface(
+      margin: EdgeInsets.zero,
+      padding: const EdgeInsets.all(NcSpacing.sm + 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: <Widget>[
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              NcIconBubble(icon: vitalIcon(vital), size: 32),
+              const SizedBox(width: NcSpacing.sm),
+              Expanded(
+                child: Text(
+                  vitalLabel(l10n, vital),
+                  style: textTheme.bodyMedium?.copyWith(fontSize: 14, fontWeight: FontWeight.w600, height: 1.25),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: NcSpacing.sm),
+          TextField(
+            key: ValueKey<String>('vital-${vital.name}'),
+            controller: _vitals[vital],
+            keyboardType: TextInputType.numberWithOptions(decimal: vital.isDecimal),
+            // Les mesures se lisent de gauche à droite, même en arabe.
+            textDirection: TextDirection.ltr,
+            style: textTheme.titleLarge,
+            decoration: InputDecoration(
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(horizontal: NcSpacing.sm + 4, vertical: NcSpacing.sm + 4),
+              errorText: _vitalErrors[vital],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 /// Liste d'actes ou de consommables, avec ajout et retrait.
 class _Lines extends StatelessWidget {
   const _Lines({
     required this.title,
+    required this.icon,
     required this.addLabel,
     required this.addKey,
     required this.lines,
@@ -409,6 +480,7 @@ class _Lines extends StatelessWidget {
   });
 
   final String title;
+  final IconData icon;
   final String addLabel;
   final String addKey;
   final List<ReportLine> lines;
@@ -419,12 +491,10 @@ class _Lines extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: NcSpacing.lg),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: <Widget>[
-          NcSectionTitle(title),
+    return NcSection(
+      title: title,
+      icon: icon,
+      children: <Widget>[
           for (final line in lines)
             ListTile(
               contentPadding: EdgeInsets.zero,
@@ -437,10 +507,9 @@ class _Lines extends StatelessWidget {
                 onPressed: () => onRemove(line),
               ),
             ),
-          const SizedBox(height: NcSpacing.sm),
+          const SizedBox(height: NcSpacing.xs),
           NcSecondaryButton(key: ValueKey<String>(addKey), label: addLabel, icon: Icons.add, onPressed: onAdd),
-        ],
-      ),
+      ],
     );
   }
 }

@@ -63,9 +63,9 @@ final bookingReportProvider = FutureProvider.autoDispose.family<Intervention, St
 NcStatusBadge bookingStatusBadge(NcLocalizations l10n, BookingStatus status, {Key? key}) {
   final (IconData icon, NcBadgeTone tone) = switch (status) {
     BookingStatus.pending => (Icons.hourglass_empty, NcBadgeTone.progress),
-    BookingStatus.confirmed => (Icons.event_available_outlined, NcBadgeTone.success),
-    BookingStatus.assigned => (Icons.person_outline, NcBadgeTone.success),
-    BookingStatus.enRoute => (Icons.directions_car_outlined, NcBadgeTone.progress),
+    BookingStatus.confirmed => (Icons.event_available_outlined, NcBadgeTone.brand),
+    BookingStatus.assigned => (Icons.person_outline, NcBadgeTone.brand),
+    BookingStatus.enRoute => (Icons.directions_car_outlined, NcBadgeTone.info),
     BookingStatus.inProgress => (Icons.medical_services_outlined, NcBadgeTone.success),
     BookingStatus.completed => (Icons.check_circle_outline, NcBadgeTone.neutral),
     BookingStatus.cancelled => (Icons.cancel_outlined, NcBadgeTone.danger),

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart' show DateFormat;
 import 'package:nc_account/nc_account.dart';
 import 'package:nc_core/nc_core.dart';
 import 'package:nc_design_system/nc_design_system.dart';
@@ -9,7 +8,9 @@ import 'package:nc_l10n/nc_l10n.dart';
 
 import '../pro_providers.dart';
 
-/// Agenda hebdomadaire : pour chaque jour, travaillé ou non, avec une heure de début et de fin.
+/// Proposition d'une semaine type : pour chaque jour, travaillé ou non, avec une heure de début
+/// et de fin. Le planning est tenu par l'agence : la semaine ne s'applique que si la coordination
+/// l'accepte.
 ///
 /// L'écran gère une plage par jour, ce qui couvre le cas courant. L'API en accepte plusieurs :
 /// un jour qui en a déjà plusieurs garde ici la première à la dernière heure.
@@ -21,14 +22,21 @@ class ScheduleScreen extends ConsumerStatefulWidget {
 }
 
 class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
-  /// Ordre d'affichage : la semaine commence le lundi. 0 = dimanche … 6 = samedi.
-  static const List<int> _weekdays = <int>[1, 2, 3, 4, 5, 6, 0];
+  static const List<int> _weekdays = orderedWeekdays;
   static const String _defaultStart = '08:00';
   static const String _defaultEnd = '18:00';
 
   final Map<int, ({String start, String end})> _days = <int, ({String start, String end})>{};
   bool _busy = false;
   String? _error;
+
+  /// Agenda enregistré, sous une forme comparable, pour savoir si l'écran a été modifié.
+  String _savedSignature = '';
+
+  String get _signature => <String>[
+        for (final weekday in _weekdays)
+          if (_days[weekday] case final day?) '$weekday:${day.start}-${day.end}',
+      ].join('|');
 
   @override
   void initState() {
@@ -41,12 +49,7 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
         end: current == null || slot.endTime.compareTo(current.end) > 0 ? slot.endTime : current.end,
       );
     }
-  }
-
-  /// Nom du jour dans la langue de l'écran. Le 1er janvier 2023 est un dimanche.
-  String _dayName(int weekday, String languageCode) {
-    final name = DateFormat.EEEE(languageCode).format(DateTime(2023, 1, 1 + weekday));
-    return name.isEmpty ? name : name[0].toUpperCase() + name.substring(1);
+    _savedSignature = _signature;
   }
 
   Future<void> _pickTime(int weekday, {required bool isStart}) async {
@@ -86,12 +89,16 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
     });
 
     try {
-      await ref.read(professionalFileProvider.notifier).setAvailabilities(<AvailabilitySlot>[
+      await ref.read(proApiProvider).proposeWeek(<AvailabilitySlot>[
         for (final weekday in _weekdays)
           if (_days[weekday] case final day?)
             AvailabilitySlot(weekday: weekday, startTime: day.start, endTime: day.end),
       ]);
+      ref.invalidate(scheduleRequestsProvider);
       if (mounted) {
+        // Plus rien à perdre : le retour ne doit pas demander de confirmation.
+        setState(() => _savedSignature = _signature);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.planningSent)));
         context.pop();
       }
     } on ApiFailure catch (failure) {
@@ -111,27 +118,44 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
     final language = Localizations.localeOf(context).languageCode;
     final textTheme = Theme.of(context).textTheme;
 
-    return NcPage(
+    return UnsavedChangesGuard(
+      dirty: _signature != _savedSignature && !_busy,
+      child: NcPage(
       appBar: AppBar(),
-      title: l10n.proScheduleTitle,
-      subtitle: l10n.proScheduleHelp,
-      actions: <Widget>[NcPrimaryButton(label: l10n.save, isLoading: _busy, onPressed: _save)],
+      title: l10n.planningProposeTitle,
+      subtitle: l10n.planningProposeHelp,
+      actions: <Widget>[
+        // Sans changement, il n'y a rien à proposer.
+        NcPrimaryButton(
+          key: const ValueKey<String>('send-week'),
+          label: l10n.planningSend,
+          isLoading: _busy,
+          onPressed: _signature == _savedSignature ? null : _save,
+        ),
+      ],
       children: <Widget>[
         if (_error != null) ...<Widget>[
           NcNotice(message: _error!, kind: NcNoticeKind.error),
           const SizedBox(height: NcSpacing.md),
         ],
         for (final weekday in _weekdays)
+          // Jour travaillé : carte blanche ; jour de repos : carte grise, à plat.
           NcSurface(
-            color: _days.containsKey(weekday) ? Theme.of(context).colorScheme.primaryContainer : null,
+            color: _days.containsKey(weekday) ? null : Theme.of(context).colorScheme.surfaceContainer,
             padding: const EdgeInsetsDirectional.fromSTEB(NcSpacing.md, NcSpacing.xs, NcSpacing.sm, NcSpacing.xs),
             child: Column(
               children: <Widget>[
           SwitchListTile(
             key: ValueKey<String>('day-$weekday'),
             contentPadding: EdgeInsets.zero,
+            secondary: NcIconBubble(
+              icon: _days.containsKey(weekday) ? Icons.work_outline : Icons.weekend_outlined,
+              size: 40,
+              background: _days.containsKey(weekday) ? Theme.of(context).colorScheme.primaryContainer : Theme.of(context).colorScheme.surfaceContainerLowest,
+              foreground: _days.containsKey(weekday) ? Theme.of(context).colorScheme.onPrimaryContainer : Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
             value: _days.containsKey(weekday),
-            title: Text(_dayName(weekday, language), style: textTheme.titleMedium),
+            title: Text(weekdayName(weekday, language), style: textTheme.titleMedium),
             subtitle: _days[weekday] == null
                 ? null
                 : Text(l10n.scheduleRange(_days[weekday]!.start, _days[weekday]!.end)),
@@ -152,6 +176,11 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
                   Expanded(
                     child: FilledButton.tonal(
                       key: ValueKey<String>('start-$weekday'),
+                      // Teal clair : le teal plein du thème est réservé à l'action principale.
+                      style: FilledButton.styleFrom(
+                        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                        foregroundColor: Theme.of(context).colorScheme.onPrimaryContainer,
+                      ),
                       onPressed: () => _pickTime(weekday, isStart: true),
                       child: _TimeLabel(label: l10n.scheduleStart, time: day.start),
                     ),
@@ -160,6 +189,11 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
                   Expanded(
                     child: FilledButton.tonal(
                       key: ValueKey<String>('end-$weekday'),
+                      // Teal clair : le teal plein du thème est réservé à l'action principale.
+                      style: FilledButton.styleFrom(
+                        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                        foregroundColor: Theme.of(context).colorScheme.onPrimaryContainer,
+                      ),
                       onPressed: () => _pickTime(weekday, isStart: false),
                       child: _TimeLabel(label: l10n.scheduleEnd, time: day.end),
                     ),
@@ -171,6 +205,7 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
             ),
           ),
       ],
+      ),
     );
   }
 }

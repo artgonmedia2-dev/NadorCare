@@ -42,17 +42,55 @@ class BookingReportScreen extends ConsumerWidget {
               ),
               const SizedBox(height: NcSpacing.lg),
             ],
+            // Les constantes en tuiles, comme un tableau de bord de santé.
+            if (Vital.values.any((vital) => intervention.vitals[vital] != null)) ...<Widget>[
+              NcSectionTitle(l10n.reportVitalsTitle),
+              NcTileGrid(
+                children: <Widget>[
+                  for (final vital in Vital.values)
+                    if (intervention.vitals[vital] != null)
+                      NcStatTile(
+                        key: ValueKey<String>('report-vital-${vital.name}'),
+                        value: formatMeasure(intervention.vitals[vital]!),
+                        label: vitalLabel(l10n, vital),
+                        icon: vitalIcon(vital),
+                      ),
+                ],
+              ),
+            ],
             if ((intervention.observations ?? '').isNotEmpty)
-              SummaryRow(label: l10n.reportObservations, value: intervention.observations!),
-            for (final vital in Vital.values)
-              if (intervention.vitals[vital] != null)
-                SummaryRow(label: vitalLabel(l10n, vital), value: formatMeasure(intervention.vitals[vital]!)),
-            if (intervention.acts.isNotEmpty)
-              SummaryRow(label: l10n.reportActsTitle, value: _lines(l10n, intervention.acts)),
-            if (intervention.consumables.isNotEmpty)
-              SummaryRow(label: l10n.reportConsumablesTitle, value: _lines(l10n, intervention.consumables)),
+              NcSection(
+                title: l10n.reportObservations,
+                icon: Icons.notes,
+                children: <Widget>[Text(intervention.observations!, style: Theme.of(context).textTheme.bodyLarge)],
+              ),
+            if (intervention.acts.isNotEmpty || intervention.consumables.isNotEmpty)
+              NcSection(
+                title: l10n.reportActsTitle,
+                icon: Icons.medical_services_outlined,
+                children: <Widget>[
+                  if (intervention.acts.isNotEmpty)
+                    SummaryRow(
+                      icon: Icons.check_circle_outline,
+                      label: l10n.reportActsTitle,
+                      value: _lines(l10n, intervention.acts),
+                    ),
+                  if (intervention.consumables.isNotEmpty)
+                    SummaryRow(
+                      icon: Icons.inventory_2_outlined,
+                      label: l10n.reportConsumablesTitle,
+                      value: _lines(l10n, intervention.consumables),
+                    ),
+                ],
+              ),
             if ((intervention.signedByName ?? '').isNotEmpty)
-              SummaryRow(label: l10n.reportSignatureTitle, value: l10n.reportSignedBy(intervention.signedByName!)),
+              NcSurface(
+                child: SummaryRow(
+                  icon: Icons.draw_outlined,
+                  label: l10n.reportSignatureTitle,
+                  value: l10n.reportSignedBy(intervention.signedByName!),
+                ),
+              ),
           ],
         ),
       AsyncError<Intervention>(:final error) => NcPage(
